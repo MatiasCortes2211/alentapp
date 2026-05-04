@@ -1,4 +1,4 @@
-# TDD-00016: Registro de un pago
+# TDD-0016: Registro de un pago
 
 - Estado: Propuesto
 - Autor: Angeles Schneeberger
