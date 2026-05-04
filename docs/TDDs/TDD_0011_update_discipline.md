@@ -1,4 +1,4 @@
-# TDD-0012: Actualización de una Disciplina
+# TDD-0011: Actualización de una Disciplina
 
 - Estado: Propuesto
 - Autor: Paula Zacarías
@@ -19,6 +19,8 @@ El objetivo del módulo es modificar los campos de una sanción previamente exis
 - Como administrativo, quiero modificar los datos de una sanción para guardar una versión actualizada de los mismos.
     - Escenario de éxito: "Si el usuario cambia un dato de una sanción, el sistema debe responder con un mensaje de éxito y la actualización de la sanción en la base de datos". 
     - Escenario de fallo: "Si el usuario cambia el socio por uno inexistente, el sistema debe notificar la inexistencia del socio e impedir la modificación de la sanción". 
+    - Escenario de fallo: "Si el usuario cambia la fecha de fin por una previa o igual a la fecha de inicio, el sistema debe notificar el error e impedir la modificación de la sanción".
+    - Escenario de fallo: "Si el usuario cambia la fecha de inicio por una posterior o igual a la fecha de fin, el sistema debe notificar el error e impedir la modificación de la sanción".
 
 ## Diseño Técnico (RFC)
 
@@ -30,14 +32,14 @@ interface Discipline {
     start_date: date; 
     end_date: date;
     is_total_suspension: boolean;
-    member_id: string; 
+    member: Member; 
     is_deleted: boolean; 
 }
 ```
 
 ### Contrato de API (@alentapp/shared) 
 
-- Endpoint: `PUT /api/v1/disciplines/:id`
+- Endpoint: `PATCH /api/v1/disciplines/:id`
 - Request Body(UpdateDiscipline): 
 ```
 {
@@ -54,13 +56,14 @@ interface Discipline {
 
 ```
 model Discipline {
-	Id String @id @default(uuid())
+	id String @id @default(uuid())
 	reason String
 	start_date DateTime
 	end_date DateTime
-	member_id: String
-	member Member? @relation (fields: [member.id], references: [id])
-	is_deleted boolean @default(false) 
+    is_total_suspension Boolean
+	member_id String
+	member Member @relation(fields: [member_id], references: [id])
+	is_deleted Boolean @default(false) 
 } 
 ```
 
