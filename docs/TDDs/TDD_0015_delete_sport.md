@@ -46,13 +46,13 @@ interface Sport {
 
 ```
 model Sport {
-	Id String @id @default(uuid())
+	id String @id @default(uuid())
 	name String @unique
 	description String
 	max_capacity Int
 	additional_price Float
 	requires_medical_certificate Boolean
-	is_deleted Boolean @default (false)
+	is_deleted Boolean @default(false)
 	enrollments Enrollment[]
 }
 ```
@@ -77,6 +77,6 @@ model Sport {
 
 | Escenario de Error                  | Validación / Regla de Negocio                                            | Código HTTP       |
 | --------------------------         | ---------------------------------------------                            | ------------------|
-| Recurso inexistente                    | Se quiere modificar, consultar o eliminar una ID que no existe.           | 404 Not Found    |
+| Recurso inexistente                    | Si se quiere eliminar un deporte con ID que no existe.           | 404 Not Found    |
 | Registro ya eliminado                | Si se intenta eliminar un deporte ya eliminada.                              | 409 Conflict   |
 | Registro rechazado           | Falla de conexión con el contenedor de Postgres.                         | 500 Internal Server Error|
