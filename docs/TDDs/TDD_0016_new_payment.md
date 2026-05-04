@@ -70,7 +70,7 @@ model Payment {
 	due_date DateTime
 	payment_date DateTime?
 	member_id String
-	member Member @relation (fields: [member_id], references: [id])
+	member Member @relation(fields: [member_id], references: [id])
 } 
 ```
 
