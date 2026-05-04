@@ -1,4 +1,4 @@
-# TDD-0014: Actualización de un pago
+# TDD-0017: Actualización de un pago
 
 - Estado: Propuesto
 - Autor: Angeles Schneeberger

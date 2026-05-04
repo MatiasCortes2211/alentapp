@@ -1,4 +1,4 @@
-# TDD-0014: Anulación de un pago
+# TDD-0018: Anulación de un pago
 
 - Estado: Propuesto
 - Autor: Angeles Schneeberger

@@ -1,4 +1,4 @@
-# TDD-0004: Registro de un pago
+# TDD-00016: Registro de un pago
 
 - Estado: Propuesto
 - Autor: Angeles Schneeberger
