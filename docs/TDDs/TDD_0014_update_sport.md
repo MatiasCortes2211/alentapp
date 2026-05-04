@@ -52,13 +52,13 @@ interface Sport {
 
 ```
 model Sport {
-	Id String @id @default(uuid())
+	id String @id @default(uuid())
 	name String @unique
 	description String
 	max_capacity Int
 	additional_price Float
 	requires_medical_certificate Boolean
-	is_deleted Boolean @default (false)
+	is_deleted Boolean @default(false)
 	enrollments Enrollment[]
 }
 ```
@@ -85,7 +85,7 @@ model Sport {
 
 | Escenario de Error                  | Validación / Regla de Negocio                                            | Código HTTP       |
 | --------------------------         | ---------------------------------------------                            | ------------------|
-| Recurso inexistente                    | Se quiere modificar, consultar o eliminar una ID que no existe.           | 404 Not Found    |
+| Recurso inexistente                    | Si se quiere modificar un deporte con ID que no existe.           | 404 Not Found    |
 | name duplicado                    | No pueden existir dos instancias de Sport con el mismo nombre.           | 409 Conflict    |
 | max_capacity inválido                    | max_capacity debe ser mayor a 0 y no puede ser menor a la cantidad de inscriptos activos.           | 400 Bad Reques    |
 | Intento de modificar name                    | El atributo name es inmutable después de la creación.           | 400 Bad Reques    |
