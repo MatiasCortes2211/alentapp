@@ -55,13 +55,13 @@ interface Sport {
 
 ```prisma
 model Sport {
-	Id String @id @default(uuid())
+	id String @id @default(uuid())
 	name String @unique
 	description String
 	max_capacity Int
 	additional_price Float
 	requires_medical_certificate Boolean
-	is_deleted Boolean @default (false)
+	is_deleted Boolean @default(false)
 	enrollments Enrollment[]
 }
 ```
