@@ -45,7 +45,7 @@ canceled = "CANCELED"
 
 ### Contrato de API (@alentapp/shared) 
 
-- Endpoint: `PATCH /api/v1/payments/:id/delete`
+- Endpoint: `PATCH /api/v1/payments/:id/cancel`
 - Request Body: none
 - Response: 204 No content en caso de éxito. 
 
@@ -84,7 +84,7 @@ model Payment {
 | Escenario de Error                  | Validación / Regla de Negocio                                            | Código HTTP       |
 | --------------------------         | ---------------------------------------------                            | ------------------|
 | id invalido                        | El id debe tener formato UUID válido.                                        | 400 Bad Request   |
-| Recurso inexistente                | Cuando se intenta anular un pago a que no está en la DB.                     | 404 Not Found     |
+| Recurso inexistente                | Cuando se intenta anular un pago que no está en la DB.                     | 404 Not Found     |
 | Pago ya está en estado paid        | Un payment no puede ser cancelado porque ya se encuentra en estado paid.     | 409 Conflict      |
 | Pago ya está en estado canceled    | Un payment no puede ser cancelado porque ya se encuentra en estado canceled. | 409 Conflict      |
 | Error de Infraestructura           | Falla de conexión con el contenedor de Postgres.                         | 500 Internal Server Error|
