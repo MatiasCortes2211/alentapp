@@ -47,7 +47,7 @@ interface Sport {
 	max_capacity?: number
 {
 ```
-- Response Body: 200 OK
+- Response: 200 OK
 
 ### Esquema de Persistencia
 
