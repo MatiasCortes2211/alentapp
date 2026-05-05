@@ -50,8 +50,8 @@ export interface UpdateMedicalCertificate {
 ```prisma
 model MedicalCertificate {
     id             String   @id @default(uuid())
-    issue_date     DateTime @db.Date
-    expiry_date    DateTime @db.Date
+    issue_date     DateTime 
+    expiry_date    DateTime 
     doctor_license String
     is_validated   Boolean  @default(true)
     member_id      String
