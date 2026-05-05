@@ -70,12 +70,13 @@ model MedicalCertificate {
 
 ### Lógica del Caso de Uso
 
-1. Verificar existencia del certificado mediante el ID provisto.
-2. Si el certificado no existe (null), retornar error 404.
-3. Combinar los datos existentes con los nuevos valores del Request Body (is_validated o expiry_date).
-4. Si se envió una nueva expiry_date, re-validar obligatoriamente que sea estrictamente mayor a la issue_date original del registro.
-5. Persistir los cambios a través del Repositorio.
-6. Retornar el certificado actualizado.
+1. Validar los datos de entrada parciales del DTO utilizando la librería Zod (solo permitiendo is_validated y/o expiry_date).
+2. Verificar existencia del certificado mediante el ID provisto.
+3. Si el certificado no existe (null), retornar error 404.
+4. Combinar los datos existentes con los nuevos valores del Request Body (is_validated o expiry_date).
+5. Si se envió una nueva expiry_date, re-validar obligatoriamente que sea estrictamente mayor a la issue_date original del registro.
+6. Persistir los cambios a través del Repositorio.
+7. Retornar el certificado actualizado.
 
 ## Casos de Borde y Errores
 

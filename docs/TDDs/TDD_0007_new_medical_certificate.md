@@ -72,7 +72,7 @@ model MedicalCertificate {
 
 ### Lógica del Caso de Uso
 
-1. Validar los datos de entrada.
+1. Validar los datos de entrada del DTO con Zod.
 2. Verificar la existencia del socio.
 3. Comprobar que expiry_date sea mayor a issue_date.
 4. Verificar que el certificado no esté vencido respecto a la fecha actual.
