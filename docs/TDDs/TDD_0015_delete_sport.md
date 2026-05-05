@@ -40,20 +40,19 @@ interface Sport {
 
 - Endpoint: `PATCH /api/v1/sports/:id`
 - Request Body(DeleteSport): none
-- Response: 204 No content (en caso de éxito)
+- Response: 200 OK
 
 ### Esquema de Persistencia
 
 ```
 model Sport {
 	id String @id @default(uuid())
-	name String @unique
+	name String
 	description String
 	max_capacity Int
 	additional_price Float
 	requires_medical_certificate Boolean
 	is_deleted Boolean @default(false)
-	enrollments Enrollment[]
 }
 ```
 
