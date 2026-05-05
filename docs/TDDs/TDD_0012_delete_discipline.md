@@ -28,8 +28,8 @@ La baja de sanción es lógica, cuando el campo deleted de discipline es true, l
 ```ts
 interface Discipline {
     reason: string;
-    start_date: date; 
-    end_date: date;
+    start_date: Date; 
+    end_date: Date;
     is_total_suspension: boolean;
     member: Member; 
     is_deleted: boolean; 
@@ -40,7 +40,7 @@ interface Discipline {
 
 - Endpoint: `PATCH /api/v1/disciplines/:id`
 - Request Body(DeleteDiscipline): none
-- Response: 204 No content en caso de éxito.
+- Response: 200 OK
 
 ### Esquema de Persistencia
 
@@ -52,7 +52,7 @@ model Discipline {
 	end_date DateTime
     is_total_suspension Boolean
 	member_id String
-	member Member @relation(fields: [member.id], references: [id])
+	member Member @relation(fields: [member_id], references: [id])
 	is_deleted Boolean @default(false) 
 } 
 ```
@@ -67,7 +67,7 @@ model Discipline {
 
 
 ### Lógica del Caso de Uso 
-1. Validar los datos de entrada.
+1. Validar los datos del DTO con Zod.
 2. Verificar la existencia de la disciplina.
 3. Verificar si ya está eliminada.
 4. Comprobar las reglas de negocio.

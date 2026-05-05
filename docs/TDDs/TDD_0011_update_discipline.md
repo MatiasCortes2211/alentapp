@@ -29,8 +29,8 @@ El objetivo del módulo es modificar los campos de una sanción previamente exis
 ```ts
 interface Discipline {
     reason: string;
-    start_date: date; 
-    end_date: date;
+    start_date: Date; 
+    end_date: Date;
     is_total_suspension: boolean;
     member: Member; 
     is_deleted: boolean; 
@@ -78,7 +78,7 @@ model Discipline {
 
 
 ### Lógica del Caso de Uso 
-1. Validar los datos de entrada.
+1. Validar los datos del DTO con Zod.
 2. Comprobar existencia de la disciplina.
 3. Comprobar que la disciplina no esté eliminada.
 4. Comprobar que la fecha de fin sea mayor a la fecha de inicio si se modifica.
