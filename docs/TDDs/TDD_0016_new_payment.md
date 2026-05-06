@@ -8,7 +8,7 @@
 
 ### Objetivo
 
-Permitir que un administrativo dé de alta un pago asociado a un miembro, representando la obligación de pago para un periodo  determinado.
+Permitir que un administrativo dé de alta un pago asociado a un miembro, representando la obligación de pago para un periodo determinado.
 
 ### User Persona
 
@@ -17,9 +17,11 @@ Permitir que un administrativo dé de alta un pago asociado a un miembro, repres
 ### Criterios de Aceptación
 - Como Administrativo, quiero registrar un nuevo pago para mantener actualizadas las obligaciones del socio. 
     - Escenario de éxito: "Si el usuario completa los datos del pago correctamente, el sistema debe responder con un mensaje de éxito y crear el pago con esos datos y el estado pending y fecha de pago null".  
-    - Escenario de fallo: "Si el usuario intenta registrar el pago omitiendo el monto (amount), la fecha de vencimiento (due_date), el mes (month) o el año (year), el sistema debe impedir la creación y señalar los campos requeridos".
-    - Escenario de fallo: "Si el usuario ingresa un monto igual o menor a cero, el sistema debe mostrar un mensaje de error de validación".  
+    - Escenario de fallo: "Si el usuario intenta registrar el pago omitiendo el monto, la fecha de vencimiento, el mes o el año, el sistema debe impedir la creación y señalar los campos requeridos". 
     - Escenario de fallo: "Si el usuario ingresa un miembro que no existe, el sistema debe mostrar un mensaje indicando que el miembro es inexistente y rechazar la operación".
+    - Escenario de fallo: "Si el usuario ingresa un mes fuera del rango 1 a 12, el sistema debe mostrar un error de validación".
+    - Escenario de fallo: "Si el usuario ingresa una fecha de vencimiento anterior a la fecha actual, el sistema debe mostrar un error de validación".
+    - Escenario de fallo: "Si el usuario ingresa un pago que ya existe para el mismo miembro, mes y año, y cuyo estado es pending o paid y is_deleted = false, el sistema debe rechazar la operación".
 
 ## Diseño Técnico (RFC)
 
@@ -33,14 +35,15 @@ interface Payment {
     status: PaymentStatus;
     due_date: Date;
     payment_date?: Date; 
+    is_deleted: boolean;
     member: Member;
 }
 ```
 ```ts
 enum PaymentStatus{
-pending = "PENDING",
-paid = "PAID",
-canceled = "CANCELED"	
+Pending = "PENDING",
+Paid = "PAID",
+Canceled = "CANCELED"	
 }
 ```
 
@@ -48,13 +51,14 @@ canceled = "CANCELED"
 
 - Endpoint: `POST /api/v1/payments`
 - Request Body: 
-```ts 
+
+```json 
 {
-    amount: number; 
-    month: number;
-    year: number;
-    due_date: string;
-    member_id: string;
+    "amount": number; 
+    "month": number;
+    "year": number;
+    "due_date": string;
+    "member_id": string;
 }
 ```
 
@@ -66,12 +70,20 @@ model Payment {
 	amount Decimal
     month Int
 	year Int
-	status String
+	status PaymentStatus @default(PENDING)
 	due_date DateTime
 	payment_date DateTime?
+    is_deleted Boolean @default(false)
 	member_id String
 	member Member @relation(fields: [member_id], references: [id])
 } 
+```
+```prisma
+enum PaymentStatus {
+  PENDING
+  PAID
+  CANCELED
+}
 ```
 
 ## Arquitectura y Flujo
@@ -83,10 +95,11 @@ model Payment {
 4. Adaptador de Entrada: PaymentController (Ruta HTTP).
 
 ### Lógica del Caso de Uso 
-1. Verificar existencia del miembro
-2. Comprobar reglas de negocio (no deben existir dos pagos activos (estado pending o paid) para un miembro en un mismo mes y año).
-3. Mapear DTO a Entidad de Dominio. 
-4. Persistir a través del Repositorio.
+1. Validar los datos del DTO con Zod
+2. Verificar existencia del miembro
+3. Comprobar reglas de negocio (no debe existir otro pago activo (estado pending o paid) para un miembro en un mismo mes y año, y no eliminado (is_deleted = false)).
+4. Mapear DTO a Entidad de Dominio. 
+5. Persistir a través del Repositorio.
 
 ## Casos de Borde y Errores
 
@@ -94,6 +107,8 @@ model Payment {
 | --------------------------         | ---------------------------------------------                            | ------------------|
 | Datos faltantes                    | Todos los campos marcados como required deben estar presentes.           | 400 Bad Request   |
 | Monto invalido                     | El monto debe ser mayor a cero.                                          | 400 Bad Request   |
+| Mes invalido                       | El mes debe estar entre 1 y 12.                                          | 400 Bad Request   |
+| Fecha vencida                      | due_date no puede ser anterior a hoy.                                     | 400 Bad Request   |
 | Recurso inexistente                | Cuando se intenta asignar un pago a un miembro que no está en la DB.    | 404 Not Found     |
-| Registro duplicado                 | No pueden exisitr dos pagos con el mismo mes, año y miembro, y con estado activo (paid o pending) | 409 Conflict     |
+| Registro duplicado                 | No pueden existir dos pagos con el mismo mes, año, miembro, con estado activo (paid o pending) y no eliminado (is_deleted = false) | 409 Conflict     |
 | Error de Infraestructura           | Falla de conexión con el contenedor de Postgres.                         | 500 Internal Server Error|
