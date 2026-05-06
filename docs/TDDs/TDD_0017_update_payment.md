@@ -57,7 +57,7 @@ Canceled = "CANCELED"
 
 ```json
 {
-    "status": 'paid' | 'canceled';
+    "status": 'PAID' | 'CANCELED';
 }
 ```
 
