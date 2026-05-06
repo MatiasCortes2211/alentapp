@@ -41,7 +41,7 @@ interface Sport {
 
 - Endpoint: `PATCH /api/v1/sports/:id`
 - Request Body (UpdateSport): 
-```
+```json
 {
 	description?: string;
 	max_capacity?: number
@@ -51,7 +51,7 @@ interface Sport {
 
 ### Esquema de Persistencia
 
-```
+```prisma
 model Sport {
 	id String @id @default(uuid())
 	name String

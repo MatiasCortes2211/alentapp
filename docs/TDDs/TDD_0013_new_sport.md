@@ -40,7 +40,7 @@ interface Sport {
 
 - Endpoint: `POST /api/v1/sports`
 - Request Body (CreateSport): 
-```ts 
+```json
 {
 	name: string;
 	description: string;

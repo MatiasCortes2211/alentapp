@@ -44,7 +44,7 @@ interface Sport {
 
 ### Esquema de Persistencia
 
-```
+```prisma
 model Sport {
 	id String @id @default(uuid())
 	name String
