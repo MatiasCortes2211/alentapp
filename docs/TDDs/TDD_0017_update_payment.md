@@ -8,18 +8,23 @@
 
 ### Objetivo
 
-Permitir a los administradores actualizar el estado de un pago para marcarlo como paid. 
+Permitir que un administrativo pueda actualizar el estado de un pago para marcarlo como paid o canceled. 
 
 ### User Persona
 
-- Administrativo: el usuario podrá actualizar pagos cuando el socio abona (estado paid). 
+- Administrativo: el usuario podrá actualizar pagos cuando el miembro abone (estado paid), o cancelar pagos (estado canceled) cuandose decidió que ya no es válido y no debe cobrarse. 
 
 
 ### Criterios de Aceptación
 - Como administrativo, quiero marcar un pago como paid para registrar que el socio abonó su pago correspondiente. 
     - Escenario de éxito: "Si el usuario ingresa un pago que existe y está en estado pending, el sistema debe responder completando la fecha de pago con la fecha actual y cambiando el estado a paid"
-    - Escenario de fallo: "Si el usuario ingresa un pago que no existe, el sistema debe mostrar un mensaje de error, indicando que el pago no existe en la base de datos". 
-    - Escenario de fallo: "Si el usuario ingresa un pago que está en estado canceled o paid, el sistema debe mostrar un mensaje de error, indicando el estado actual del mismo". 
+    - Escenario de fallo: "Si el usuario ingresa un pago que no existe, el sistema debe mostrar un mensaje indicando que el pago no existe en la base de datos". 
+    - Escenario de fallo: "Si el usuario ingresa un pago que está en estado canceled o paid, el sistema debe mostrar un mensaje de error, indicando el estado actual del mismo y que el pago ya se encuentra en un estado inactivo". 
+
+- Como administrativo, quiero cancelar un pago para poder anularlo sin eliminar el historial de pagos.  
+    - Escenario de éxito: "Si el usuario completa la cancelación de un pago que existe y está en estado pending, el sistema debe responder con el pago y su cambio de estado a canceled".  
+    -  Escenario de fallo: "Si el usuario solicita la cancelación de un pago y este no existe, el sistema debe mostrar un mensaje indicando que el pago no fue encontrado". 
+    - Escenario de fallo: "Si el usuario solicita la cancelación de un pago y este se encuentra en estado paid o canceled, el sistema debe mostrar un mensaje de error indicando el estado actual del mismo y que el pago no puede ser anulado porque ya se encuentra en un estado inactivo". 
 
 ## Diseño Técnico (RFC)
 
@@ -33,21 +38,28 @@ interface Payment {
     status: PaymentStatus;
     due_date: Date;
     payment_date?: Date; 
+    is_deleted: boolean;
     member: Member;
 }
 ```
 ```ts
 enum PaymentStatus{
-pending = "PENDING",
-paid = "PAID",
-canceled = "CANCELED"	
+Pending = "PENDING",
+Paid = "PAID",
+Canceled = "CANCELED"	
 }
 ```
 
 ### Contrato de API (@alentapp/shared) 
 
-- Endpoint: `PATCH /api/v1/payments/:id/update`
-- Request Body: none
+- Endpoint: `PATCH /api/v1/payments/:id`
+- Request Body: 
+
+```json
+{
+    "status": 'paid' | 'canceled';
+}
+```
 
 ### Esquema de Persistencia
 
@@ -57,12 +69,20 @@ model Payment {
 	amount Decimal
 	month Int
 	year Int
-	status String
+	status PaymentStatus @default(PENDING)
 	due_date DateTime
 	payment_date DateTime?
+    is_deleted Boolean @default(false)
 	member_id String
 	member Member @relation(fields: [member_id], references: [id])
 } 
+```
+```prisma
+enum PaymentStatus {
+  PENDING
+  PAID
+  CANCELED
+}
 ```
 
 ## Arquitectura y Flujo
@@ -75,7 +95,7 @@ model Payment {
 
 ### Lógica del Caso de Uso 
 1. Verifica existencia del pago
-2. Comprobar reglas de negocio (Si el pago ya está cancelado o pagado, no puede modificarse). 
+2. Comprobar reglas de negocio (Si el pago ya está cancelado o pagado, no puede modificarse, solo se permiten transiciones desde el estado pending). 
 3. Aplicar cambio en la entidad de dominio 
 4. Persistir a través del Repositorio. 
 
@@ -84,7 +104,8 @@ model Payment {
 | Escenario de Error                  | Validación / Regla de Negocio                                               | Código HTTP       |
 | --------------------------         | ---------------------------------------------                                | ------------------|
 | id invalido                        | El id debe tener formato UUID válido.                                        | 400 Bad Request   |
-| Recurso inexistente                | Cuando se intenta modificar un pago que no está en la DB.                  | 404 Not Found     |
-| Pago ya está en estado paid        | Un payment no puede ser modificado porque ya se encuentra en estado paid     | 409 Conflict      |
-| Pago ya está en estado canceled    | Un payment no puede ser modificado porque ya se encuentra en estado canceled | 409 Conflict      |
+| Recurso inexistente                | Cuando se intenta modificar un pago que no está en la DB.                    | 404 Not Found     |
+| Pago ya está en estado paid        | Solo se permiten transiciones desde PENDING hacia PAID o CANCELED.           | 409 Conflict      |
+| Pago ya está en estado canceled    | Solo se permiten transiciones desde PENDING hacia PAID o CANCELED.           | 409 Conflict      |
+| Pago esta eliminado                | Un pago no puede ser modificado si se encuentra eliminado (is_deleted = true).| 409 Conflict      |
 | Error de Infraestructura           | Falla de conexión con el contenedor de Postgres.                             | 500 Internal Server Error|
