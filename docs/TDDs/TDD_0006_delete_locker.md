@@ -51,7 +51,7 @@ interface Locker {
 
 - Endpoint: `PATCH /api/v1/lockers/:id`
 - Request Body (DeleteLocker): none
-- Response: 202 OK
+- Response: 200 OK
 
 ### Esquema de Persistencia
 
@@ -70,7 +70,7 @@ enum LockerLocation {
 
 model Locker {
 	id String @id @default(uuid())
-	number Int @unique
+	number Int
 	location LockerLocation
 	status LockerStatus @default(Available)
 	end_contract_date DateTime?
