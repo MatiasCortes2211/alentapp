@@ -43,8 +43,8 @@ interface Sport {
 - Request Body (UpdateSport): 
 ```json
 {
-	description?: string;
-	max_capacity?: number
+	"description"?: string;
+	"max_capacity"?: number;
 {
 ```
 - Response: 200 OK

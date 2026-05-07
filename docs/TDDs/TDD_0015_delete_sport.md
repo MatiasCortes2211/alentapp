@@ -70,7 +70,7 @@ model Sport {
 1. Verificar que el Sport que se quiere eliminar existe.
 2. Verificar que el Sport no esté eliminado previamente.
 3. Llamar al método de eliminación.
-4. Retorna SportResponse con is_deleted: true y el mensaje 200 OK
+4. Retorna SportResponse con is_deleted: true y el mensaje 200 OK.
 
 ## Casos de Borde y Errores
 

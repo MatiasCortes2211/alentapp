@@ -42,11 +42,11 @@ interface Sport {
 - Request Body (CreateSport): 
 ```json
 {
-	name: string;
-	description: string;
-	max_capacity: number;
-	additional_price: number;
-	requires_medical_certificate: boolean;
+	"name": string;
+	"description": string;
+	"max_capacity": number;
+	"additional_price": number;
+	"requires_medical_certificate": boolean;
 }
 ```
 - Response: 201 Created
