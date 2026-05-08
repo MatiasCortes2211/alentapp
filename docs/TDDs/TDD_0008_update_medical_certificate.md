@@ -41,7 +41,7 @@ interface MedicalCertificate {
 ```ts
 export interface UpdateMedicalCertificate {
     is_validated?: boolean;
-    expiry_date?: Date;
+    expiry_date?: string;
 }
 ```
 - **Response**: 200 OK con el objeto del certificado médico actualizado.
@@ -55,7 +55,7 @@ model MedicalCertificate {
     doctor_license String
     is_validated   Boolean  @default(true)
     member_id      String
-    Member         Member   @relation(fields: [member_id], references: [id])
+    member         Member   @relation(fields: [member_id], references: [id])
 }
 ```
 
