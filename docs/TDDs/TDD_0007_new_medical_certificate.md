@@ -40,8 +40,8 @@ interface MedicalCertificate {
 
 ```
 {
-    issue_date: Date;
-    expiry_date: Date;
+    issue_date: string;
+    expiry_date: string;
     doctor_license: string;
     member_id: string;
 }
@@ -57,7 +57,7 @@ model MedicalCertificate {
     doctor_license String
     is_validated Boolean @default(true)
     member_id String
-    Member Member @relation(fields: [member_id], references: [id])
+    member Member @relation(fields: [member_id], references: [id])
 }
 ```
 
@@ -85,7 +85,7 @@ model MedicalCertificate {
 | Escenario de Error       | Validación / Regla de Negocio                                 | Código HTTP               |
 | ------------------------ | ------------------------------------------------------------- | ------------------------- |
 | Datos faltantes          | Todos los campos requeridos deben estar presentes.            | 400 Bad Request           |
-| Fechas inválidas         | expiry_date menor o igual a issue_date o fecha vencida.       | 400 Bad Request           |
+| Fechas inválidas         | La fecha de vencimiento (expiry_date) debe ser posterior a la fecha de emision (issue_date) y posterior a la fecha actual       | 400 Bad Request           |
 | Socio inexistente        | El member_id no existe en la base de datos.                   | 404 Not Found             |
 | Error de Infraestructura | Falla en la persistencia o al invalidar certificados previos.| 500 Internal Server Error |
 
