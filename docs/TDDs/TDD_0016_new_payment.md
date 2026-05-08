@@ -1,6 +1,6 @@
 # TDD-0016: Registro de un pago
 
-- Estado: Propuesto
+- Estado: Aprobado
 - Autor: Angeles Schneeberger
 - Fecha: 2026-05-01
 
