@@ -110,5 +110,5 @@ enum PaymentStatus {
 | Mes invalido                       | El mes debe estar entre 1 y 12.                                          | 400 Bad Request   |
 | Fecha vencida                      | due_date no puede ser anterior a hoy.                                     | 400 Bad Request   |
 | Recurso inexistente                | Cuando se intenta asignar un pago a un miembro que no está en la DB.    | 404 Not Found     |
-| Registro duplicado                 | No pueden existir dos pagos con el mismo mes, año, miembro, con estado activo (paid o pending) y no eliminado (is_deleted = false) | 409 Conflict     |
+| Registro duplicado                 | No puede existir más de un pago activo para la misma combinación de miembro, mes y año. Se consideran activos los pagos con estado PENDING o PAID y que no estén marcados como eliminados. | 409 Conflict     |
 | Error de Infraestructura           | Falla de conexión con el contenedor de Postgres.                         | 500 Internal Server Error|
