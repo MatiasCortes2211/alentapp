@@ -48,9 +48,9 @@ model MedicalCertificate {
     issue_date DateTime @db.Date
     expiry_date DateTime @db.Date
     doctor_license String
-    is_validated Boolean @default(false)
+    is_validated Boolean @default(true)
     member_id String
-    member Member @relation (fields: [member_id], references: [id])
+    member Member @relation(fields: [member_id], references: [id])
 }
 ```
 
@@ -67,10 +67,9 @@ model MedicalCertificate {
 
 1. Extraer el ID del parámetro de la URL y validar su formato (UUID) utilizando la librería Zod.
 2. Verificar existencia del certificado médico.
-3. Se extrae el ID del parámetro de la URL y se valida su formato.
-4. Si el método devuelve null, el flujo se interrumpe y se lanza una excepción de tipo "Recurso no encontrado" (404).
-5. Se llama al método delete(id) del repositorio para remover físicamente el registro de la tabla en Postgres.
-6. Se devuelve una respuesta con código de estado HTTP 204 No Content para indicar éxito.
+3. Si el método devuelve null, el flujo se interrumpe y se lanza una excepción de tipo "Recurso no encontrado" (404).
+4. Se llama al método delete(id) del repositorio para remover físicamente el registro de la tabla en Postgres.
+5. Se devuelve una respuesta con código de estado HTTP 204 No Content para indicar éxito.
 
 ## Casos de Borde y Errores
 
