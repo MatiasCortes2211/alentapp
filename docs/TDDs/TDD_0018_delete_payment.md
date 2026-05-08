@@ -48,7 +48,7 @@ Canceled = "CANCELED"
 
 - Endpoint: `PATCH /api/v1/payments/:id/delete`
 - Request Body: none
-- Response: 204 No content en caso de éxito. 
+- Response: 200 OK
 
 ### Esquema de Persistencia
 
