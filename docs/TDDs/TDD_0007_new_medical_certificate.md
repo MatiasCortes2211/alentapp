@@ -31,25 +31,25 @@ interface MedicalCertificate {
     is_validated: boolean;
     member: Member;
 }
-````
+```
 
 ### Contrato de API (@alentapp/shared)
 
 * Endpoint: `POST /api/v1/medical-certificates`
 * Request Body(CreateMedicalCertificate):
 
-```
+```json
 {
-    issue_date: string;
-    expiry_date: string;
-    doctor_license: string;
-    member_id: string;
+    "issue_date": "string",
+    "expiry_date": "string",
+    "doctor_license": "string",
+    "member_id": "string"
 }
 ```
 
 ### Esquema de Persistencia
 
-```
+```prisma
 model MedicalCertificate {
     id String @id @default(uuid())
     issue_date DateTime @db.Date

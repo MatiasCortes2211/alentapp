@@ -38,10 +38,10 @@ interface MedicalCertificate {
 
 - **Endpoint**: `PATCH /api/v1/medical-certificates/:id`
 - **Request Body**:
-```ts
-export interface UpdateMedicalCertificate {
-    is_validated?: boolean;
-    expiry_date?: string;
+```json
+{
+    "is_validated": "boolean",
+    "expiry_date": "string"
 }
 ```
 - **Response**: 200 OK con el objeto del certificado médico actualizado.
