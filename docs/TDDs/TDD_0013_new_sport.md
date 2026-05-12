@@ -1,6 +1,6 @@
 # TDD-0013: Registro de un Deporte
 
-- Estado: Propuesto
+- Estado: Aprobado
 - Autor: Matias Cortes
 - Fecha: 2026-05-03
 
@@ -40,13 +40,13 @@ interface Sport {
 
 - Endpoint: `POST /api/v1/sports`
 - Request Body (CreateSport): 
-```ts 
+```json
 {
-	name: string;
-	description: string;
-	max_capacity: number;
-	additional_price: number;
-	requires_medical_certificate: boolean;
+	"name": string;
+	"description": string;
+	"max_capacity": number;
+	"additional_price": number;
+	"requires_medical_certificate": boolean;
 }
 ```
 - Response: 201 Created
@@ -56,13 +56,12 @@ interface Sport {
 ```prisma
 model Sport {
 	id String @id @default(uuid())
-	name String @unique
+	name String
 	description String
 	max_capacity Int
 	additional_price Float
 	requires_medical_certificate Boolean
 	is_deleted Boolean @default(false)
-	enrollments Enrollment[]
 }
 ```
 
@@ -79,6 +78,7 @@ model Sport {
 1. Validar los datos del DTO con Zod.
 2. Comprobar reglas de negocio:
 	- No pueden existir dos instancias de Sport con el mismo nombre.
+	Esta regla de negocio solo tiene en cuenta instancias de Sport con is_deleted en false. El sistema debe permitir la reutilización de un nombre de una instancia de Sport que ya fue eliminada. Por este motivo, name no puede ser unique, sino que se debe hacer la validación a través de una función propia.
 	- max_capacity debe ser mayor a 0.
 	- El Sport inicia con is_deleted en false por defecto.
 3. Mapear DTO a Entidad de Dominio.
@@ -90,6 +90,6 @@ model Sport {
 | Escenario de Error                  | Validación / Regla de Negocio                                            | Código HTTP       |
 | --------------------------         | ---------------------------------------------                            | ------------------|
 | Datos faltantes                    | Todos los campos marcados como required deben estar presentes.           | 400 Bad Request   |
-| max_capacity inválido (create)                | max_capacity debe ser mayor a 0. iguales.                              | 400 Bad Request   |
+| max_capacity inválido (create)                | max_capacity debe ser mayor a 0.                              | 400 Bad Request   |
 | name duplicado                | No pueden existir dos instancias de Sport con el mismo nombre.   | 409 Conflict     |
 | Registro rechazado           | Falla de conexión con el contenedor de Postgres.                         | 500 Internal Server Error|

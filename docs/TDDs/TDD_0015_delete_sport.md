@@ -1,6 +1,6 @@
 # TDD-0015: Eliminación de un Deporte
 
-- Estado: Propuesto
+- Estado: Aprobado
 - Autor: Matias Cortes
 - Fecha: 2026-05-03
 
@@ -38,22 +38,21 @@ interface Sport {
 
 ### Contrato de API (@alentapp/shared) 
 
-- Endpoint: `PATCH /api/v1/sports/:id`
+- Endpoint: `DELETE /api/v1/sports/:id`
 - Request Body(DeleteSport): none
-- Response: 204 No content (en caso de éxito)
+- Response: 204 no content.
 
 ### Esquema de Persistencia
 
-```
+```prisma
 model Sport {
 	id String @id @default(uuid())
-	name String @unique
+	name String
 	description String
 	max_capacity Int
 	additional_price Float
 	requires_medical_certificate Boolean
 	is_deleted Boolean @default(false)
-	enrollments Enrollment[]
 }
 ```
 
@@ -71,7 +70,7 @@ model Sport {
 1. Verificar que el Sport que se quiere eliminar existe.
 2. Verificar que el Sport no esté eliminado previamente.
 3. Llamar al método de eliminación.
-4. Retorna SportResponse con is_deleted: true y el mensaje 200 OK
+4. Retorna SportResponse con is_deleted: true y el mensaje 204 no content.
 
 ## Casos de Borde y Errores
 
