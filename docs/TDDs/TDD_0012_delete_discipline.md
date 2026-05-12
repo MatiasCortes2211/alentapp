@@ -38,9 +38,9 @@ interface Discipline {
 
 ### Contrato de API (@alentapp/shared) 
 
-- Endpoint: `PATCH /api/v1/disciplines/:id`
+- Endpoint: `DELETE /api/v1/disciplines/:id`
 - Request Body(DeleteDiscipline): none
-- Response: 200 OK
+- Response: 204 no content.
 
 ### Esquema de Persistencia
 
