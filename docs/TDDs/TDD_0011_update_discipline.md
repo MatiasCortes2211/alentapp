@@ -1,6 +1,6 @@
 # TDD-0011: Actualización de una Disciplina
 
-- Estado: Propuesto
+- Estado: Aprobado
 - Autor: Paula Zacarías
 - Fecha: 2026-05-03
 
