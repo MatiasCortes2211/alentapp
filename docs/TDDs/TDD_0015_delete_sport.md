@@ -1,6 +1,6 @@
 # TDD-0015: Eliminación de un Deporte
 
-- Estado: Propuesto
+- Estado: Aprobado
 - Autor: Matias Cortes
 - Fecha: 2026-05-03
 
@@ -38,9 +38,9 @@ interface Sport {
 
 ### Contrato de API (@alentapp/shared) 
 
-- Endpoint: `PATCH /api/v1/sports/:id`
+- Endpoint: `DELETE /api/v1/sports/:id`
 - Request Body(DeleteSport): none
-- Response: 200 OK
+- Response: 204 no content.
 
 ### Esquema de Persistencia
 

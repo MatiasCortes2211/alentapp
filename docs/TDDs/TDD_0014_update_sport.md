@@ -1,6 +1,6 @@
 # TDD-0014: Actualización de un Deporte
 
-- Estado: Propuesto
+- Estado: Aprobado
 - Autor: Matias Cortes
 - Fecha: 2026-05-03
 
