@@ -82,8 +82,8 @@ model Discipline {
 2. Comprobar existencia de la disciplina.
 3. Comprobar que la disciplina no esté eliminada.
 4. Comprobar que la fecha de fin sea mayor a la fecha de inicio si se modifica.
-5. Aplicar cambio a Entidad de Dominio. 
-6. Comprobar las reglas de negocio.
+5. Comprobar las reglas de negocio.
+6. Aplicar cambio a Entidad de Dominio. 
 7. Persistir a través del Repositorio. 
 
 
