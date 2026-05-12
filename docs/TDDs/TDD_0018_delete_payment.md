@@ -46,9 +46,9 @@ Canceled = "CANCELED"
 
 ### Contrato de API (@alentapp/shared) 
 
-- Endpoint: `PATCH /api/v1/payments/:id/delete`
+- Endpoint: `DELETE /api/v1/payments/:id`
 - Request Body: none
-- Response: 200 OK
+- Response: 204 No content.
 
 ### Esquema de Persistencia
 
