@@ -1,7 +1,7 @@
 # TDD-0004: Registro de un Casillero (Locker)
 
-- Estado: Propuesto
-- Autor: Cemino Conrado
+- Estado: Aprobado
+- Autor: Conrado Cemino
 - Fecha: 2026-05-03
 
 ## Contexto de Negocio (PRD)
