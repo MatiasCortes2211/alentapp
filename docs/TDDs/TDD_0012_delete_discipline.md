@@ -44,7 +44,7 @@ interface Discipline {
 
 ### Esquema de Persistencia
 
-```
+```prisma
 model Discipline {
 	id String @id @default(uuid())
 	reason String

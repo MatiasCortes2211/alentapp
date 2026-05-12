@@ -41,20 +41,20 @@ interface Discipline {
 
 - Endpoint: `PATCH /api/v1/disciplines/:id`
 - Request Body(UpdateDiscipline): 
-```
+```json
 {
-    reason?: string;
-    start_date?: string;
-    end_date?: string;
-    is_total_suspension?: boolean;
-	member_id?: string;
+    "reason?": string;
+    "start_date?": string;
+    "end_date?": string;
+    "is_total_suspension?": boolean;
+	"member_id?": string;
 }
 ```
 
 
 ### Esquema de Persistencia
 
-```
+```prisma
 model Discipline {
 	id String @id @default(uuid())
 	reason String
