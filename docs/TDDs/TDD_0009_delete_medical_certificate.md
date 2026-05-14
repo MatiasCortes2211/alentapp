@@ -1,6 +1,6 @@
 # TDD-0009: Eliminación de un certificado médico
 
-- **Estado**: Propuesto
+- **Estado**: Aprobado
 - **Autor**: Rodrigo Castaño
 - **Fecha**: 2026-04-27
 

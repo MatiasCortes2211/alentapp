@@ -1,8 +1,8 @@
 # TDD-0007: Registro de un Certificado Médico
 
-- Estado: Propuesto
-- Autor: Rodrigo Castaño
-- Fecha: 2026-04-27
+- **Estado**: Aprobado
+- **Autor**: Rodrigo Castaño
+- **Fecha**: 2026-04-27
 
 ## Contexto de Negocio (PRD)
 
