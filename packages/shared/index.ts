@@ -41,3 +41,11 @@ export interface Sport {
   requires_medical_certificate: boolean;
   is_deleted: boolean;
 }
+
+export interface CreateSport {
+  name: string;
+  description: string;
+  max_capacity: number;
+  additional_price: number;
+  requires_medical_certificate: boolean;
+}
