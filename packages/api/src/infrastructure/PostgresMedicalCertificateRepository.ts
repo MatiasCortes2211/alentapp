@@ -63,8 +63,7 @@ export class PostgresMedicalCertificateRepository implements MedicalCertificateR
             expiry_date: cert.expiry_date.toISOString().split('T')[0],
             doctor_license: cert.doctor_license,
             member_id: cert.member_id,
-            is_validated: cert.is_validated,
-            created_at: cert.created_at.toISOString(),
+            is_validated: cert.is_validated
         };
     }
 }
