@@ -1,5 +1,8 @@
 // ==========================================
 // Member
+
+import { Member } from "../api/src/generated/client/index.js";
+
 // ==========================================
 export type MemberCategory = 'Pleno' | 'Cadete' | 'Honorario';
 export type MemberStatus = 'Activo' | 'Moroso' | 'Suspendido';
@@ -30,4 +33,25 @@ export interface UpdateMemberRequest {
   birthdate?: string; // ISO Date String (YYYY-MM-DD)
   category?: MemberCategory;
   status?: MemberStatus;
+}
+
+// ==========================================
+// Discipline
+// ==========================================
+export interface Discipline {
+  id: string; // UUID
+  reason: string;
+  start_date: string;
+  end_date: string;
+  is_total_suspension: boolean;
+  member: Member;
+  is_deleted: boolean;
+}
+
+export interface CreateDiscipline {
+  reason: string;
+  start_date: string; // ISO Date String (YYYY-MM-DD)
+  end_date: string; // ISO Date String (YYYY-MM-DD)
+  is_total_suspension: boolean;
+  member_id: string; // UUID
 }
