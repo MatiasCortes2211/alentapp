@@ -35,11 +35,6 @@ export interface UpdateMemberRequest {
 // ==========================================
 // Medical Certificate
 // ==========================================
-
-// ==========================================
-// Medical Certificate (TDD-0007)
-// ==========================================
-
 // este es el objeto completo del certificado médico que se devuelve al cliente
 export interface MedicalCertificateDTO {
   id: string;
