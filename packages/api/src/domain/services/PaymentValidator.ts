@@ -32,4 +32,14 @@ export class PaymentValidator {
             throw new Error('Ya existe un pago activo para este socio en el mismo mes y año');
         }
     }
+
+    validateRequiredFields(body: any): void {
+        const requiredFields = ['member_id', 'amount', 'month', 'year', 'due_date'];
+        
+        for (const field of requiredFields) {
+            if (body[field] === undefined || body[field] === null || body[field] === '') {
+                throw new Error(`El campo es requerido`);
+            }
+        }
+    }
 }
