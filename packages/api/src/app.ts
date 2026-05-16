@@ -7,6 +7,11 @@ import { GetMembersUseCase } from './application/GetMembersUseCase.js';
 import { UpdateMemberUseCase } from './application/UpdateMemberUseCase.js';
 import { DeleteMemberUseCase } from './application/DeleteMemberUseCase.js';
 import { MemberController } from './delivery/MemberController.js';
+
+import { PostgresPaymentRepository } from './infrastructure/PostgresPaymentRepository.js';
+import { PaymentValidator } from './domain/services/PaymentValidator.js'; 
+import { CreatePaymentUseCase } from './application/NewPaymentUseCase.js'; 
+import { PaymentController } from './delivery/PaymentController.js'; 
 import { PostgresSportRepository } from './infrastructure/PostgresSportRepository.js';
 import { SportValidator } from './domain/services/SportValidator.js';
 import { CreateSportUseCase } from './application/NewSportUseCase.js';
@@ -47,6 +52,15 @@ export function buildApp() {
         deleteMemberUseCase
     );
 
+    const paymentRepo = new PostgresPaymentRepository();
+    const paymentValidator = new PaymentValidator(paymentRepo);
+    
+    const createPaymentUseCase = new CreatePaymentUseCase(paymentRepo, memberRepo, paymentValidator);
+
+    const paymentController = new PaymentController(
+        createPaymentUseCase
+    );
+
     // Configuración para Sport
     const sportRepo = new PostgresSportRepository();
     const sportValidator = new SportValidator(sportRepo);
@@ -61,6 +75,8 @@ export function buildApp() {
     server.post('/api/v1/socios', memberController.create.bind(memberController));
     server.put('/api/v1/socios/:id', memberController.update.bind(memberController));
     server.delete('/api/v1/socios/:id', memberController.delete.bind(memberController));
+
+    server.post('/api/v1/payments', paymentController.create.bind(paymentController));
 
     //Sport endpoints
     server.post('/api/v1/sports', sportController.create.bind(sportController));

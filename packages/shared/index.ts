@@ -32,6 +32,36 @@ export interface UpdateMemberRequest {
   status?: MemberStatus;
 }
 
+// ==========================================
+// Payment
+// ==========================================
+
+export enum PaymentStatus {
+  Pending = 'PENDING',
+  Paid = 'PAID',
+  Canceled = 'CANCELED'
+}
+
+export interface PaymentDTO {
+  id: string; // UUID
+  amount: number;
+  month: number;
+  year: number;
+  status: PaymentStatus;
+  due_date: string; // ISO Date String (YYYY-MM-DD)
+  payment_date?: string | null; // ISO Date String (YYYY-MM-DD)
+  is_deleted: boolean;
+  member_id: string; // UUID
+}
+
+export interface CreatePaymentRequest {
+  amount: number;
+  month: number;
+  year: number;
+  due_date: string; // ISO Date String (YYYY-MM-DD)
+  member_id: string; // UUID
+}
+
 export interface Sport {
   id: string; // UUID
   name: string;
