@@ -31,7 +31,12 @@ export function HomeView() {
           icon={LuUsers}
         />
 
-        {/* Future sections can be added here following the same pattern */}
+        <SectionCard 
+          title="Deportes"
+          description="Gestiona el catálogo de deportes, sus precios y requisitos asociados."
+          to="/sports"
+          icon={LuUsers}
+        />
         <Box 
           p="6" 
           bg="bg.muted/30" 
