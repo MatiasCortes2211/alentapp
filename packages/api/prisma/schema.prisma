@@ -47,4 +47,6 @@ model Discipline {
 	member_id String
 	member Member @relation(fields: [member_id], references: [id])
 	is_deleted Boolean @default(false) 
+
+    @@map("disciplines")
 } 
