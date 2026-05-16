@@ -8,6 +8,7 @@ import { UpdateMemberUseCase } from './application/UpdateMemberUseCase.js';
 import { DeleteMemberUseCase } from './application/DeleteMemberUseCase.js';
 import { MemberController } from './delivery/MemberController.js';
 import { PostgresSportRepository } from './infrastructure/PostgresSportRepository.js';
+import { SportValidator } from './domain/services/SportValidator.js';
 import { CreateSportUseCase } from './application/NewSportUseCase.js';
 import { SportController } from './delivery/SportController.js';
 
@@ -48,8 +49,9 @@ export function buildApp() {
 
     // Configuración para Sport
     const sportRepo = new PostgresSportRepository();
+    const sportValidator = new SportValidator(sportRepo);
 
-    const createSportUseCase = new CreateSportUseCase(sportRepo);
+    const createSportUseCase = new CreateSportUseCase(sportRepo, sportValidator);
 
     const sportController = new SportController(
         createSportUseCase
