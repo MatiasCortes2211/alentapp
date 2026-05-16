@@ -34,12 +34,11 @@ export class MedicalCertificateController {
     } catch (error: any) {
       // Manejo de errores según Casos de Borde del TDD
       
-      // Errores de Zod (400 Bad Request)
+      // Errores de Zod (400 Bad Request) unificados a propiedad 'message' para cumplir con el TDD
       if (error instanceof z.ZodError) {
+        const customMessage = error.issues.map(issue => issue.message).join(", ");
         return reply.status(400).send({ 
-          error: "Datos faltantes o inválidos", 
-          // Detalles específicos de validación para facilitar la corrección por parte del cliente
-          details: error.issues 
+          message: customMessage || "Datos faltantes o inválidos"
         });
       }
 
