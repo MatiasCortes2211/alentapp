@@ -30,6 +30,13 @@ export function HomeView() {
           to="/members"
           icon={LuUsers}
         />
+        
+        <SectionCard 
+          title="Pagos"
+          description="Genera y administra las obligaciones de pago de los socios del club."
+          to="/payments"
+          icon={LuUsers}
+        />
 
         {/* Future sections can be added here following the same pattern */}
         <Box 
