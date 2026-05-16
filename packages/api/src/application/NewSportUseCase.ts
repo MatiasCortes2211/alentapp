@@ -1,18 +1,20 @@
 import { z, ZodError } from "zod";
 import { SportRepository } from "../domain/SportRepository.js";
+import { SportValidator } from "../domain/services/SportValidator.js";
 import {Sport, CreateSport } from "@alentapp/shared";
 
 const CreateSportSchema = z.object({
-    name: z.string().min(1),
-    description: z.string().min(1),
+    name: z.string().min(1, {message: "name es un campo requerido y no puede estar vacío."}),
+    description: z.string().min(1, {message: "description es un campo requerido y no puede estar vacío."}),
     max_capacity: z.number().int().positive({message: "max_capacity debe ser mayor a 0."}),
-    additional_price: z.number().nonnegative(),
-    requires_medical_certificate: z.boolean(),
+    additional_price: z.number().nonnegative({message: "additional_price debe ser mayor a 0."}),
+    requires_medical_certificate: z.boolean({message: "requires_medical_certificate debe ser un valor booleano válido."}),
 });
 
 export class CreateSportUseCase {
     constructor(
-        private readonly sportRepository: SportRepository
+        private readonly sportRepository: SportRepository,
+        private readonly sportValidator: SportValidator
     ) {}
 
     async execute(data: CreateSport): Promise<Sport> {
@@ -24,10 +26,7 @@ export class CreateSportUseCase {
             }
         }
 
-        const deporteExistente = await this.sportRepository.findByName(data.name);
-        if (deporteExistente && !deporteExistente.is_deleted) {
-            throw new Error(`No pueden existir dos instancias de Sport con el mismo nombre.`);
-        }
+        await this.sportValidator.validateNameIsUnique(data.name); //Valida unicidad de nombre
 
         const nuevoDeporte = await this.sportRepository.create({
             ...data,
