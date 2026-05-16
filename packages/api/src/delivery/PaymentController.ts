@@ -31,7 +31,8 @@ export class PaymentController {
             if (
                 error.message.includes('mayor a cero') || 
                 error.message.includes('entre 1 y 12') || 
-                error.message.includes('no puede ser anterior a hoy')
+                error.message.includes('no puede ser anterior a hoy') ||
+                error.message.includes('es requerido')
             ) {
                 return reply.status(400).send({ error: error.message });
             }

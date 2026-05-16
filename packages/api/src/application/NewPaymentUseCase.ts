@@ -11,6 +11,8 @@ export class CreatePaymentUseCase {
     ) {}
 
     async execute(data: CreatePaymentRequest): Promise<PaymentDTO> {
+
+        this.paymentValidator.validateRequiredFields(data)
         
         // 1. el miembro debe existir
         const member = await this.memberRepository.findById(data.member_id);
