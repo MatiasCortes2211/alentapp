@@ -1,9 +1,7 @@
 // ==========================================
 // Member
-
-import { Member } from "../api/src/generated/client/index.js";
-
 // ==========================================
+
 export type MemberCategory = 'Pleno' | 'Cadete' | 'Honorario';
 export type MemberStatus = 'Activo' | 'Moroso' | 'Suspendido';
 
@@ -44,7 +42,7 @@ export interface Discipline {
   start_date: string;
   end_date: string;
   is_total_suspension: boolean;
-  member: Member;
+  member_id: string;
   is_deleted: boolean;
 }
 
