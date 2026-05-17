@@ -10,17 +10,16 @@ export class NewMedicalCertificateUseCase {
         private readonly validator: MedicalCertificateValidator
     ) { }
 
-    // aca se orquesta la lógica de negocio, pero no se mete en detalles de validación o persistencia, que se delegan a otros componentes especializados.
     async execute(data: CreateMedicalCertificate): Promise<MedicalCertificateDTO> {
-        // 1. Verificar la existencia del socio
+        // 1. Validaciones de estructura (Zod) y reglas de negocio de fechas (Arriba de todo, estilo AlentApp)
+        // Se delega toda la lógica de validación a un Domain Service especializado.
+        this.validator.validate(data);
+
+        // 2. Verificar la existencia del socio
         const member = await this.memberRepository.findById(data.member_id);
         if (!member) {
             throw new Error('Socio inexistente');
         }
-
-        // 2. Validaciones de fechas y reglas de negocio del certificado
-        // Se delega toda la lógica de validación a un Domain Service especializado, manteniendo el caso de uso limpio y enfocado en la orquestación.
-        this.validator.validate(data);
 
         // 3. Regla de Negocio: Invalidar automáticamente certificados anteriores
         await this.certificateRepository.invalidatePriorCertificates(data.member_id);
