@@ -1,10 +1,12 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { CreateDisciplineUseCase } from '../application/NewDisciplineUseCase.js';
 import { CreateDiscipline } from '@alentapp/shared';
+import { GetDisciplineUseCase } from '../application/GetDisciplineUseCase.js';
 
 export class DisciplineController {
     constructor(
         private readonly createDisciplineUseCase: CreateDisciplineUseCase,
+        private readonly getDisciplineUseCase: GetDisciplineUseCase,
     ) {}
 
     async create(
@@ -25,6 +27,15 @@ export class DisciplineController {
                 return reply.status(404).send({ error: error.message });
             }
             return reply.status(500).send({ error: 'Error al crear la disciplina' });
+        }
+    }
+
+    async findAll(_request: FastifyRequest, reply: FastifyReply){
+        try {
+            const disciplines = await this.getDisciplineUseCase.execute();
+            return reply.status(200).send({ data: disciplines });
+        } catch (error) {
+            return reply.status(500).send({ error: 'Error al obtener las disciplinas' });
         }
     }
 }

@@ -39,6 +39,7 @@ import { PostgresDisciplineRepository } from './infrastructure/PostgresDisciplin
 import { DisciplineValidator } from './domain/services/DisciplineValidator.js';
 import { CreateDisciplineUseCase } from './application/NewDisciplineUseCase.js';
 import { DisciplineController } from './delivery/DisciplineController.js';
+import { GetDisciplineUseCase } from './application/GetDisciplineUseCase.js';
 
 export function buildApp() {
     const server = Fastify({
@@ -126,8 +127,11 @@ export function buildApp() {
 
     const createDisciplineUseCase = new CreateDisciplineUseCase(disciplineRepo, disciplineValidator, memberRepo);
 
+    const getDisciplineUseCase = new GetDisciplineUseCase(disciplineRepo);
+
     const disciplineController = new DisciplineController(
-        createDisciplineUseCase
+        createDisciplineUseCase,
+        getDisciplineUseCase
     );
 
     server.get('/api/v1/socios', memberController.getAll.bind(memberController));
@@ -150,6 +154,7 @@ export function buildApp() {
     server.patch('/api/v1/sports/:id', sportController.update.bind(sportController));
     //Endpoints para Discipline
     server.post('/api/v1/disciplines', disciplineController.create.bind(disciplineController));
+    server.get('/api/v1/disciplines', disciplineController.findAll.bind(disciplineController));
 
     server.get('/', async (req, rep) => {
         rep.status(200).send({ msg: 'asd' })
