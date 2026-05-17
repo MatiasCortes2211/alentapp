@@ -48,6 +48,20 @@ export class PostgresPaymentRepository implements PaymentRepository {
         return payment ? this.mapToDTO(payment as unknown as DBPayment) : null;
     }
 
+    async findAll(): Promise<PaymentDTO[]> {
+        const payments = await prisma.payment.findMany({
+            where: {
+                is_deleted: false, 
+            },
+            orderBy: [
+                { year: 'desc' },   
+                { month: 'desc' }, 
+            ],
+        });
+        
+        return payments.map(payment => this.mapToDTO(payment as unknown as DBPayment));
+    }
+
     // El método de nuestra regla de negocio para evitar duplicados
     async findActiveByMemberMonthYear(memberId: string, month: number, year: number): Promise<PaymentDTO | null> {
         const payment = await prisma.payment.findFirst({
