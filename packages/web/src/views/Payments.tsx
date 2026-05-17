@@ -1,14 +1,14 @@
 import { 
+  Table, 
   Button, 
   Heading, 
-  HStack, 
+  HStack,  
   Stack, 
   Text, 
   Box,
   Flex,
-  Input,
   Center,
-  Table 
+  Input
 } from "@chakra-ui/react";
 import { IconButton } from "@chakra-ui/react"; 
 import { LuPlus, LuRefreshCw, LuTrash2 } from "react-icons/lu"; 
@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import { paymentsService } from "../services/payments";
 import { membersService } from "../services/members";
 import type { MemberDTO, CreatePaymentRequest, PaymentDTO } from "@alentapp/shared";
+import { PaymentStatus } from "@alentapp/shared"; 
 import { 
   DialogRoot, 
   DialogContent, 
@@ -117,6 +118,15 @@ export function PaymentsView() {
   }
 };
   
+  const handleUpdatePayment = async (id: string, status: PaymentStatus.Paid | PaymentStatus.Canceled) => {
+  try {
+    await paymentsService.update(id, { status });
+    const updatedPayments = await paymentsService.getAll();
+    setPayments(updatedPayments);
+  } catch (err: any) {
+    alert(err.message || "Error al actualizar el pago");
+  }
+};
 
   return (
     <DialogRoot open={isDialogOpen} onOpenChange={(e) => setIsDialogOpen(e.open)}>
@@ -211,7 +221,6 @@ export function PaymentsView() {
             <Center h="300px">
               <Stack align="center" gap="4">
                 <Text color="fg.muted">No se encontraron pagos registrados.</Text>
-                <Text fontSize="sm" color="gray.400">(La lista se implementará en la próxima actualización)</Text>
               </Stack>
             </Center>
           ) : (
@@ -253,23 +262,44 @@ export function PaymentsView() {
                       }
                       fontSize="xs" 
                       fontWeight="bold" >
-                      {payment.status}
-                        </Box> </Table.Cell>
-                      <Table.Cell textAlign="end">
-                        <Table.Cell textAlign="end">
-                          <HStack gap="2" justify="flex-end">
-                            <IconButton
-                              variant="ghost"
-                              size="sm"
-                              colorPalette="red"
-                              aria-label="Eliminar pago"
-                              onClick={() => handleDeletePayment(payment.id)}
-                            >
-                              <LuTrash2 />
-                            </IconButton>
-                          </HStack>
-                        </Table.Cell>
+                      {payment.status} 
+                      </Box>
                       </Table.Cell>
+
+                      <Table.Cell textAlign="end">
+                        <HStack gap="2" justify="flex-end">
+                      {payment.status === 'PENDING' && (
+                        <>
+                          <Button
+                            size="sm"
+                            colorPalette="green"
+                            variant="outline"
+                            onClick={() => handleUpdatePayment(payment.id, PaymentStatus.Paid)}
+                          >
+                            Pagar
+                          </Button>
+                          <Button
+                            size="sm"
+                            colorPalette="red"
+                            variant="outline"
+                            onClick={() => handleUpdatePayment(payment.id, PaymentStatus.Canceled)}
+                          >
+                            Cancelar
+                          </Button>
+                
+                        </>
+                      )}
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        colorPalette="red"
+                        aria-label="Eliminar pago"
+                        onClick={() => handleDeletePayment(payment.id)}
+                      >
+                      <LuTrash2 />
+                     </IconButton>                      
+                    </HStack>
+                  </Table.Cell>
                     </Table.Row>
                   );
                 })}

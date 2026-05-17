@@ -13,6 +13,7 @@ export class CreateLockerUseCase {
     ) {}
 
     async execute(data: CreateLockerRequest): Promise<LockerDTO> {
+        // Validación estructural
         try {
             CreateLockerSchema.parse(data);
         } catch (error) {
@@ -22,6 +23,10 @@ export class CreateLockerUseCase {
             throw error;
         }
 
+        // Validación de asignación mutua miembro <-> fecha fin contrato
+        this.lockerValidator.validateAssignmentIntegrity(data.member_id, data.end_contract_date);
+
+        // Validación de número único
         await this.lockerValidator.validateNumberIsUnique(data.number);
 
         if (data.member_id) {
@@ -35,10 +40,16 @@ export class CreateLockerUseCase {
             }
         }
 
+        if (data.end_contract_date) {
+            this.lockerValidator.validateEndContractDate(data.end_contract_date);
+        }
+
+        const finalStatus = data.member_id ? 'Occupied' : (data.status || 'Available');
+        
         const nuevoLocker = await this.lockerRepository.create({
             number: data.number,
             location: data.location,
-            status: data.status || 'Available',
+            status: finalStatus,
             end_contract_date: data.end_contract_date || null,
             member_id: data.member_id || null,
         });

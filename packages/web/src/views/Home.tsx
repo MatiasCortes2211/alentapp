@@ -52,6 +52,13 @@ export function HomeView() {
           icon={LuUsers} // Un ícono de actividad/salud
         />
 
+        <SectionCard 
+          title="Sanciones"
+          description="Carga nuevas sanciones a los socios, visualiza las sanciones vigentes y su historial."
+          to="/disciplines"
+          icon={LuUsers}
+        />
+
         {/* Future sections can be added here following the same pattern */}
         <SectionCard 
           title="Deportes"

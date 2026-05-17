@@ -1,6 +1,7 @@
 // ==========================================
 // Member
 // ==========================================
+
 export type MemberCategory = 'Pleno' | 'Cadete' | 'Honorario';
 export type MemberStatus = 'Activo' | 'Moroso' | 'Suspendido';
 
@@ -113,9 +114,14 @@ export interface CreatePaymentRequest {
   member_id: string; // UUID
 }
 
+export interface UpdatePaymentRequest {
+  status: PaymentStatus.Paid | PaymentStatus.Canceled;
+}
+
 // ==========================================
 // Sport
 // ==========================================
+
 export interface Sport {
   id: string; // UUID
   name: string;
@@ -132,4 +138,25 @@ export interface CreateSport {
   max_capacity: number;
   additional_price: number;
   requires_medical_certificate: boolean;
+}
+
+// ==========================================
+// Discipline
+// ==========================================
+export interface Discipline {
+  id: string; // UUID
+  reason: string;
+  start_date: string;
+  end_date: string;
+  is_total_suspension: boolean;
+  member_id: string;
+  is_deleted: boolean;
+}
+
+export interface CreateDiscipline {
+  reason: string;
+  start_date: string; // ISO Date String (YYYY-MM-DD)
+  end_date: string; // ISO Date String (YYYY-MM-DD)
+  is_total_suspension: boolean;
+  member_id: string; // UUID
 }
