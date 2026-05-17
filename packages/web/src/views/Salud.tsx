@@ -10,13 +10,14 @@ import {
     Flex,
     Spinner,
     Center,
-    Input
+    Input,
+    Badge
 } from "@chakra-ui/react";
-import { LuPlus, LuRefreshCw, LuActivity } from "react-icons/lu";
+import { LuPlus, LuRefreshCw, LuActivity, LuEye } from "react-icons/lu";
 import { useEffect, useState } from "react";
 import { membersService } from "../services/members";
 import { medicalCertificateService } from "../services/medicalCertificateService";
-import type { MemberDTO, CreateMedicalCertificate } from "@alentapp/shared";
+import type { MemberDTO, CreateMedicalCertificate, MedicalCertificateDTO } from "@alentapp/shared"; 
 import {
     DialogRoot,
     DialogContent,
@@ -34,10 +35,15 @@ export function SaludView() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // State para el modal de carga
+    // State para el modal de carga (Alta)
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedMember, setSelectedMember] = useState<MemberDTO | null>(null);
+
+    //  NUEVOS STATES PARA EL READ (HISTORIAL)
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [historyCertificates, setHistoryCertificates] = useState<MedicalCertificateDTO[]>([]);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
     // Form state basado en tu TDD-0007
     const [formData, setFormData] = useState<CreateMedicalCertificate>({
@@ -71,15 +77,29 @@ export function SaludView() {
         setIsDialogOpen(true);
     };
 
+    // NUEVA FUNCIÓN PARA EL READ: Abre el modal y trae los datos de la API
+    const openHistoryModal = async (member: MemberDTO) => {
+        setSelectedMember(member);
+        setIsHistoryOpen(true);
+        setIsLoadingHistory(true);
+        try {
+            const certs = await medicalCertificateService.getByMemberId(member.id);
+            setHistoryCertificates(certs);
+        } catch (err: any) {
+            alert(err.message || "Error al cargar el historial clínico");
+        } finally {
+            setIsLoadingHistory(false);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            // Aseguramos que los datos vayan limpios
             await medicalCertificateService.create({
                 member_id: formData.member_id,
-                issue_date: new Date(formData.issue_date).toISOString(), // Forzamos ISO
-                expiry_date: new Date(formData.expiry_date).toISOString(), // Forzamos ISO
+                issue_date: new Date(formData.issue_date).toISOString(), 
+                expiry_date: new Date(formData.expiry_date).toISOString(), 
                 doctor_license: formData.doctor_license.trim()
             });
 
@@ -87,7 +107,6 @@ export function SaludView() {
             alert("¡Certificado registrado con éxito!");
             fetchMembers();
         } catch (err: any) {
-            // Si el error viene del backend, mostramos el mensaje real
             alert(err.message || "Error interno del servidor");
         } finally {
             setIsSubmitting(false);
@@ -99,21 +118,21 @@ export function SaludView() {
     }, []);
 
     return (
-        <DialogRoot open={isDialogOpen} onOpenChange={(e) => setIsDialogOpen(e.open)}>
-            <Stack gap="8">
-                <Flex justify="space-between" align="center">
-                    <Stack gap="1">
-                        <Heading size="2xl" fontWeight="bold">Gestión de Salud</Heading>
-                        <Text color="fg.muted" fontSize="md">
-                            Administra los certificados médicos y aptitudes físicas de los socios.
-                        </Text>
-                    </Stack>
-                    <Button variant="outline" onClick={fetchMembers} disabled={isLoading}>
-                        <LuRefreshCw /> Actualizar lista
-                    </Button>
-                </Flex>
+        <Stack gap="8">
+            <Flex justify="space-between" align="center">
+                <Stack gap="1">
+                    <Heading size="2xl" fontWeight="bold">Gestión de Salud</Heading>
+                    <Text color="fg.muted" fontSize="md">
+                        Administra los certificados médicos y aptitudes físicas de los socios.
+                    </Text>
+                </Stack>
+                <Button variant="outline" onClick={fetchMembers} disabled={isLoading}>
+                    <LuRefreshCw /> Actualizar lista
+                </Button>
+            </Flex>
 
-                {/* Modal de CREAR Certificado */}
+            {/* MODAL 1: Cargar Certificado (Alta) */}
+            <DialogRoot open={isDialogOpen} onOpenChange={(e) => setIsDialogOpen(e.open)}>
                 <DialogContent>
                     <form onSubmit={handleSubmit}>
                         <DialogHeader>
@@ -158,25 +177,88 @@ export function SaludView() {
                         <DialogCloseTrigger />
                     </form>
                 </DialogContent>
+            </DialogRoot>
 
-                <Box bg="bg.panel" borderRadius="xl" boxShadow="sm" borderWidth="1px" overflow="hidden">
-                    {isLoading ? (
-                        <Center h="300px"><Spinner size="xl" color="blue.500" /></Center>
-                    ) : (
-                        <Table.Root size="md" variant="line" interactive>
-                            <Table.Header>
-                                <Table.Row bg="bg.muted/50">
-                                    <Table.ColumnHeader py="4">Socio</Table.ColumnHeader>
-                                    <Table.ColumnHeader py="4">DNI</Table.ColumnHeader>
-                                    <Table.ColumnHeader py="4" textAlign="end">Acciones</Table.ColumnHeader>
-                                </Table.Row>
-                            </Table.Header>
-                            <Table.Body>
-                                {members.map((member) => (
-                                    <Table.Row key={member.id} _hover={{ bg: "bg.muted/30" }}>
-                                        <Table.Cell fontWeight="semibold">{member.name}</Table.Cell>
-                                        <Table.Cell color="fg.muted">{member.dni}</Table.Cell>
-                                        <Table.Cell textAlign="end">
+            {/* MODAL 2 NUEVO: Historial de Certificados (READ) */}
+        
+            <DialogRoot size="lg" open={isHistoryOpen} onOpenChange={(e) => setIsHistoryOpen(e.open)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Historial Médico: {selectedMember?.name}</DialogTitle>
+                    </DialogHeader>
+                    <DialogBody>
+                        {isLoadingHistory ? (
+                            <Center h="150px"><Spinner size="md" color="blue.500" /></Center>
+                        ) : historyCertificates.length === 0 ? (
+                            <Text textAlign="center" color="fg.muted" py="6">
+                                El socio no posee ningún certificado cargado en el sistema.
+                            </Text>
+                        ) : (
+                            <Table.Root size="sm" variant="line">
+                                <Table.Header>
+                                    <Table.Row bg="bg.muted/30">
+                                        <Table.ColumnHeader>Emisión</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Vencimiento</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Matrícula</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign="end">Estado</Table.ColumnHeader>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
+                                    {historyCertificates.map((cert) => (
+                                        <Table.Row key={cert.id}>
+                                            <Table.Cell>{cert.issue_date}</Table.Cell>
+                                            <Table.Cell>{cert.expiry_date}</Table.Cell>
+                                            <Table.Cell>{cert.doctor_license}</Table.Cell>
+                                            <Table.Cell textAlign="end">
+                                                {/* 🌟 CORREGIDO: Mapeado fino con cert.is_validated */}
+                                                <Badge colorPalette={cert.is_validated ? "green" : "red"}>
+                                                    {cert.is_validated ? "Vigente" : "Invalido"}
+                                                </Badge>
+                                            </Table.Cell>
+                                        </Table.Row>
+                                    ))}
+                                </Table.Body>
+                            </Table.Root>
+                        )}
+                    </DialogBody>
+                    <DialogFooter>
+                        <DialogActionTrigger asChild>
+                            <Button variant="outline">Cerrar</Button>
+                        </DialogActionTrigger>
+                    </DialogFooter>
+                    <DialogCloseTrigger />
+                </DialogContent>
+            </DialogRoot>
+
+            {/* TABLA PRINCIPAL DE SOCIOS */}
+            <Box bg="bg.panel" borderRadius="xl" boxShadow="sm" borderWidth="1px" overflow="hidden">
+                {isLoading ? (
+                    <Center h="300px"><Spinner size="xl" color="blue.500" /></Center>
+                ) : (
+                    <Table.Root size="md" variant="line" interactive>
+                        <Table.Header>
+                            <Table.Row bg="bg.muted/50">
+                                <Table.ColumnHeader py="4">Socio</Table.ColumnHeader>
+                                <Table.ColumnHeader py="4">DNI</Table.ColumnHeader>
+                                <Table.ColumnHeader py="4" textAlign="end">Acciones</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                            {members.map((member) => (
+                                <Table.Row key={member.id} _hover={{ bg: "bg.muted/30" }}>
+                                    <Table.Cell fontWeight="semibold">{member.name}</Table.Cell>
+                                    <Table.Cell color="fg.muted">{member.dni}</Table.Cell>
+                                    <Table.Cell textAlign="end">
+                                        <HStack gap="2" justify="flex-end">
+                                            {/* NUEVO BOTÓN PARA VER EL READ */}
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                colorPalette="gray"
+                                                onClick={() => openHistoryModal(member)}
+                                            >
+                                                <LuEye /> Ver Historial
+                                            </Button>
                                             <Button
                                                 size="sm"
                                                 colorPalette="blue"
@@ -185,14 +267,14 @@ export function SaludView() {
                                             >
                                                 <LuPlus /> Cargar Certificado
                                             </Button>
-                                        </Table.Cell>
-                                    </Table.Row>
-                                ))}
-                            </Table.Body>
-                        </Table.Root>
-                    )}
-                </Box>
-            </Stack>
-        </DialogRoot>
+                                        </HStack>
+                                    </Table.Cell>
+                                </Table.Row>
+                            ))}
+                        </Table.Body>
+                    </Table.Root>
+                )}
+            </Box>
+        </Stack>
     );
 }
