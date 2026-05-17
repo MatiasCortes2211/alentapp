@@ -8,4 +8,5 @@ export interface PaymentRepository {
   findById(id: string): Promise<PaymentDTO | null>;
   findActiveByMemberMonthYear(memberId: string, month: number, year: number): Promise<PaymentDTO | null>;
   findAll(): Promise<PaymentDTO[]>;
+  delete(id: string): Promise<void>;
 }
