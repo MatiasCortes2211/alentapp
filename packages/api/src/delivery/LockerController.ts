@@ -1,12 +1,14 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { CreateLockerUseCase } from '../application/NewLockerUseCase.js';
 import { GetLockersUseCase } from '../application/GetLockersUseCase.js';
-import { CreateLockerRequest } from '@alentapp/shared';
+import { UpdateLockerUseCase } from '../application/UpdateLockerUseCase.js';
+import { CreateLockerRequest, UpdateLockerRequest } from '@alentapp/shared';
 
 export class LockerController {
     constructor(
         private readonly createLockerUseCase: CreateLockerUseCase,
         private readonly getLockersUseCase: GetLockersUseCase,
+        private readonly updateLockerUseCase: UpdateLockerUseCase,
     ) {}
 
     async getAll(_request: FastifyRequest, reply: FastifyReply) {
@@ -40,6 +42,24 @@ export class LockerController {
             }
             if (error.message.includes('conjuntamente')) {
                 return reply.status(400).send({ error: error.message });
+            }
+            return reply.status(400).send({ error: error.message });
+        }
+    }
+
+    async update(
+        request: FastifyRequest<{ Params: { id: string }, Body: UpdateLockerRequest }>,
+        reply: FastifyReply,
+    ) {
+        try {
+            const locker = await this.updateLockerUseCase.execute(request.params.id, request.body);
+            return reply.status(200).send({ data: locker });
+        } catch (error: any) {
+            if (error.message.includes('no existe')) {
+                return reply.status(404).send({ error: error.message });
+            }
+            if (error.message.includes('Ya existe un casillero')) {
+                return reply.status(409).send({ error: error.message });
             }
             return reply.status(400).send({ error: error.message });
         }
