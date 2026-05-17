@@ -265,7 +265,7 @@ export function LockersView() {
                     </Box>
                   </Table.Cell>
                   <Table.Cell color="fg.muted">
-                    {locker.end_contract_date ? new Date(locker.end_contract_date).toLocaleDateString() : '-'}
+                    {locker.end_contract_date ? new Date(locker.end_contract_date).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : '-'}
                   </Table.Cell>
                   <Table.Cell color="fg.muted">{locker.member_id ? 'Asignado' : '-'}</Table.Cell>
                   <Table.Cell textAlign="end">
