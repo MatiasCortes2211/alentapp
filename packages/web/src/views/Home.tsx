@@ -38,6 +38,14 @@ export function HomeView() {
           icon={LuUsers}
         />
 
+      <SectionCard 
+          title="Salud"
+          description="Gestiona certificados médicos, matrículas y estados de aptitud física de los socios."
+          to="/salud"
+          icon={LuUsers} // Un ícono de actividad/salud
+        />
+
+        {/* Future sections can be added here following the same pattern */}
         <SectionCard 
           title="Deportes"
           description="Gestiona el catálogo de deportes, sus precios y requisitos asociados."

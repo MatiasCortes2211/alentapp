@@ -7,6 +7,11 @@ import { GetMembersUseCase } from './application/GetMembersUseCase.js';
 import { UpdateMemberUseCase } from './application/UpdateMemberUseCase.js';
 import { DeleteMemberUseCase } from './application/DeleteMemberUseCase.js';
 import { MemberController } from './delivery/MemberController.js';
+// Imports de Certificados Médicos
+import { PostgresMedicalCertificateRepository } from './infrastructure/PostgresMedicalCertificateRepository.js';
+import { MedicalCertificateValidator } from './domain/services/MedicalCertificateValidator.js';
+import { NewMedicalCertificateUseCase } from './application/NewMedicalCertificateUseCase.js';
+import { MedicalCertificateController } from './delivery/MedicalCertificateController.js';
 
 import { PostgresPaymentRepository } from './infrastructure/PostgresPaymentRepository.js';
 import { PaymentValidator } from './domain/services/PaymentValidator.js'; 
@@ -53,6 +58,19 @@ export function buildApp() {
         deleteMemberUseCase
     );
 
+    // --- INSTANCIAS DE CERTIFICADOS MÉDICOS
+    const certificateRepo = new PostgresMedicalCertificateRepository();
+    const certificateValidator = new MedicalCertificateValidator();
+    
+    // El caso de uso necesita ambos repos para validar socio y persistir certificado
+    const newCertificateUseCase = new NewMedicalCertificateUseCase(
+        certificateRepo,
+        memberRepo,
+        certificateValidator
+    );
+
+    const certificateController = new MedicalCertificateController(newCertificateUseCase);
+
     const paymentRepo = new PostgresPaymentRepository();
     const paymentValidator = new PaymentValidator(paymentRepo);
     
@@ -76,6 +94,8 @@ export function buildApp() {
     server.put('/api/v1/socios/:id', memberController.update.bind(memberController));
     server.delete('/api/v1/socios/:id', memberController.delete.bind(memberController));
 
+    // Rutas de Certificados Médicos
+    server.post('/api/v1/medical-certificates', certificateController.create.bind(certificateController));
     server.post('/api/v1/payments', paymentController.create.bind(paymentController));
     server.get('/api/v1/payments', paymentController.getAll.bind(paymentController));
 

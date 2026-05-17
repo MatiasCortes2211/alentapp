@@ -33,6 +33,25 @@ export interface UpdateMemberRequest {
 }
 
 // ==========================================
+// Medical Certificate
+// ==========================================
+// este es el objeto completo del certificado médico que se devuelve al cliente
+export interface MedicalCertificateDTO {
+  id: string;
+  issue_date: string;
+  expiry_date: string;
+  doctor_license: string;
+  is_validated: boolean;
+  member_id: string;
+}
+
+// este es el objeto que se recibe del cliente para crear un nuevo certificado médico
+export interface CreateMedicalCertificate {
+  issue_date: string;
+  expiry_date: string;
+  doctor_license: string;
+  member_id: string;
+}
 // Payment
 // ==========================================
 
