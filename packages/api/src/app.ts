@@ -24,6 +24,7 @@ import { PaymentValidator } from './domain/services/PaymentValidator.js';
 import { CreatePaymentUseCase } from './application/NewPaymentUseCase.js'; 
 import { PaymentController } from './delivery/PaymentController.js'; 
 import { GetPaymentsUseCase } from './application/GetPaymentsUseCase.js';
+import { DeletePaymentUseCase } from './application/DeletePaymentUseCase.js';
 
 import { PostgresSportRepository } from './infrastructure/PostgresSportRepository.js';
 import { SportValidator } from './domain/services/SportValidator.js';
@@ -93,8 +94,9 @@ export function buildApp() {
     
     const createPaymentUseCase = new CreatePaymentUseCase(paymentRepo, memberRepo, paymentValidator);
     const getPaymentsUseCase = new GetPaymentsUseCase(paymentRepo); 
+    const deletePaymentUseCase = new DeletePaymentUseCase(paymentRepo);
 
-    const paymentController = new PaymentController(createPaymentUseCase, getPaymentsUseCase );
+    const paymentController = new PaymentController(createPaymentUseCase, getPaymentsUseCase, deletePaymentUseCase);
 
     // Sport
     const sportRepo = new PostgresSportRepository();
@@ -118,6 +120,7 @@ export function buildApp() {
     
     server.post('/api/v1/payments', paymentController.create.bind(paymentController));
     server.get('/api/v1/payments', paymentController.getAll.bind(paymentController));
+    server.delete('/api/v1/payments/:id', paymentController.delete.bind(paymentController));
 
     server.post('/api/v1/sports', sportController.create.bind(sportController));
     server.get('/api/v1/sports', sportController.getAll.bind(sportController));
