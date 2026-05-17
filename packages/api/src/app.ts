@@ -8,6 +8,11 @@ import { UpdateMemberUseCase } from './application/UpdateMemberUseCase.js';
 import { DeleteMemberUseCase } from './application/DeleteMemberUseCase.js';
 import { MemberController } from './delivery/MemberController.js';
 
+import { PostgresDisciplineRepository } from './infrastructure/PostgresDisciplineRepository.js';
+import { DisciplineValidator } from './domain/services/DisciplineValidator.js';
+import { CreateDisciplineUseCase } from './application/NewDisciplineUseCase.js';
+import { DisciplineController } from './delivery/DisciplineController.js';
+
 export function buildApp() {
     const server = Fastify({
         logger: {
@@ -43,10 +48,23 @@ export function buildApp() {
         deleteMemberUseCase
     );
 
+    // Configuración para Discipline
+    const disciplineRepo = new PostgresDisciplineRepository();
+    const disciplineValidator = new DisciplineValidator();
+
+    const createDisciplineUseCase = new CreateDisciplineUseCase(disciplineRepo, disciplineValidator, memberRepo);
+
+    const disciplineController = new DisciplineController(
+        createDisciplineUseCase
+    );
+
     server.get('/api/v1/socios', memberController.getAll.bind(memberController));
     server.post('/api/v1/socios', memberController.create.bind(memberController));
     server.put('/api/v1/socios/:id', memberController.update.bind(memberController));
     server.delete('/api/v1/socios/:id', memberController.delete.bind(memberController));
+
+    //Endpoints para Discipline
+    server.post('/api/v1/disciplines', disciplineController.create.bind(disciplineController));
 
     server.get('/', async (req, rep) => {
         rep.status(200).send({ msg: 'asd' })
