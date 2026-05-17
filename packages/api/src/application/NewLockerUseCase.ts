@@ -39,10 +39,12 @@ export class CreateLockerUseCase {
             this.lockerValidator.validateEndContractDate(data.end_contract_date);
         }
 
+        const finalStatus = data.member_id ? 'Occupied' : (data.status || 'Available');
+        
         const nuevoLocker = await this.lockerRepository.create({
             number: data.number,
             location: data.location,
-            status: data.status || 'Available',
+            status: finalStatus,
             end_contract_date: data.end_contract_date || null,
             member_id: data.member_id || null,
         });
