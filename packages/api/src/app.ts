@@ -25,6 +25,7 @@ import { PaymentValidator } from './domain/services/PaymentValidator.js';
 import { CreatePaymentUseCase } from './application/NewPaymentUseCase.js'; 
 import { PaymentController } from './delivery/PaymentController.js'; 
 import { GetPaymentsUseCase } from './application/GetPaymentsUseCase.js';
+import { UpdatePaymentUseCase } from './application/UpdatePaymentUseCase.js';
 
 import { PostgresSportRepository } from './infrastructure/PostgresSportRepository.js';
 import { SportValidator } from './domain/services/SportValidator.js';
@@ -52,7 +53,7 @@ export function buildApp() {
 
     server.register(cors, {
         origin: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
         allowedHeaders: ['Content-Type', 'Authorization'],
         credentials: true,
     });
@@ -100,8 +101,9 @@ export function buildApp() {
     
     const createPaymentUseCase = new CreatePaymentUseCase(paymentRepo, memberRepo, paymentValidator);
     const getPaymentsUseCase = new GetPaymentsUseCase(paymentRepo); 
+    const updatePaymentUseCase = new UpdatePaymentUseCase(paymentRepo, paymentValidator);
 
-    const paymentController = new PaymentController(createPaymentUseCase, getPaymentsUseCase );
+    const paymentController = new PaymentController(createPaymentUseCase, getPaymentsUseCase, updatePaymentUseCase);
 
     // Sport
     const sportRepo = new PostgresSportRepository();
@@ -136,6 +138,7 @@ export function buildApp() {
     
     server.post('/api/v1/payments', paymentController.create.bind(paymentController));
     server.get('/api/v1/payments', paymentController.getAll.bind(paymentController));
+    server.patch('/api/v1/payments/:id', paymentController.update.bind(paymentController));
 
     server.post('/api/v1/sports', sportController.create.bind(sportController));
     server.get('/api/v1/sports', sportController.getAll.bind(sportController));
