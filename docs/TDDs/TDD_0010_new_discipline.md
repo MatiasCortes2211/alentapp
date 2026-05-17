@@ -1,6 +1,6 @@
 # TDD-0010: Registro de una Disciplina
 
-- Estado: Propuesto
+- Estado: Aprobado
 - Autor: Paula Zacarías
 - Fecha: 2026-05-03
 
@@ -27,8 +27,8 @@ El objetivo del módulo es dar de alta a una sanción y asignarla a un socio ya 
 ```ts
 interface Discipline {
     reason: string;
-    start_date: date; 
-    end_date: date;
+    start_date: Date; 
+    end_date: Date;
     is_total_suspension: boolean;
     member: Member; 
     is_deleted: boolean; 
@@ -39,19 +39,19 @@ interface Discipline {
 
 - Endpoint: `POST /api/v1/disciplines`
 - Request Body(CreateDiscipline): 
-```
+```json
 {
-    reason: string;
-    start_date: string;
-    end_date: string;
-    is_total_suspension: boolean;
-	member_id: string;
+    "reason": string;
+    "start_date": string;
+    "end_date": string;
+    "is_total_suspension": boolean;
+	"member_id": string;
 }
 ```
 
 ### Esquema de Persistencia
 
-```
+```prisma
 model Discipline {
 	id String @id @default(uuid())
 	reason String
@@ -73,7 +73,7 @@ model Discipline {
 4. Adaptador de Entrada: DisciplineController (Ruta HTTP).
 
 ### Lógica del Caso de Uso 
-1. Validar los datos de entrada.
+1. Validar los datos del DTO con Zod.
 2. Verificar la existencia del socio.
 3. Comprobar que la fecha de fin sea mayor a la fecha de inicio.
 4. Comprobar las reglas de negocio.

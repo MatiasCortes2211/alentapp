@@ -1,6 +1,6 @@
-# TDD-0012: Actualización de una Disciplina
+# TDD-0011: Actualización de una Disciplina
 
-- Estado: Propuesto
+- Estado: Aprobado
 - Autor: Paula Zacarías
 - Fecha: 2026-05-03
 
@@ -19,6 +19,8 @@ El objetivo del módulo es modificar los campos de una sanción previamente exis
 - Como administrativo, quiero modificar los datos de una sanción para guardar una versión actualizada de los mismos.
     - Escenario de éxito: "Si el usuario cambia un dato de una sanción, el sistema debe responder con un mensaje de éxito y la actualización de la sanción en la base de datos". 
     - Escenario de fallo: "Si el usuario cambia el socio por uno inexistente, el sistema debe notificar la inexistencia del socio e impedir la modificación de la sanción". 
+    - Escenario de fallo: "Si el usuario cambia la fecha de fin por una previa o igual a la fecha de inicio, el sistema debe notificar el error e impedir la modificación de la sanción".
+    - Escenario de fallo: "Si el usuario cambia la fecha de inicio por una posterior o igual a la fecha de fin, el sistema debe notificar el error e impedir la modificación de la sanción".
 
 ## Diseño Técnico (RFC)
 
@@ -27,40 +29,41 @@ El objetivo del módulo es modificar los campos de una sanción previamente exis
 ```ts
 interface Discipline {
     reason: string;
-    start_date: date; 
-    end_date: date;
+    start_date: Date; 
+    end_date: Date;
     is_total_suspension: boolean;
-    member_id: string; 
+    member: Member; 
     is_deleted: boolean; 
 }
 ```
 
 ### Contrato de API (@alentapp/shared) 
 
-- Endpoint: `PUT /api/v1/disciplines/:id`
+- Endpoint: `PATCH /api/v1/disciplines/:id`
 - Request Body(UpdateDiscipline): 
-```
+```json
 {
-    reason?: string;
-    start_date?: string;
-    end_date?: string;
-    is_total_suspension?: boolean;
-	member_id?: string;
+    "reason?": string;
+    "start_date?": string;
+    "end_date?": string;
+    "is_total_suspension?": boolean;
+	"member_id?": string;
 }
 ```
 
 
 ### Esquema de Persistencia
 
-```
+```prisma
 model Discipline {
-	Id String @id @default(uuid())
+	id String @id @default(uuid())
 	reason String
 	start_date DateTime
 	end_date DateTime
-	member_id: String
-	member Member? @relation (fields: [member.id], references: [id])
-	is_deleted boolean @default(false) 
+    is_total_suspension Boolean
+	member_id String
+	member Member @relation(fields: [member_id], references: [id])
+	is_deleted Boolean @default(false) 
 } 
 ```
 
@@ -75,12 +78,12 @@ model Discipline {
 
 
 ### Lógica del Caso de Uso 
-1. Validar los datos de entrada.
+1. Validar los datos del DTO con Zod.
 2. Comprobar existencia de la disciplina.
 3. Comprobar que la disciplina no esté eliminada.
 4. Comprobar que la fecha de fin sea mayor a la fecha de inicio si se modifica.
-5. Aplicar cambio a Entidad de Dominio. 
-6. Comprobar las reglas de negocio.
+5. Comprobar las reglas de negocio.
+6. Aplicar cambio a Entidad de Dominio. 
 7. Persistir a través del Repositorio. 
 
 

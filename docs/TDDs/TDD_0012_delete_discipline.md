@@ -1,6 +1,6 @@
-# TDD-0011: Eliminación de una Disciplina
+# TDD-0012: Eliminación de una Disciplina
 
-- Estado: Propuesto
+- Estado: Aprobado
 - Autor: Paula Zacarías
 - Fecha: 2026-05-03
 
@@ -28,31 +28,32 @@ La baja de sanción es lógica, cuando el campo deleted de discipline es true, l
 ```ts
 interface Discipline {
     reason: string;
-    start_date: date; 
-    end_date: date;
+    start_date: Date; 
+    end_date: Date;
     is_total_suspension: boolean;
-    member_id: string; 
+    member: Member; 
     is_deleted: boolean; 
 }
 ```
 
 ### Contrato de API (@alentapp/shared) 
 
-- Endpoint: `PATCH /api/v1/disciplines/:id`
+- Endpoint: `DELETE /api/v1/disciplines/:id`
 - Request Body(DeleteDiscipline): none
-- Response: 204 No content en caso de éxito.
+- Response: 204 no content.
 
 ### Esquema de Persistencia
 
-```
+```prisma
 model Discipline {
-	Id String @id @default(uuid())
+	id String @id @default(uuid())
 	reason String
 	start_date DateTime
 	end_date DateTime
-	member_id: String
-	member Member? @relation (fields: [member.id], references: [id])
-	is_deleted boolean @default(false) 
+    is_total_suspension Boolean
+	member_id String
+	member Member @relation(fields: [member_id], references: [id])
+	is_deleted Boolean @default(false) 
 } 
 ```
 
@@ -66,7 +67,7 @@ model Discipline {
 
 
 ### Lógica del Caso de Uso 
-1. Validar los datos de entrada.
+1. Validar los datos del DTO con Zod.
 2. Verificar la existencia de la disciplina.
 3. Verificar si ya está eliminada.
 4. Comprobar las reglas de negocio.
@@ -80,5 +81,4 @@ model Discipline {
 | --------------------------         | ---------------------------------------------                            | ------------------|
 | Registro eliminado                    | Si se intenta eliminar una sanción ya eliminada.           | 409 Conflict   |
 | Recurso inexistente                 | Cuando se intenta eliminar una sanción cuyo ID no está en la DB.                              | 404 Not Found   |
-| Recurso equivocado                | Cuando se intenta eliminar una sanción cuyo ID es inválido.   | 400 Bad Request    |
 | Error de Infraestructura           | Falla de conexión con el contenedor de Postgres.                         | 500 Internal Server Error|

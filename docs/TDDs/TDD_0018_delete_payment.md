@@ -1,6 +1,6 @@
-# TDD-0018: Anulación de un pago
+# TDD-0018: Eliminación lógica de un pago
 
-- Estado: Propuesto
+- Estado: Aprobado
 - Autor: Angeles Schneeberger
 - Fecha: 2026-05-01
 
@@ -8,17 +8,17 @@
 
 ### Objetivo
 
-Permitir a los administrativos anular un pago registrado sin eliminarlo físicamente de la base de datos, el borrado es solamente lógico, el estado del pago pasa a canceled. 
+Permitir a los administrativos eliminar lógicamente un pago del sistema, sin borrarlo físicamente de la base de datos.
 
 ### User Persona
 
-- Administrativo: el usuario podrá anular un pago cargado incorrectamente, sin perder el historial de pagos.
+- Administrativo: el usuario podrá eliminar lógicamente un pago cuando este haya sido generado por error técnico o no deba formar parte de la operatoria del sistema. 
 
 ### Criterios de Aceptación
-- Como administrativo, quiero anular un pago para corregir errores sin eliminar el historial de pagos.  
-    - Escenario de éxito: "Si el usuario completa la anulación de un pago que existe y está en estado pending, el sistema debe responder con el pago y su cambio de estado a canceled".  
-    -  Escenario de fallo: "Si el usuario solicita la anulación de un pago y este no existe, el sistema debe mostrar un mensaje de error indicando que el pago no fue encontrado". 
-    - Escenario de fallo: "Si el usuario solicita la anulación de un pago y este se encuentra en estado paid o canceled, el sistema debe mostrar un mensaje de error indicando que el pago no puede ser anulado porque ya se encuentra en un estado inactivo". 
+- Como administrativo, quiero eliminar un pago para que deje de aparecer en el sistema sin perder el registro en la base de datos 
+    - Escenario de éxito: "Si el usuario elimina un pago existente que no está previamente eliminado, el sistema debe marcar el atributo is_deleted = true". 
+    -  Escenario de fallo: "Si el usuario solicita la eliminación de un pago y este no existe, el sistema debe mostrar un mensaje de error indicando que el pago no fue encontrado". 
+    - Escenario de fallo: "Si el usuario solicita la eliminación de un pago y este ya estaba eliminado, el sistema debe mostrar un mensaje de error indicando que ya fue eliminado". 
 
 ## Diseño Técnico (RFC)
 
@@ -32,22 +32,23 @@ interface Payment {
     status: PaymentStatus;
     due_date: Date;
     payment_date?: Date; 
+    is_deleted: boolean;
     member: Member;
 }
 ```
 ```ts
 enum PaymentStatus{
-pending = "PENDING",
-paid = "PAID",
-canceled = "CANCELED"	
+Pending = "PENDING",
+Paid = "PAID",
+Canceled = "CANCELED"	
 }
 ```
 
 ### Contrato de API (@alentapp/shared) 
 
-- Endpoint: `PATCH /api/v1/payments/:id/cancel`
+- Endpoint: `DELETE /api/v1/payments/:id`
 - Request Body: none
-- Response: 204 No content en caso de éxito. 
+- Response: 204 No content.
 
 ### Esquema de Persistencia
 
@@ -57,12 +58,20 @@ model Payment {
 	amount Decimal
 	month Int
 	year Int
-	status String
+	status PaymentStatus @default(PENDING)
 	due_date DateTime
 	payment_date DateTime?
+    is_deleted Boolean @default(false)
 	member_id String
 	member Member @relation(fields: [member_id], references: [id])
 } 
+```
+```prisma
+enum PaymentStatus {
+  PENDING
+  PAID
+  CANCELED
+}
 ```
 
 ## Arquitectura y Flujo
@@ -75,7 +84,7 @@ model Payment {
 
 ### Lógica del Caso de Uso 
 1. Verificar existencia del pago
-2. Comprobar reglas de negocio (Si el pago ya está cancelado o ya está pagado, no puede cancelarse el pago). 
+2. Verificar que is_deleted = false
 3. Aplicar cambio en la entidad de dominio 
 4. Persistir a través del Repositorio. 
 
@@ -84,8 +93,7 @@ model Payment {
 | Escenario de Error                  | Validación / Regla de Negocio                                            | Código HTTP       |
 | --------------------------         | ---------------------------------------------                            | ------------------|
 | id invalido                        | El id debe tener formato UUID válido.                                        | 400 Bad Request   |
-| Recurso inexistente                | Cuando se intenta anular un pago que no está en la DB.                     | 404 Not Found     |
-| Pago ya está en estado paid        | Un payment no puede ser cancelado porque ya se encuentra en estado paid.     | 409 Conflict      |
-| Pago ya está en estado canceled    | Un payment no puede ser cancelado porque ya se encuentra en estado canceled. | 409 Conflict      |
+| Recurso inexistente                | Cuando se intenta eliminar un pago que no está en la DB.                     | 404 Not Found     |
+| Pago ya eliminado                  | Un pago no puede ser eliminado nuevamente.                                | 409 Conflict      |
 | Error de Infraestructura           | Falla de conexión con el contenedor de Postgres.                         | 500 Internal Server Error|
 

@@ -1,7 +1,7 @@
 # TDD-0004: Registro de un Casillero (Locker)
 
-- Estado: Propuesto
-- Autor: Cemino Conrado
+- Estado: Aprobado
+- Autor: Conrado Cemino
 - Fecha: 2026-05-03
 
 ## Contexto de Negocio (PRD)
@@ -58,7 +58,7 @@ interface Locker {
     "number": number;
     "location": 'Vestuario Masculino' | 'Vestuario Femenino' | 'Vestuario Niños';
     "status": 'Available' | 'Occupied' | 'Maintenance';
-    "end_contract_date": Date | null;
+    "end_contract_date": string | null;
     "member_id": string | null;
 }
 ```
@@ -82,7 +82,7 @@ enum LockerLocation {
 
 model Locker {
 	id String @id @default(uuid())
-	number Int @unique
+	number Int
 	location LockerLocation
 	status LockerStatus @default(Available)
 	end_contract_date DateTime?

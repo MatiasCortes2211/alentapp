@@ -1,7 +1,7 @@
 # TDD-0006: Eliminación de un Casillero (Locker)
 
-- Estado: Propuesto
-- Autor: Cemino Conrado
+- Estado: Aprobado
+- Autor: Conrado Cemino
 - Fecha: 2026-05-03
 
 ## Contexto de Negocio (PRD)
@@ -49,9 +49,9 @@ interface Locker {
 
 ### Contrato de API (@alentapp/shared) 
 
-- Endpoint: `PATCH /api/v1/lockers/:id`
+- Endpoint: `DELETE /api/v1/lockers/:id`
 - Request Body (DeleteLocker): none
-- Response: 202 OK
+- Response: 204 No content.
 
 ### Esquema de Persistencia
 
@@ -70,7 +70,7 @@ enum LockerLocation {
 
 model Locker {
 	id String @id @default(uuid())
-	number Int @unique
+	number Int
 	location LockerLocation
 	status LockerStatus @default(Available)
 	end_contract_date DateTime?

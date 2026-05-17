@@ -1,6 +1,6 @@
 # TDD-0014: Actualización de un Deporte
 
-- Estado: Propuesto
+- Estado: Aprobado
 - Autor: Matias Cortes
 - Fecha: 2026-05-03
 
@@ -16,8 +16,11 @@ El módulo modificar una instancia de Sport, pudiendo actualizar únicamente su 
 
 ### Criterios de Aceptación
 - Como Administrador, quiero modificar la descripción o el cupo máximo de un deporte ya existente.
-    - Escenario de éxito: "Si el administrador completa los datos a actualizar de descripción y/o cupo máximo, el sistema responde con la actualización de la instancia existente de Sport".
-    - Escenario de fallo: "Si el administrador ingresa una capacidad máxima <= 0 o si quiere modificar el nombre del deporte, el sistema no debe permitir su actualización y lanzará un error". 
+    - Escenario de éxito: "Si el administrador completa los datos a actualizar de descripción y/o cupo máximo (max_capacity > 0 y max_capacity >= inscriptos activos), el sistema responde con la actualización de la instancia existente de Sport".
+    - Escenario de fallo: "Si el administrador ingresa una capacidad máxima <= 0, el sistema no debe permitir su actualización y lanzará un error". 
+	- Escenario de fallo: "Si el administrador quiere modificar el nombre del deporte, el sistema no debe permitir su actualización y lanzará un error".
+	- Escenario de fallo: "Si el administrador quiere modificar el monto adicional del deporte, el sistema no debe permitir su actualización y lanzará un error".
+	- Escenario de fallo: "Si el administrador quiere modificar la exigencia de certificacio médico del deporte, el sistema no debe permitir su actualización y lanzará un error".
 
 ## Diseño Técnico (RFC)
 
@@ -38,28 +41,25 @@ interface Sport {
 
 - Endpoint: `PATCH /api/v1/sports/:id`
 - Request Body (UpdateSport): 
-```
+```json
 {
-	description?: string;
-	max_capacity?: number
-	additional_price?: number;
-	requires_medical_certificate?: boolean;
+	"description"?: string;
+	"max_capacity"?: number;
 {
 ```
-- Response Body: 200 OK: SportResponse
+- Response: 200 OK
 
 ### Esquema de Persistencia
 
-```
+```prisma
 model Sport {
 	id String @id @default(uuid())
-	name String @unique
+	name String
 	description String
 	max_capacity Int
 	additional_price Float
 	requires_medical_certificate Boolean
 	is_deleted Boolean @default(false)
-	enrollments Enrollment[]
 }
 ```
 
@@ -79,7 +79,7 @@ model Sport {
 	- El nombre es inmutable luego de la creación de un deporte.
 	- La max_capacity debe ser mayor a 0.
 4. Persistir a través del Repositorio.
-5. Retornar SportResponse actualizado.
+5. Retornar SportResponse.
 
 ## Casos de Borde y Errores
 
