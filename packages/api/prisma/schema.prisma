@@ -36,6 +36,7 @@ model Member {
     payments   Payment[]
 
     lockers    Locker[]
+    medical_certificates MedicalCertificate[]
 
     @@map("members") // Para que en la DB la tabla se llame 'members' en minúscula
 }
@@ -67,6 +68,22 @@ model Locker {
     @@map("lockers")
 }
 
+// MedicalCertificate ==========================================
+
+model MedicalCertificate {
+    id             String   @id @default(uuid())
+    issue_date     DateTime @db.Date
+    expiry_date    DateTime @db.Date
+    doctor_license String
+    is_validated   Boolean  @default(true)
+    member_id      String
+    member         Member   @relation(fields: [member_id], references: [id])
+
+    @@map("medical_certificates")
+}
+
+// Payment ==========================================
+
 enum PaymentStatus {
     PENDING
     PAID
@@ -87,6 +104,8 @@ model Payment {
 
     @@map("payments")
 }
+
+// Sport ==========================================
 
 model Sport {
     id String @id @default(uuid())

@@ -66,6 +66,25 @@ export interface UpdateLockerRequest {
 }
 
 // ==========================================
+// Medical Certificate
+// ==========================================
+export interface MedicalCertificateDTO {
+  id: string;
+  issue_date: string;
+  expiry_date: string;
+  doctor_license: string;
+  is_validated: boolean;
+  member_id: string;
+}
+
+export interface CreateMedicalCertificate {
+  issue_date: string;
+  expiry_date: string;
+  doctor_license: string;
+  member_id: string;
+}
+
+// ==========================================
 // Payment
 // ==========================================
 export enum PaymentStatus {
