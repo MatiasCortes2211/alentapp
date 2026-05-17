@@ -1,11 +1,22 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { CreateSportUseCase } from '../application/NewSportUseCase.js';
+import { GetSportsUseCase } from '../application/GetSportsUseCase.js';
 import { CreateSport } from '@alentapp/shared';
 
 export class SportController {
     constructor(
         private readonly createSportUseCase: CreateSportUseCase,
+        private readonly getSportsUseCase: GetSportsUseCase
     ) {}
+
+    async getAll(_request: FastifyRequest, reply: FastifyReply) {
+        try {
+            const sports = await this.getSportsUseCase.execute();
+            return reply.status(200).send({ data: sports });
+        } catch (error: any) {
+            return reply.status(500).send({ error: error.message });
+        }
+    }
 
     async create(
         request: FastifyRequest<{ Body: CreateSport }>,

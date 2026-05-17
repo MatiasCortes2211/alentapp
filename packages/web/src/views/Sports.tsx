@@ -5,10 +5,14 @@ import {
   Stack, 
   Text,
   Flex,
-  Input
+  Input,
+  Table,
+  Box,
+  Spinner,
+  Center
 } from "@chakra-ui/react";
 import { LuPlus } from "react-icons/lu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { sportsService } from "../services/sports";
 import type { Sport, CreateSport } from "@alentapp/shared";
 import { 
@@ -32,46 +36,69 @@ import {
 } from "../components/ui/select";
 
 const medicalCertificateOptions = createListCollection({
-    items: [
-        { label: "Sí", value: "true" },
-        { label: "No", value: "false" },
-    ]
+  items: [
+    { label: "Sí", value: "true" },
+    { label: "No", value: "false" },
+  ]
 });
 
 export function SportsView() {
+    const [sports, setSports] = useState<Sport[]>([]);
+    const [isLoading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState<CreateSport>({
-        name: "",
-        description: "",
-        max_capacity: 0,
-        additional_price: 0,
-        requires_medical_certificate: false,
+      name: "",
+      description: "",
+      max_capacity: 0,
+      additional_price: 0,
+      requires_medical_certificate: false,
     });
 
+    const fetchSports = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+          const data = await sportsService.getAll();
+          setSports(data);
+      } catch (err: any) {
+          setError(err.message || "Error al obtener los deportes");
+      } finally {
+          setLoading(false);
+      }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        try {
-            await sportsService.create(formData as CreateSport);
-            setIsDialogOpen(false);
-        } catch (err: any) {
-            alert(err.message || "Error al guardar el deporte");
-        } finally {
-            setIsSubmitting(false);
-        }
+      e.preventDefault();
+      setIsSubmitting(true);
+      try {
+          await sportsService.create(formData as CreateSport);
+          setIsDialogOpen(false);
+      } catch (err: any) {
+          alert(err.message || "Error al guardar el deporte");
+      } finally {
+          setIsSubmitting(false);
+      }
+      setIsDialogOpen(false);
+      fetchSports();
     };
 
     const openCreateModal = () => {
-        setFormData({
-            name: "",
-            description: "",
-            max_capacity: null as any,
-            additional_price: null as any,
-            requires_medical_certificate: false,
-        });
-        setIsDialogOpen(true);
+      setFormData({
+          name: "",
+          description: "",
+          max_capacity: null as any,
+          additional_price: null as any,
+          requires_medical_certificate: false,
+      });
+      setIsDialogOpen(true);
     };
+
+    useEffect(() => {
+        fetchSports();
+    }, []);
 
     return (
     <DialogRoot open={isDialogOpen} onOpenChange={(e) => setIsDialogOpen(e.open)}>
@@ -176,6 +203,48 @@ export function SportsView() {
             <DialogCloseTrigger />
           </form>
         </DialogContent>
+
+      {error && (
+          <Box p="4" bg="red.50" color="red.700" borderRadius="md">
+              <Text>{error}</Text>
+          </Box>
+      )}
+
+      <Box bg="bg.panel" borderRadius="xl" borderWidth="1px" overflow="hidden" minH="300px">
+          {isLoading ? (
+              <Center h="300px">
+                  <Spinner size="xl" color="blue.500" />
+              </Center>
+          ) : sports.length === 0 ? (
+              <Center h="300px">
+                  <Text color="fg.muted">No se encontraron deportes.</Text>
+              </Center>
+          ) : (
+              <Table.Root size="md" variant="line" interactive>
+                  <Table.Header>
+                      <Table.Row bg="bg.muted/50">
+                          <Table.ColumnHeader py="4">Nombre</Table.ColumnHeader>
+                          <Table.ColumnHeader py="4">Descripción</Table.ColumnHeader>
+                          <Table.ColumnHeader py="4">Cupo Máximo</Table.ColumnHeader>
+                          <Table.ColumnHeader py="4">Precio Adicional</Table.ColumnHeader>
+                          <Table.ColumnHeader py="4">Cert. Médico</Table.ColumnHeader>
+                      </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
+                      {sports.map((sport) => (
+                          <Table.Row key={sport.id} _hover={{ bg: "bg.muted/30" }}>
+                              <Table.Cell fontWeight="semibold">{sport.name}</Table.Cell>
+                              <Table.Cell color="fg.muted">{sport.description}</Table.Cell>
+                              <Table.Cell color="fg.muted">{sport.max_capacity}</Table.Cell>
+                              <Table.Cell color="fg.muted">{sport.additional_price}</Table.Cell>
+                              <Table.Cell color="fg.muted">{sport.requires_medical_certificate ? "Sí" : "No"}</Table.Cell>
+                          </Table.Row>
+                      ))}
+                  </Table.Body>
+              </Table.Root>
+          )}
+      </Box>
+
       </Stack>
     </DialogRoot>
   );

@@ -33,9 +33,60 @@ export interface UpdateMemberRequest {
 }
 
 // ==========================================
+// Locker
+// ==========================================
+export type LockerStatus = 'Available' | 'Occupied' | 'Maintenance';
+export type LockerLocation = 'Male' | 'Female' | 'Kids';
+
+export interface LockerDTO {
+  id: string; // UUID
+  number: number;
+  location: LockerLocation;
+  status: LockerStatus;
+  end_contract_date: string | null;
+  member_id: string | null;
+  is_deleted: boolean;
+}
+
+export interface CreateLockerRequest {
+  number: number;
+  location: LockerLocation;
+  status?: LockerStatus;
+  end_contract_date?: string | null;
+  member_id?: string | null;
+}
+
+export interface UpdateLockerRequest {
+  number?: number;
+  location?: LockerLocation;
+  status?: LockerStatus;
+  end_contract_date?: string | null;
+  member_id?: string | null;
+  is_deleted?: boolean;
+}
+
+// ==========================================
+// Medical Certificate
+// ==========================================
+export interface MedicalCertificateDTO {
+  id: string;
+  issue_date: string;
+  expiry_date: string;
+  doctor_license: string;
+  is_validated: boolean;
+  member_id: string;
+}
+
+export interface CreateMedicalCertificate {
+  issue_date: string;
+  expiry_date: string;
+  doctor_license: string;
+  member_id: string;
+}
+
+// ==========================================
 // Payment
 // ==========================================
-
 export enum PaymentStatus {
   Pending = 'PENDING',
   Paid = 'PAID',
@@ -65,6 +116,10 @@ export interface CreatePaymentRequest {
 export interface UpdatePaymentRequest {
   status: PaymentStatus.Paid | PaymentStatus.Canceled;
 }
+
+// ==========================================
+// Sport
+// ==========================================
 
 export interface Sport {
   id: string; // UUID
