@@ -1,7 +1,7 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/client/client.js';
 import { SportRepository } from '../domain/SportRepository.js';
-import { Sport, CreateSport } from '@alentapp/shared';
+import { Sport } from '@alentapp/shared';
 
 if (!process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL environment variable is not set');
@@ -22,7 +22,7 @@ type DBSport = {
 };
 
 export class PostgresSportRepository implements SportRepository {
-    async create(data: CreateSport): Promise<Sport> {
+    async create(data: Omit<Sport, 'id'>): Promise<Sport> {
         const sport = await prisma.sport.create({
             data: {
                 name: data.name,
@@ -30,6 +30,7 @@ export class PostgresSportRepository implements SportRepository {
                 max_capacity: data.max_capacity,
                 additional_price: data.additional_price,
                 requires_medical_certificate: data.requires_medical_certificate,
+                is_deleted: data.is_deleted,
             },
         });
 
@@ -41,7 +42,6 @@ export class PostgresSportRepository implements SportRepository {
         const sport = await prisma.sport.findFirst({
             where: {
                 name,
-                is_deleted: false,
             },
         });
 

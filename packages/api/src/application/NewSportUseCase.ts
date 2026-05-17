@@ -17,6 +17,7 @@ export class CreateSportUseCase {
             if (error instanceof ZodError) {
                 throw new Error(error.issues[0].message);
             }
+            throw error;
         }
 
         await this.sportValidator.validateNameIsUnique(data.name); //Valida unicidad de nombre
