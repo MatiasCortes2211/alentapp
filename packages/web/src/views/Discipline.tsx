@@ -167,8 +167,11 @@ export function DisciplineView() {
                 <Field label="Tipo Suspension:" required>
                   <Box 
                     as="select" 
-                    value={formData.is_suspension_total} 
-                    onChange={(e: any) => setFormData({ ...formData, is_suspension_total: e.target.value })} 
+                    value={formData.is_total_suspension} 
+                    onChange={(e: any) => setFormData({ 
+                      ...formData, 
+                      is_total_suspension: e.target.value === "true" 
+                    })} 
                     required
                     w="full"
                     h="10"

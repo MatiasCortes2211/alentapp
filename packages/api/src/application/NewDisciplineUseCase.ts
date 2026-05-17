@@ -21,7 +21,7 @@ export class CreateDisciplineUseCase {
             }
         }
 
-        await this.disciplineValidator.validateEndDate(data.startDate, data.endDate);
+        await this.disciplineValidator.validateEndDate(data.start_date, data.end_date);
 
         const member = await this.memberRepository.findById(data.member_id);
         if (!member) {
