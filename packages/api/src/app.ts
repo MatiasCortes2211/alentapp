@@ -16,6 +16,7 @@ import { GetPaymentsUseCase } from './application/GetPaymentsUseCase.js';
 import { PostgresSportRepository } from './infrastructure/PostgresSportRepository.js';
 import { SportValidator } from './domain/services/SportValidator.js';
 import { CreateSportUseCase } from './application/NewSportUseCase.js';
+import { UpdateSportUseCase } from './application/UpdateSportUseCase.js';
 import { SportController } from './delivery/SportController.js';
 
 export function buildApp() {
@@ -66,9 +67,10 @@ export function buildApp() {
     const sportValidator = new SportValidator(sportRepo);
 
     const createSportUseCase = new CreateSportUseCase(sportRepo, sportValidator);
-
+    const updateSportUseCase = new UpdateSportUseCase(sportRepo, sportValidator);
     const sportController = new SportController(
-        createSportUseCase
+        createSportUseCase,
+        updateSportUseCase
     );
 
     server.get('/api/v1/socios', memberController.getAll.bind(memberController));
@@ -81,7 +83,7 @@ export function buildApp() {
 
     //Sport endpoints
     server.post('/api/v1/sports', sportController.create.bind(sportController));
-
+    server.patch('/api/v1/sports/:id', sportController.update.bind(sportController));
 
     server.get('/', async (req, rep) => {
         rep.status(200).send({ msg: 'asd' })
