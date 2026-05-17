@@ -79,3 +79,8 @@ export interface CreateSport {
   additional_price: number;
   requires_medical_certificate: boolean;
 }
+
+export interface UpdateSport {
+  description?: string;
+  max_capacity?: number;
+}
