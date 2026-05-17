@@ -14,7 +14,7 @@ import { LuPlus, LuRefreshCw } from "react-icons/lu";
 import { useEffect, useState } from "react";
 import { disciplinesService } from "../services/disciplines";
 import { membersService } from "../services/members";
-import type { MemberDTO, CreateDiscipline } from "@alentapp/shared";
+import type { MemberDTO, CreateDiscipline, Discipline } from "@alentapp/shared";
 import { 
   DialogRoot, 
   DialogContent, 
@@ -90,6 +90,21 @@ export function DisciplineView() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDeleteDiscipline = async (discipline: Discipline) => {
+      const member = members.find(m => m.id === discipline.member_id);
+      const memberName = member ? member.name : 'este socio';
+      
+      if (window.confirm(`¿Estás seguro de que deseas eliminar la disciplina de "${memberName}"? Esta acción no se puede deshacer.`)) {
+          try {
+              await disciplinesService.delete(discipline.id);
+              setDisciplines(prev => prev.filter(d => d.id !== discipline.id));
+              alert('¡Disciplina eliminada con éxito!');
+          } catch (err: any) {
+              alert(err.message || 'Error al eliminar la disciplina');
+          }
+      }
   };
 
   return (
@@ -220,7 +235,19 @@ export function DisciplineView() {
                   <Table.ColumnHeader py="4">Fecha de Fin</Table.ColumnHeader>
                   <Table.ColumnHeader py="4">Disciplina Total</Table.ColumnHeader>
                   <Table.ColumnHeader py="4">Razón</Table.ColumnHeader>
-                  <Table.ColumnHeader py="4" textAlign="end">Acciones</Table.ColumnHeader>
+                  <Table.ColumnHeader py="4" textAlign="end">
+                        <HStack gap="2" justify="flex-end">
+                          <IconButton 
+                            variant="ghost" 
+                            size="sm" 
+                            colorPalette="red" 
+                            aria-label="Eliminar disciplina"
+                            onClick={() => handleDeleteDiscipline(discipline)}
+                          >
+                            <LuTrash2 />
+                          </IconButton>
+                        </HStack>
+                  </Table.ColumnHeader>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
