@@ -25,7 +25,7 @@ export class SportController {
             if (error.message.includes('max_capacity debe ser mayor a 0.')) {
                 return reply.status(400).send({ error: error.message });
             }
-            if (error.message.includes('additional_price debe ser mayor a 0.')) {
+            if (error.message.includes('additional_price debe ser mayor o igual a 0.')) {
                 return reply.status(400).send({ error: error.message });
             }
             if (error.message.includes('requires_medical_certificate debe ser un valor booleano válido.')) {
