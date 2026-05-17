@@ -13,6 +13,7 @@ export class CreateLockerUseCase {
     ) {}
 
     async execute(data: CreateLockerRequest): Promise<LockerDTO> {
+        // Validación estructural
         try {
             CreateLockerSchema.parse(data);
         } catch (error) {
@@ -22,6 +23,10 @@ export class CreateLockerUseCase {
             throw error;
         }
 
+        // Validación de asignación mutua miembro <-> fecha fin contrato
+        this.lockerValidator.validateAssignmentIntegrity(data.member_id, data.end_contract_date);
+
+        // Validación de número único
         await this.lockerValidator.validateNumberIsUnique(data.number);
 
         if (data.member_id) {
