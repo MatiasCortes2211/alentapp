@@ -58,3 +58,15 @@ model Payment {
 
     @@map("payments")
 }
+
+model Sport {
+    id String @id @default(uuid())
+    name String
+    description String
+    max_capacity Int
+    additional_price Float
+    requires_medical_certificate Boolean
+    is_deleted Boolean @default(false)
+    
+    @@map("sports")
+}
