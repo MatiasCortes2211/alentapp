@@ -15,8 +15,11 @@ export const medicalCertificateService = {
 
     if (!response.ok) {
       const errorData = await response.json();
-      // Si el backend tira un 400 por fecha vencida, acá lo capturamos
-      throw new Error(errorData.error || 'Error al registrar el certificado');
+      
+      // Capturamos 'message' (para las fechas/Zod) o 'error' (para socio inexistente)
+      const errorMessage = errorData.message || errorData.error || 'Error al registrar el certificado';
+      
+      throw new Error(errorMessage);
     }
 
     const result = await response.json();
