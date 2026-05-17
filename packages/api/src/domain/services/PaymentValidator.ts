@@ -42,4 +42,12 @@ export class PaymentValidator {
             }
         }
     }
+
+    validateStatusTransition(currentStatus: string): void {
+    if (currentStatus === 'PAID' || currentStatus === 'CANCELED') {
+        throw new Error(
+            `El pago ya se encuentra en estado ${currentStatus} y no puede ser modificado`
+        );
+    }
+}
 }
