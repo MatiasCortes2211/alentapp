@@ -24,7 +24,7 @@ export class DisciplineController {
             if (error.message.includes('El miembro ingresado no existe en el sistema')){
                 return reply.status(404).send({ error: error.message });
             }
-            
+            return reply.status(500).send({ error: 'Error al crear la disciplina' });
         }
     }
 }
