@@ -8,9 +8,9 @@ import {
   Box,
   Flex,
   Center,
-  Input
+  Input,
+  IconButton,
 } from "@chakra-ui/react";
-import { IconButton } from "@chakra-ui/react"; 
 import { LuPlus, LuRefreshCw, LuTrash2 } from "react-icons/lu"; 
 import { useEffect, useState } from "react";
 import { paymentsService } from "../services/payments";
@@ -234,76 +234,75 @@ export function PaymentsView() {
                   <Table.ColumnHeader py="4">Estado</Table.ColumnHeader>
                   <Table.ColumnHeader py="4" textAlign="end">Acciones</Table.ColumnHeader>
                 </Table.Row>
-              </Table.Header>
-              <Table.Body>
-                {payments.map((payment) => {
-                  const member = members.find(m => m.id === payment.member_id);
-                  return (
-                    <Table.Row key={payment.id}>
-                      <Table.Cell>{member ? `${member.name} (${member.dni})` : payment.member_id}</Table.Cell>
-                      <Table.Cell color="fg.muted">${payment.amount.toLocaleString('es-AR')}</Table.Cell>
-                      <Table.Cell color="fg.muted">{payment.month}/{payment.year}</Table.Cell>
-                      <Table.Cell color="fg.muted">{payment.due_date}</Table.Cell>
-                      <Table.Cell>
-                      <Box 
-                      display="inline-block" 
-                      px="2" 
-                      py="0.5" 
-                      borderRadius="md" 
-                      bg={
-                        payment.status === 'PAID' ? 'green.50' :
-                        payment.status === 'PENDING' ? 'orange.50' :
-                        'red.50'
-                      }
-                      color={
-                        payment.status === 'PAID' ? 'green.700' :
-                        payment.status === 'PENDING' ? 'orange.700' :
-                        'red.700'
-                      }
-                      fontSize="xs" 
-                      fontWeight="bold" >
-                      {payment.status} 
+               </Table.Header>
+                <Table.Body>
+                  {payments.map((payment) => {
+                    const member = members.find(m => m.id === payment.member_id);
+                    return (
+                      <Table.Row key={payment.id}>
+                        <Table.Cell>{member ? `${member.name} (${member.dni})` : payment.member_id}</Table.Cell>
+                        <Table.Cell color="fg.muted">${payment.amount.toLocaleString('es-AR')}</Table.Cell>
+                        <Table.Cell color="fg.muted">{payment.month}/{payment.year}</Table.Cell>
+                        <Table.Cell color="fg.muted">{payment.due_date}</Table.Cell>
+                        <Table.Cell>
+                        <Box 
+                        display="inline-block" 
+                        px="2" 
+                        py="0.5" 
+                        borderRadius="md" 
+                        bg={
+                          payment.status === 'PAID' ? 'green.50' :
+                          payment.status === 'PENDING' ? 'orange.50' :
+                          'red.50'
+                        }
+                        color={
+                          payment.status === 'PAID' ? 'green.700' :
+                          payment.status === 'PENDING' ? 'orange.700' :
+                          'red.700'
+                        }
+                        fontSize="xs" 
+                        fontWeight="bold" >
+                        {payment.status} 
                       </Box>
                       </Table.Cell>
 
-                      <Table.Cell textAlign="end">
-                        <HStack gap="2" justify="flex-end">
-                      {payment.status === 'PENDING' && (
-                        <>
-                          <Button
-                            size="sm"
-                            colorPalette="green"
-                            variant="outline"
-                            onClick={() => handleUpdatePayment(payment.id, PaymentStatus.Paid)}
-                          >
-                            Pagar
-                          </Button>
-                          <Button
-                            size="sm"
-                            colorPalette="red"
-                            variant="outline"
-                            onClick={() => handleUpdatePayment(payment.id, PaymentStatus.Canceled)}
-                          >
-                            Cancelar
-                          </Button>
-                
-                        </>
-                      )}
-                      <IconButton
-                        variant="ghost"
-                        size="sm"
-                        colorPalette="red"
-                        aria-label="Eliminar pago"
-                        onClick={() => handleDeletePayment(payment.id)}
-                      >
-                      <LuTrash2 />
-                     </IconButton>                      
-                    </HStack>
-                  </Table.Cell>
+                        <Table.Cell textAlign="end">
+                          <HStack gap="2" justify="flex-end">
+                            {payment.status === 'PENDING' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  colorPalette="green"
+                                  variant="outline"
+                                  onClick={() => handleUpdatePayment(payment.id, PaymentStatus.Paid)}
+                                >
+                                  Pagar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  colorPalette="red"
+                                  variant="outline"
+                                  onClick={() => handleUpdatePayment(payment.id, PaymentStatus.Canceled)}
+                                >
+                                  Cancelar
+                                </Button>
+                              </>
+                            )}
+                            <IconButton
+                              variant="ghost"
+                              size="sm"
+                              colorPalette="red"
+                              aria-label="Eliminar pago"
+                              onClick={() => handleDeletePayment(payment.id)}
+                            >
+                              <LuTrash2 />
+                            </IconButton>                      
+                        </HStack>
+                    </Table.Cell>
                     </Table.Row>
-                  );
-                })}
-              </Table.Body>
+                    );
+                  })}
+                </Table.Body>
             </Table.Root>
           )}
         </Box>
