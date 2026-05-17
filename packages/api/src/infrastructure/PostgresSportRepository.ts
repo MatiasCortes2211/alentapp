@@ -48,6 +48,16 @@ export class PostgresSportRepository implements SportRepository {
         return sport ? this.mapToDTO(sport) : null;
     }
 
+    async findAll(): Promise<Sport[]> {
+        const sports = await prisma.sport.findMany({
+            where: {
+                is_deleted: false,
+            },
+        });
+
+        return sports.map(this.mapToDTO);
+    }
+
     private mapToDTO(sport: DBSport): Sport {
         return {
             id: sport.id,
