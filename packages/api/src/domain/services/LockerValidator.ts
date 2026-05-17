@@ -17,4 +17,13 @@ export class LockerValidator {
             throw new Error('Un casillero solo puede ser asignado si su estado es Disponible');
         }
     }
+
+    validateEndContractDate(dateString: string): void {
+        const endDate = new Date(dateString);
+        const now = new Date();
+        
+        if (endDate <= now) {
+            throw new Error('La fecha de fin de contrato debe ser mayor a la fecha actual');
+        }
+    }
 }

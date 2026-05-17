@@ -35,6 +35,10 @@ export class CreateLockerUseCase {
             }
         }
 
+        if (data.end_contract_date) {
+            this.lockerValidator.validateEndContractDate(data.end_contract_date);
+        }
+
         const nuevoLocker = await this.lockerRepository.create({
             number: data.number,
             location: data.location,
