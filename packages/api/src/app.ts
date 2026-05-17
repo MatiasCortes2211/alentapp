@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+
 import { PostgresMemberRepository } from './infrastructure/PostgresMemberRepository.js';
 import { MemberValidator } from './domain/services/MemberValidator.js';
 import { CreateMemberUseCase } from './application/NewMemberUseCase.js';
@@ -7,6 +8,11 @@ import { GetMembersUseCase } from './application/GetMembersUseCase.js';
 import { UpdateMemberUseCase } from './application/UpdateMemberUseCase.js';
 import { DeleteMemberUseCase } from './application/DeleteMemberUseCase.js';
 import { MemberController } from './delivery/MemberController.js';
+
+import { PostgresLockerRepository } from './infrastructure/PostgresLockerRepository.js';
+import { LockerValidator } from './domain/services/LockerValidator.js';
+import { CreateLockerUseCase } from './application/NewLockerUseCase.js';
+import { LockerController } from './delivery/LockerController.js';
 
 export function buildApp() {
     const server = Fastify({
@@ -42,6 +48,15 @@ export function buildApp() {
         updateMemberUseCase,
         deleteMemberUseCase
     );
+
+    const lockerRepo = new PostgresLockerRepository();
+    const lockerValidator = new LockerValidator(lockerRepo);
+    
+    const createLockerUseCase = new CreateLockerUseCase(lockerRepo, lockerValidator);
+
+    const lockerController = new LockerController(createLockerUseCase);
+
+    server.post('/api/v1/lockers', lockerController.create.bind(lockerController));
 
     server.get('/api/v1/socios', memberController.getAll.bind(memberController));
     server.post('/api/v1/socios', memberController.create.bind(memberController));
