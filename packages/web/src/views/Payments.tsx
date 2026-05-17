@@ -10,7 +10,8 @@ import {
   Center,
   Table 
 } from "@chakra-ui/react";
-import { LuPlus, LuRefreshCw } from "react-icons/lu";
+import { IconButton } from "@chakra-ui/react"; 
+import { LuPlus, LuRefreshCw, LuTrash2 } from "react-icons/lu"; 
 import { useEffect, useState } from "react";
 import { paymentsService } from "../services/payments";
 import { membersService } from "../services/members";
@@ -103,6 +104,18 @@ export function PaymentsView() {
     }
   
   };
+
+  const handleDeletePayment = async (id: string) => {
+  if (window.confirm('¿Estás seguro de que deseas eliminar este pago? Esta acción no se puede deshacer.')) {
+    try {
+      await paymentsService.delete(id);
+      const updatedPayments = await paymentsService.getAll();
+      setPayments(updatedPayments);
+    } catch (err: any) {
+      alert(err.message || "Error al eliminar el pago");
+    }
+  }
+};
   
 
   return (
@@ -242,7 +255,21 @@ export function PaymentsView() {
                       fontWeight="bold" >
                       {payment.status}
                         </Box> </Table.Cell>
-                      <Table.Cell textAlign="end">-</Table.Cell>
+                      <Table.Cell textAlign="end">
+                        <Table.Cell textAlign="end">
+                          <HStack gap="2" justify="flex-end">
+                            <IconButton
+                              variant="ghost"
+                              size="sm"
+                              colorPalette="red"
+                              aria-label="Eliminar pago"
+                              onClick={() => handleDeletePayment(payment.id)}
+                            >
+                              <LuTrash2 />
+                            </IconButton>
+                          </HStack>
+                        </Table.Cell>
+                      </Table.Cell>
                     </Table.Row>
                   );
                 })}
