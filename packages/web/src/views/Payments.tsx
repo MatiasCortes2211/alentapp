@@ -62,6 +62,15 @@ export function PaymentsView() {
     fetchData();
   }, []);
 
+  const fetchPayments = async () => {
+  try {
+    const data = await paymentsService.getAll();
+    setPayments(data);
+  } catch (err: any) {
+    setError(err.message || "Error al cargar los pagos");
+  }
+  };
+
   const openCreateModal = () => {
     setFormData({
       amount: "",
@@ -75,8 +84,7 @@ export function PaymentsView() {
   };
 
   const handleRefresh = async () => {
-      const data = await paymentsService.getAll();
-      setPayments(data);
+     fetchPayments();
     };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,8 +102,7 @@ export function PaymentsView() {
       };
 
       await paymentsService.create(payload);
-      const updatedPayments = await paymentsService.getAll(); 
-      setPayments(updatedPayments);                        
+      fetchPayments();                       
       setIsDialogOpen(false);
       alert("¡Pago generado con éxito!"); 
     } catch (err: any) {
@@ -110,8 +117,7 @@ export function PaymentsView() {
   if (window.confirm('¿Estás seguro de que deseas eliminar este pago? Esta acción no se puede deshacer.')) {
     try {
       await paymentsService.delete(id);
-      const updatedPayments = await paymentsService.getAll();
-      setPayments(updatedPayments);
+      fetchPayments();
     } catch (err: any) {
       alert(err.message || "Error al eliminar el pago");
     }
@@ -121,8 +127,7 @@ export function PaymentsView() {
   const handleUpdatePayment = async (id: string, status: PaymentStatus.Paid | PaymentStatus.Canceled) => {
   try {
     await paymentsService.update(id, { status });
-    const updatedPayments = await paymentsService.getAll();
-    setPayments(updatedPayments);
+    fetchPayments();
   } catch (err: any) {
     alert(err.message || "Error al actualizar el pago");
   }
@@ -173,10 +178,9 @@ export function PaymentsView() {
                     borderRadius="md"
                     borderWidth="1px"
                     borderColor="border.muted"
-                    bg="transparent"
                     outline="none"
-                   bg="whiteAlpha.100"
-                  color="gray"       
+                    bg="whiteAlpha.100"
+                    color="gray"       
                   >
                     <option value="" disabled>Seleccione un socio</option>
                     {members.map(member => (
