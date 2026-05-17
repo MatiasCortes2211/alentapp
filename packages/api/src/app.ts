@@ -13,6 +13,16 @@ import { MedicalCertificateValidator } from './domain/services/MedicalCertificat
 import { NewMedicalCertificateUseCase } from './application/NewMedicalCertificateUseCase.js';
 import { MedicalCertificateController } from './delivery/MedicalCertificateController.js';
 
+import { PostgresPaymentRepository } from './infrastructure/PostgresPaymentRepository.js';
+import { PaymentValidator } from './domain/services/PaymentValidator.js'; 
+import { CreatePaymentUseCase } from './application/NewPaymentUseCase.js'; 
+import { PaymentController } from './delivery/PaymentController.js'; 
+import { GetPaymentsUseCase } from './application/GetPaymentsUseCase.js';
+import { PostgresSportRepository } from './infrastructure/PostgresSportRepository.js';
+import { SportValidator } from './domain/services/SportValidator.js';
+import { CreateSportUseCase } from './application/NewSportUseCase.js';
+import { SportController } from './delivery/SportController.js';
+
 export function buildApp() {
     const server = Fastify({
         logger: {
@@ -61,6 +71,24 @@ export function buildApp() {
 
     const certificateController = new MedicalCertificateController(newCertificateUseCase);
 
+    const paymentRepo = new PostgresPaymentRepository();
+    const paymentValidator = new PaymentValidator(paymentRepo);
+    
+    const createPaymentUseCase = new CreatePaymentUseCase(paymentRepo, memberRepo, paymentValidator);
+    const getPaymentsUseCase = new GetPaymentsUseCase(paymentRepo); 
+
+    const paymentController = new PaymentController(createPaymentUseCase, getPaymentsUseCase );
+
+    // Configuración para Sport
+    const sportRepo = new PostgresSportRepository();
+    const sportValidator = new SportValidator(sportRepo);
+
+    const createSportUseCase = new CreateSportUseCase(sportRepo, sportValidator);
+
+    const sportController = new SportController(
+        createSportUseCase
+    );
+
     server.get('/api/v1/socios', memberController.getAll.bind(memberController));
     server.post('/api/v1/socios', memberController.create.bind(memberController));
     server.put('/api/v1/socios/:id', memberController.update.bind(memberController));
@@ -68,6 +96,12 @@ export function buildApp() {
 
     // Rutas de Certificados Médicos
     server.post('/api/v1/medical-certificates', certificateController.create.bind(certificateController));
+    server.post('/api/v1/payments', paymentController.create.bind(paymentController));
+    server.get('/api/v1/payments', paymentController.getAll.bind(paymentController));
+
+    //Sport endpoints
+    server.post('/api/v1/sports', sportController.create.bind(sportController));
+
 
     server.get('/', async (req, rep) => {
         rep.status(200).send({ msg: 'asd' })
