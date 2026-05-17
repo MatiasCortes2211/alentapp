@@ -1,12 +1,14 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { CreatePaymentUseCase } from '../application/NewPaymentUseCase.js';
-import { CreatePaymentRequest } from '@alentapp/shared';
+import { CreatePaymentRequest, UpdatePaymentRequest} from '@alentapp/shared';
 import { GetPaymentsUseCase } from '../application/GetPaymentsUseCase.js';
+import { UpdatePaymentUseCase } from '../application/UpdatePaymentUseCase.js';
 
 export class PaymentController {
     constructor(
         private readonly createPaymentUseCase: CreatePaymentUseCase,
-        private readonly getPaymentsUseCase: GetPaymentsUseCase
+        private readonly getPaymentsUseCase: GetPaymentsUseCase,
+        private readonly updatePaymentUseCase: UpdatePaymentUseCase
     ) {}
 
     async create(
@@ -54,6 +56,31 @@ export class PaymentController {
             return reply.status(200).send({ data: pagos });
 
         } catch (error: any) {
+            return reply.status(500).send({ error: "Error interno, reintente más tarde" });
+        }
+    }
+       async update( 
+        request: FastifyRequest<{ Params: { id: string }, Body: UpdatePaymentRequest }>,
+        reply: FastifyReply,
+    ) {
+        try {
+            request.log.info('Actualizando estado de pago');
+
+            const { id } = request.params;
+            const pago = await this.updatePaymentUseCase.execute(id, request.body);
+
+            return reply.status(200).send({ data: pago });
+
+        } catch (error: any) {
+
+            if (error.message.includes('no existe en el sistema')) {
+                return reply.status(404).send({ error: error.message });
+            }
+
+            if (error.message.includes('ya se encuentra en estado')) {
+                return reply.status(409).send({ error: error.message });
+            }
+
             return reply.status(500).send({ error: "Error interno, reintente más tarde" });
         }
     }

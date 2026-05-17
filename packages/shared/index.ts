@@ -1,6 +1,7 @@
 // ==========================================
 // Member
 // ==========================================
+
 export type MemberCategory = 'Pleno' | 'Cadete' | 'Honorario';
 export type MemberStatus = 'Activo' | 'Moroso' | 'Suspendido';
 
@@ -33,9 +34,60 @@ export interface UpdateMemberRequest {
 }
 
 // ==========================================
+// Locker
+// ==========================================
+export type LockerStatus = 'Available' | 'Occupied' | 'Maintenance';
+export type LockerLocation = 'Male' | 'Female' | 'Kids';
+
+export interface LockerDTO {
+  id: string; // UUID
+  number: number;
+  location: LockerLocation;
+  status: LockerStatus;
+  end_contract_date: string | null;
+  member_id: string | null;
+  is_deleted: boolean;
+}
+
+export interface CreateLockerRequest {
+  number: number;
+  location: LockerLocation;
+  status?: LockerStatus;
+  end_contract_date?: string | null;
+  member_id?: string | null;
+}
+
+export interface UpdateLockerRequest {
+  number?: number;
+  location?: LockerLocation;
+  status?: LockerStatus;
+  end_contract_date?: string | null;
+  member_id?: string | null;
+  is_deleted?: boolean;
+}
+
+// ==========================================
+// Medical Certificate
+// ==========================================
+export interface MedicalCertificateDTO {
+  id: string;
+  issue_date: string;
+  expiry_date: string;
+  doctor_license: string;
+  is_validated: boolean;
+  member_id: string;
+}
+
+export interface CreateMedicalCertificate {
+  issue_date: string;
+  expiry_date: string;
+  doctor_license: string;
+  member_id: string;
+}
+
+// ==========================================
 // Payment
 // ==========================================
-
 export enum PaymentStatus {
   Pending = 'PENDING',
   Paid = 'PAID',
@@ -62,6 +114,14 @@ export interface CreatePaymentRequest {
   member_id: string; // UUID
 }
 
+export interface UpdatePaymentRequest {
+  status: PaymentStatus.Paid | PaymentStatus.Canceled;
+}
+
+// ==========================================
+// Sport
+// ==========================================
+
 export interface Sport {
   id: string; // UUID
   name: string;
@@ -83,4 +143,25 @@ export interface CreateSport {
 export interface UpdateSport {
   description?: string;
   max_capacity?: number;
+}
+
+// ==========================================
+// Discipline
+// ==========================================
+export interface Discipline {
+  id: string; // UUID
+  reason: string;
+  start_date: string;
+  end_date: string;
+  is_total_suspension: boolean;
+  member_id: string;
+  is_deleted: boolean;
+}
+
+export interface CreateDiscipline {
+  reason: string;
+  start_date: string; // ISO Date String (YYYY-MM-DD)
+  end_date: string; // ISO Date String (YYYY-MM-DD)
+  is_total_suspension: boolean;
+  member_id: string; // UUID
 }
