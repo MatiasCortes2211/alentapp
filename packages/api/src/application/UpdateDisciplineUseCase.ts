@@ -26,7 +26,7 @@ export class UpdateDisciplineUseCase {
             throw new Error('La disciplina no existe');
         }
         if (discipline.is_deleted) {
-            throw new Error('La disciplina ya fue eliminada');
+            throw new Error('La disciplina no existe');
         }
 
         if (data.member_id) {
