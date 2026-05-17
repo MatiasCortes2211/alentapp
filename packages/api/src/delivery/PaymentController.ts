@@ -1,10 +1,12 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { CreatePaymentUseCase } from '../application/NewPaymentUseCase.js';
 import { CreatePaymentRequest } from '@alentapp/shared';
+import { GetPaymentsUseCase } from '../application/GetPaymentsUseCase.js';
 
 export class PaymentController {
     constructor(
-        private readonly createPaymentUseCase: CreatePaymentUseCase
+        private readonly createPaymentUseCase: CreatePaymentUseCase,
+        private readonly getPaymentsUseCase: GetPaymentsUseCase
     ) {}
 
     async create(
@@ -37,6 +39,21 @@ export class PaymentController {
                 return reply.status(400).send({ error: error.message });
             }
 
+            return reply.status(500).send({ error: "Error interno, reintente más tarde" });
+        }
+    }
+        async getAll( 
+        request: FastifyRequest,
+        reply: FastifyReply,
+    ) {
+        try {
+            request.log.info('Obteniendo todos los pagos');
+
+            const pagos = await this.getPaymentsUseCase.execute();
+
+            return reply.status(200).send({ data: pagos });
+
+        } catch (error: any) {
             return reply.status(500).send({ error: "Error interno, reintente más tarde" });
         }
     }
