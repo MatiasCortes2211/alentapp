@@ -79,6 +79,15 @@ export class PostgresPaymentRepository implements PaymentRepository {
         return payment ? this.mapToDTO(payment as unknown as DBPayment) : null;
     }
 
+    async delete(id: string): Promise<void> {
+        await prisma.payment.update({
+            where: { id },
+            data: {
+                is_deleted: true,
+            },
+        });
+    }
+
     private mapToDTO(payment: DBPayment): PaymentDTO {
         return {
             id: payment.id,
