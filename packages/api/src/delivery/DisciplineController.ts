@@ -1,10 +1,12 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { CreateDisciplineUseCase } from '../application/NewDisciplineUseCase.js';
-import { CreateDiscipline } from '@alentapp/shared';
+import { UpdateDisciplineUseCase } from '../application/UpdateDisciplineUseCase.js';
+import { CreateDiscipline, UpdateDiscipline } from '@alentapp/shared';
 
 export class DisciplineController {
     constructor(
         private readonly createDisciplineUseCase: CreateDisciplineUseCase,
+        private readonly updateDisciplineUseCase: UpdateDisciplineUseCase,
     ) {}
 
     async create(
@@ -25,6 +27,30 @@ export class DisciplineController {
                 return reply.status(404).send({ error: error.message });
             }
             return reply.status(500).send({ error: 'Error al crear la disciplina' });
+        }
+    }
+
+    async update(
+        request: FastifyRequest<{ Params:{id:string}, Body: UpdateDiscipline }>,
+        reply: FastifyReply
+    ){
+        try {
+            const discipline = await this.updateDisciplineUseCase.execute(request.params.id, request.body);
+            return reply.status(200).send({ data: discipline });
+        } catch (error: any) {
+            if (error.message.includes('La disciplina no existe')){
+                return reply.status(404).send({ error: error.message });
+            }
+            if (error.message.includes('El miembro ingresado no existe en el sistema')){
+                return reply.status(404).send({ error: error.message });
+            }
+            if (error.message.includes('La fecha de fin debe ser posterior a la fecha de inicio')){
+                return reply.status(400).send({ error: error.message });
+            }
+            if (error.message.includes('Required') || error.message.includes('requerido') || error.message.includes('vacía')){
+                return reply.status(400).send({ error: error.message });
+            }
+            return reply.status(500).send({ error: 'Error al actualizar la disciplina' });
         }
     }
 }
