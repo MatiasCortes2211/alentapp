@@ -12,6 +12,7 @@ import { PostgresMedicalCertificateRepository } from './infrastructure/PostgresM
 import { MedicalCertificateValidator } from './domain/services/MedicalCertificateValidator.js';
 import { NewMedicalCertificateUseCase } from './application/NewMedicalCertificateUseCase.js';
 import { MedicalCertificateController } from './delivery/MedicalCertificateController.js';
+import { GetMedicalCertificatesUseCase } from './application/GetMedicalCertificatesUseCase.js'; 
 
 import { PostgresPaymentRepository } from './infrastructure/PostgresPaymentRepository.js';
 import { PaymentValidator } from './domain/services/PaymentValidator.js'; 
@@ -69,7 +70,14 @@ export function buildApp() {
         certificateValidator
     );
 
-    const certificateController = new MedicalCertificateController(newCertificateUseCase);
+    // 1. Instancia del nuevo caso de uso del READ
+    const getMedicalCertificatesUseCase = new GetMedicalCertificatesUseCase(certificateRepo);
+
+    // 2. ÚNICA DECLARACIÓN del controlador pasando ambas dependencias
+    const certificateController = new MedicalCertificateController(
+        newCertificateUseCase,
+        getMedicalCertificatesUseCase
+    );
 
     const paymentRepo = new PostgresPaymentRepository();
     const paymentValidator = new PaymentValidator(paymentRepo);
@@ -96,6 +104,9 @@ export function buildApp() {
 
     // Rutas de Certificados Médicos
     server.post('/api/v1/medical-certificates', certificateController.create.bind(certificateController));
+    server.get('/api/v1/medical-certificates/member/:memberId', certificateController.getByMember.bind(certificateController));
+
+    
     server.post('/api/v1/payments', paymentController.create.bind(paymentController));
     server.get('/api/v1/payments', paymentController.getAll.bind(paymentController));
 
