@@ -19,5 +19,17 @@ export const paymentsService = {
     }
     const result = await response.json();
     return result.data;
+  },
+
+  async getAll(): Promise<PaymentDTO[]> {
+    const response = await fetch(`${API_URL}/payments`);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al obtener los pagos');
+    }
+    const result = await response.json();
+    return result.data;
   }
+
 };
