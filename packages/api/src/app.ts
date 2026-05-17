@@ -64,7 +64,7 @@ export function buildApp() {
     const lockerRepo = new PostgresLockerRepository();
     const lockerValidator = new LockerValidator(lockerRepo);
     
-    const createLockerUseCase = new CreateLockerUseCase(lockerRepo, lockerValidator);
+    const createLockerUseCase = new CreateLockerUseCase(lockerRepo, memberRepo, lockerValidator);
 
     const lockerController = new LockerController(createLockerUseCase);
     
