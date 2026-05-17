@@ -14,7 +14,7 @@ import { LuPlus, LuRefreshCw } from "react-icons/lu";
 import { useEffect, useState } from "react";
 import { paymentsService } from "../services/payments";
 import { membersService } from "../services/members";
-import type { MemberDTO, CreatePaymentRequest } from "@alentapp/shared";
+import type { MemberDTO, CreatePaymentRequest, PaymentDTO } from "@alentapp/shared";
 import { 
   DialogRoot, 
   DialogContent, 
@@ -34,7 +34,7 @@ export function PaymentsView() {
   const [members, setMembers] = useState<MemberDTO[]>([]);
   
  
-  const [payments, setPayments] = useState([]); 
+  const [payments, setPayments] = useState<PaymentDTO[]>([]); 
 
   const [formData, setFormData] = useState({
     amount: "",
@@ -45,15 +45,19 @@ export function PaymentsView() {
   });
 
   useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const data = await membersService.getAll();
-        setMembers(data);
-      } catch (err) {
-        console.error("Error al cargar socios", err);
-      }
-    };
-    fetchMembers();
+  const fetchData = async () => {
+    try {
+      const [membersData, paymentsData] = await Promise.all([
+        membersService.getAll(),
+        paymentsService.getAll(),
+      ]);
+      setMembers(membersData);
+      setPayments(paymentsData);
+    } catch (err) {
+      console.error("Error al cargar datos", err);
+    }
+  };
+    fetchData();
   }, []);
 
   const openCreateModal = () => {
@@ -67,6 +71,11 @@ export function PaymentsView() {
     setError(null);
     setIsDialogOpen(true);
   };
+
+  const handleRefresh = async () => {
+      const data = await paymentsService.getAll();
+      setPayments(data);
+    };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +92,8 @@ export function PaymentsView() {
       };
 
       await paymentsService.create(payload);
+      const updatedPayments = await paymentsService.getAll(); 
+      setPayments(updatedPayments);                        
       setIsDialogOpen(false);
       alert("¡Pago generado con éxito!"); 
     } catch (err: any) {
@@ -90,7 +101,9 @@ export function PaymentsView() {
     } finally {
       setIsSubmitting(false);
     }
+  
   };
+  
 
   return (
     <DialogRoot open={isDialogOpen} onOpenChange={(e) => setIsDialogOpen(e.open)}>
@@ -104,7 +117,7 @@ export function PaymentsView() {
             </Text>
           </Stack>
           <HStack gap="3">
-            <Button variant="outline" disabled={true}>
+            <Button variant="outline" onClick={handleRefresh}>
               <LuRefreshCw /> Actualizar
             </Button>
             <Button colorPalette="blue" size="md" onClick={openCreateModal}>
@@ -201,7 +214,38 @@ export function PaymentsView() {
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {/*endpoint getAll */}
+                {payments.map((payment) => {
+                  const member = members.find(m => m.id === payment.member_id);
+                  return (
+                    <Table.Row key={payment.id}>
+                      <Table.Cell>{member ? `${member.name} (${member.dni})` : payment.member_id}</Table.Cell>
+                      <Table.Cell color="fg.muted">${payment.amount.toLocaleString('es-AR')}</Table.Cell>
+                      <Table.Cell color="fg.muted">{payment.month}/{payment.year}</Table.Cell>
+                      <Table.Cell color="fg.muted">{payment.due_date}</Table.Cell>
+                      <Table.Cell>
+                      <Box 
+                      display="inline-block" 
+                      px="2" 
+                      py="0.5" 
+                      borderRadius="md" 
+                      bg={
+                        payment.status === 'PAID' ? 'green.50' :
+                        payment.status === 'PENDING' ? 'orange.50' :
+                        'red.50'
+                      }
+                      color={
+                        payment.status === 'PAID' ? 'green.700' :
+                        payment.status === 'PENDING' ? 'orange.700' :
+                        'red.700'
+                      }
+                      fontSize="xs" 
+                      fontWeight="bold" >
+                      {payment.status}
+                        </Box> </Table.Cell>
+                      <Table.Cell textAlign="end">-</Table.Cell>
+                    </Table.Row>
+                  );
+                })}
               </Table.Body>
             </Table.Root>
           )}
