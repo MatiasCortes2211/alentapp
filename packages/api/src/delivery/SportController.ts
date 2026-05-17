@@ -1,12 +1,15 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { CreateSportUseCase } from '../application/NewSportUseCase.js';
 import { GetSportsUseCase } from '../application/GetSportsUseCase.js';
+import { DeleteSportUseCase } from '../application/DeleteSportUseCase.js';
 import { CreateSport } from '@alentapp/shared';
+import { request } from 'https';
 
 export class SportController {
     constructor(
         private readonly createSportUseCase: CreateSportUseCase,
-        private readonly getSportsUseCase: GetSportsUseCase
+        private readonly getSportsUseCase: GetSportsUseCase,
+        private readonly deleteSportUseCase: DeleteSportUseCase,
     ) {}
 
     async getAll(_request: FastifyRequest, reply: FastifyReply) {
@@ -41,6 +44,25 @@ export class SportController {
             }
             if (error.message.includes('requires_medical_certificate debe ser un valor booleano válido.')) {
                 return reply.status(400).send({ error: error.message });
+            }
+            return reply.status(500).send({ error: 'Internal server error' });
+        }
+    }
+
+    async delete(
+        request: FastifyRequest<{ Params: { id: string } }>,
+        reply: FastifyReply
+    ) {
+        try {
+            const { id } = request.params;
+            await this.deleteSportUseCase.execute(id);
+            return reply.status(204).send();
+        } catch (error: any) {
+            if (error.message.includes('El deporte no existe')) {
+                return reply.status(404).send({ error: error.message });
+            }
+            if (error.message.includes('El deporte ya está eliminado')) {
+                return reply.status(409).send({ error: error.message });
             }
             return reply.status(500).send({ error: 'Internal server error' });
         }
