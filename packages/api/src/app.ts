@@ -17,6 +17,7 @@ import { MedicalCertificateController } from './delivery/MedicalCertificateContr
 import { PostgresLockerRepository } from './infrastructure/PostgresLockerRepository.js';
 import { LockerValidator } from './domain/services/LockerValidator.js';
 import { CreateLockerUseCase } from './application/NewLockerUseCase.js';
+import { GetLockersUseCase } from './application/GetLockersUseCase.js';
 import { LockerController } from './delivery/LockerController.js';
 
 import { PostgresPaymentRepository } from './infrastructure/PostgresPaymentRepository.js';
@@ -71,8 +72,9 @@ export function buildApp() {
     const lockerValidator = new LockerValidator(lockerRepo);
     
     const createLockerUseCase = new CreateLockerUseCase(lockerRepo, memberRepo, lockerValidator);
+    const getLockersUseCase = new GetLockersUseCase(lockerRepo);
 
-    const lockerController = new LockerController(createLockerUseCase);
+    const lockerController = new LockerController(createLockerUseCase, getLockersUseCase);
     
     // MedicalCertificate
     const certificateRepo = new PostgresMedicalCertificateRepository();
@@ -113,6 +115,7 @@ export function buildApp() {
     server.delete('/api/v1/socios/:id', memberController.delete.bind(memberController));
 
     server.post('/api/v1/lockers', lockerController.create.bind(lockerController));
+    server.get('/api/v1/lockers', lockerController.getAll.bind(lockerController));
 
     server.post('/api/v1/medical-certificates', certificateController.create.bind(certificateController));
     
