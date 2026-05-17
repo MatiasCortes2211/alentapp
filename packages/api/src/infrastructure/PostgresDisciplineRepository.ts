@@ -22,7 +22,7 @@ type DBDiscipline = {
 };
 
 export class PostgresDisciplineRepository implements DisciplineRepository {
-    async create(data: CreateDiscipline): Promise<Discipline> {
+    async create(data: Omit<Discipline, 'id'>): Promise<Discipline> {
         const discipline = await prisma.discipline.create({
             data: {
                 reason: data.reason,
@@ -30,6 +30,7 @@ export class PostgresDisciplineRepository implements DisciplineRepository {
                 end_date: new Date(data.end_date),
                 is_total_suspension: data.is_total_suspension,
                 member_id: data.member_id,
+                is_deleted: data.is_deleted,
             },
         });
 
