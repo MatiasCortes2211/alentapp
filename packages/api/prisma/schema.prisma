@@ -34,5 +34,34 @@ model Member {
     status     MemberStatus   @default(Activo)
     created_at DateTime       @default(now())
 
+    lockers    Locker[]
+
     @@map("members") // Para que en la DB la tabla se llame 'members' en minúscula
+}
+
+// Locker ==========================================
+
+enum LockerStatus {
+    Available
+    Occupied
+    Maintenance
+}
+
+enum LockerLocation {
+    Male
+    Female
+    Kids
+}
+
+model Locker {
+    id                String         @id @default(uuid())
+    number            Int
+    location          LockerLocation
+    status            LockerStatus   @default(Available)
+    end_contract_date DateTime?
+    member_id         String?
+    member            Member?        @relation(fields: [member_id], references: [id])
+    is_deleted        Boolean        @default(false)
+
+    @@map("lockers")
 }
