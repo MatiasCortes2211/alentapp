@@ -2,11 +2,13 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { CreatePaymentUseCase } from '../application/NewPaymentUseCase.js';
 import { CreatePaymentRequest } from '@alentapp/shared';
 import { GetPaymentsUseCase } from '../application/GetPaymentsUseCase.js';
+import { DeletePaymentUseCase } from '../application/DeletePaymentUseCase.js';
 
 export class PaymentController {
     constructor(
         private readonly createPaymentUseCase: CreatePaymentUseCase,
-        private readonly getPaymentsUseCase: GetPaymentsUseCase
+        private readonly getPaymentsUseCase: GetPaymentsUseCase,
+        private readonly deletePaymentUseCase: DeletePaymentUseCase,
     ) {}
 
     async create(
@@ -42,7 +44,7 @@ export class PaymentController {
             return reply.status(500).send({ error: "Error interno, reintente más tarde" });
         }
     }
-        async getAll( 
+    async getAll( 
         request: FastifyRequest,
         reply: FastifyReply,
     ) {
@@ -57,4 +59,31 @@ export class PaymentController {
             return reply.status(500).send({ error: "Error interno, reintente más tarde" });
         }
     }
+
+    async delete( 
+        request: FastifyRequest<{ Params: { id: string } }>,
+        reply: FastifyReply,
+    ) {
+        try {
+            request.log.info('Eliminando pago');
+
+            const { id } = request.params;
+            await this.deletePaymentUseCase.execute(id);
+
+            return reply.status(204).send();
+
+        } catch (error: any) {
+
+            if (error.message.includes('no existe en el sistema')) {
+                return reply.status(404).send({ error: error.message });
+            }
+
+            if (error.message.includes('ya fue eliminado')) {
+                return reply.status(409).send({ error: error.message });
+            }
+
+            return reply.status(500).send({ error: "Error interno, reintente más tarde" });
+        }
+    }
+
 }
