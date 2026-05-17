@@ -50,11 +50,11 @@ export function SportsView() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<CreateSport>({
-    name: "",
-    description: "",
-    max_capacity: 0,
-    additional_price: 0,
-    requires_medical_certificate: false,
+  name: "",
+  description: "",
+  max_capacity: 0,
+  additional_price: 0,
+  requires_medical_certificate: false,
   });
 
   const fetchSports = async () => {
@@ -64,9 +64,9 @@ export function SportsView() {
       const data = await sportsService.getAll();
       setSports(data);
     } catch (err: any) {
-        setError(err.message || "Error al obtener los deportes");
+      setError(err.message || "Error al obtener los deportes");
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -74,12 +74,12 @@ export function SportsView() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-        await sportsService.create(formData as CreateSport);
-        setIsDialogOpen(false);
+      await sportsService.create(formData as CreateSport);
+      setIsDialogOpen(false);
     } catch (err: any) {
-        alert(err.message || "Error al guardar el deporte");
+      alert(err.message || "Error al guardar el deporte");
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
     setIsDialogOpen(false);
     fetchSports();
@@ -87,10 +87,10 @@ export function SportsView() {
 
   const openCreateModal = () => {
     setFormData({
-        name: "",
-        description: "",
-        max_capacity: null as any,
-        additional_price: null as any,
+      name: "",
+      description: "",
+      max_capacity: null as any,
+      additional_price: null as any,
       requires_medical_certificate: false,
     });
     setIsDialogOpen(true);
@@ -99,16 +99,16 @@ export function SportsView() {
   const handleDeleteSport = async (id: string, name: string) => {
     if (window.confirm(`¿Estás seguro de que querés eliminar el deporte "${name}"? Esta acción no se puede deshacer.`)) {
       try {
-          await sportsService.delete(id);
-          fetchSports();
+        await sportsService.delete(id);
+        fetchSports();
       } catch (err: any) {
-          alert(err.message || "Error al eliminar el deporte");
+        alert(err.message || "Error al eliminar el deporte");
       }
     }
   };
 
   useEffect(() => {
-      fetchSports();
+    fetchSports();
   }, []);
 
   return (
