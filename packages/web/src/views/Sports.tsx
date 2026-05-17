@@ -43,94 +43,103 @@ const medicalCertificateOptions = createListCollection({
 });
 
 export function SportsView() {
-    const [sports, setSports] = useState<Sport[]>([]);
-    const [isLoading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const [sports, setSports] = useState<Sport[]>([]);
+  const [isLoading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [formData, setFormData] = useState<CreateSport>({
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<CreateSport>({
+    name: "",
+    description: "",
+    max_capacity: 0,
+    additional_price: 0,
+    requires_medical_certificate: false,
+  });
+  const [editingSport, setEditingSport] = useState<Sport | null>(null);
+  const [updateData, setUpdateData] = useState<UpdateSport>({
+    description: "",
+    max_capacity: 0
+  });
+
+  const fetchSports = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await sportsService.getAll();
+      setSports(data);
+    } catch (err: any) {
+      setError(err.message || "Error al obtener los deportes");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await sportsService.create(formData as CreateSport);
+      setIsDialogOpen(false);
+      fetchSports();
+    } catch (err: any) {
+      alert(err.message || "Error al guardar el deporte");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSport) return;
+    setIsSubmitting(true);
+    try {
+      await sportsService.update(editingSport.id, updateData);
+      setIsDialogOpen(false);
+      setEditingSport(null);
+      fetchSports();
+    } catch (err: any) {
+      alert(err.message || "Error al actualizar el deporte");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const openCreateModal = () => {
+    setEditingSport(null);
+    setFormData({
       name: "",
       description: "",
-      max_capacity: 0,
-      additional_price: 0,
+      max_capacity: null as any,
+      additional_price: null as any,
       requires_medical_certificate: false,
     });
-    const [editingSport, setEditingSport] = useState<Sport | null>(null);
-    const [updateData, setUpdateData] = useState<UpdateSport>({
-        description: "",
-        max_capacity: 0
+    setIsDialogOpen(true);
+  };
+
+  const openEditModal = (sport: Sport) => {
+    setEditingSport(sport);
+    setUpdateData({
+      description: sport.description,
+      max_capacity: sport.max_capacity
     });
+    setIsDialogOpen(true);
+  }
 
-    const fetchSports = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-          const data = await sportsService.getAll();
-          setSports(data);
-      } catch (err: any) {
-          setError(err.message || "Error al obtener los deportes");
-      } finally {
-          setLoading(false);
-      }
-    };
+  useEffect(() => {
+    fetchSports();
+  }, []);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-      try {
-          await sportsService.create(formData as CreateSport);
-          setIsDialogOpen(false);
-          fetchSports();
-      } catch (err: any) {
-          alert(err.message || "Error al guardar el deporte");
-      } finally {
-          setIsSubmitting(false);
-      }
-    };
-
-    const handleUpdate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!editingSport) return;
-        setIsSubmitting(true);
-        try {
-            await sportsService.update(editingSport.id, updateData);
-            setIsDialogOpen(false);
-            setEditingSport(null);
-            fetchSports();
-        } catch (err: any) {
-            alert(err.message || "Error al actualizar el deporte");
-        } finally {
-            setIsSubmitting(false);
+  return (
+    <DialogRoot
+      open={isDialogOpen}
+      onOpenChange={(e) => {
+        setIsDialogOpen(e.open);
+        if (!e.open) {
+          setEditingSport(null);
         }
-    };
-
-    const openCreateModal = () => {
-      setFormData({
-          name: "",
-          description: "",
-          max_capacity: null as any,
-          additional_price: null as any,
-          requires_medical_certificate: false,
-      });
-      setIsDialogOpen(true);
-    };
-
-    const openEditModal = (sport: Sport) => {
-        setEditingSport(sport);
-        setUpdateData({
-            description: sport.description,
-            max_capacity: sport.max_capacity
-        });
-        setIsDialogOpen(true);
-    }
-
-    useEffect(() => {
-        fetchSports();
-    }, []);
-
-    return (
-    <DialogRoot open={isDialogOpen} onOpenChange={(e) => setIsDialogOpen(e.open)}>
+      }}
+    >
       <Stack gap="8">
         <Flex justify="space-between" align="center">
           <Stack gap="1">
