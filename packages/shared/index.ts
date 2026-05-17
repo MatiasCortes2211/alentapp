@@ -62,6 +62,10 @@ export interface CreatePaymentRequest {
   member_id: string; // UUID
 }
 
+export interface UpdatePaymentRequest {
+  status: PaymentStatus.Paid | PaymentStatus.Canceled;
+}
+
 export interface Sport {
   id: string; // UUID
   name: string;
