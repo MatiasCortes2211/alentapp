@@ -13,8 +13,8 @@ export class LockerValidator {
     }
 
     validateStatusForAssignment(status: LockerStatus): void {
-        if (status === 'Maintenance') {
-            throw new Error('Un casillero en mantenimiento no puede ser asignado');
+        if (status !== 'Available') {
+            throw new Error('Un casillero solo puede ser asignado si su estado es Disponible');
         }
     }
 }
