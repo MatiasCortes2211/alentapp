@@ -58,6 +58,34 @@ export class PostgresSportRepository implements SportRepository {
         return sports.map(this.mapToDTO);
     }
 
+    async findById(id: string): Promise<Sport | null> {
+        const sport = await prisma.sport.findUnique({
+            where: {
+                id,
+            },
+        });
+    
+        return sport ? this.mapToDTO(sport) : null;
+    }
+
+    async countActiveEnrollments(id: string): Promise<number> {
+        return 0; // Dado que no se ha implementado la lógica de inscripciones, este método devuelve 0 por ahora. Deberá ser implementado correctamente si se integra el módulo de inscripciones.
+    }
+
+    async update(id: string, data: Partial<Pick<Sport, 'description' | 'max_capacity'>>): Promise<Sport> {
+        const updatedSport = await prisma.sport.update({
+            where: { id },
+            data: {
+                ...(data.description && { description: data.description }),
+                ...(data.max_capacity && { max_capacity: data.max_capacity }),
+            },
+        });
+        
+        return this.mapToDTO(updatedSport);
+    }
+
+
+
     private mapToDTO(sport: DBSport): Sport {
         return {
             id: sport.id,
