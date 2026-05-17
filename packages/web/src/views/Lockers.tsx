@@ -4,7 +4,8 @@ import {
 import { LuPlus, LuPencil, LuTrash2, LuRefreshCw } from "react-icons/lu";
 import { useEffect, useState } from "react";
 import { lockersService } from "../services/lockers";
-import type { LockerDTO, CreateLockerRequest, UpdateLockerRequest, LockerLocation, LockerStatus } from "@alentapp/shared";
+import { membersService } from "../services/members";
+import type { LockerDTO, CreateLockerRequest, UpdateLockerRequest, LockerLocation, LockerStatus, MemberDTO } from "@alentapp/shared";
 import { 
   DialogRoot, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter, DialogActionTrigger, DialogCloseTrigger
 } from "../components/ui/dialog";
@@ -33,6 +34,8 @@ export function LockersView() {
   const [lockers, setLockers] = useState<LockerDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [members, setMembers] = useState<MemberDTO[]>([]);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -114,6 +117,14 @@ export function LockersView() {
 
   useEffect(() => {
     fetchLockers();
+    (async () => {
+      try {
+        const membersData = await membersService.getAll();
+        setMembers(membersData);
+      } catch (err) {
+        console.error("Error al cargar miembros", err);
+      }
+    })();
   }, []);
 
   return (
@@ -188,12 +199,27 @@ export function LockersView() {
                     </SelectContent>
                   </SelectRoot>
                 </Field>
-                <Field label="ID del Socio Asignado (Opcional)">
-                  <Input 
-                    placeholder="UUID del socio" 
-                    value={formData.member_id || ''}
-                    onChange={(e) => setFormData({ ...formData, member_id: e.target.value })}
-                  />
+                <Field label="Socio Asignado (Opcional)">
+                  <Box 
+                    as="select" 
+                    value={formData.member_id || ""} 
+                    onChange={(e: any) => setFormData({ ...formData, member_id: e.target.value })} 
+                    w="full"
+                    h="10"
+                    px="3"
+                    borderRadius="md"
+                    borderWidth="1px"
+                    borderColor="border.muted"
+                    bg="transparent"
+                    outline="none"
+                  >
+                    <option value="">Sin asignar</option>
+                    {members.map(member => (
+                      <option key={member.id} value={member.id}>
+                        {member.name} (DNI: {member.dni})
+                      </option>
+                    ))}
+                  </Box>
                 </Field>
                 <Field label="Fecha Fin de Contrato (Opcional)">
                   <Input 
@@ -267,7 +293,13 @@ export function LockersView() {
                   <Table.Cell color="fg.muted">
                     {locker.end_contract_date ? new Date(locker.end_contract_date).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : '-'}
                   </Table.Cell>
-                  <Table.Cell color="fg.muted">{locker.member_id ? 'Asignado' : '-'}</Table.Cell>
+                  <Table.Cell color="fg.muted">
+                    {(() => {
+                      if (!locker.member_id) return '-';
+                      const member = members.find(m => m.id === locker.member_id);
+                      return member ? `${member.name} (${member.dni})` : 'Socio desconocido';
+                    })()}
+                  </Table.Cell>
                   <Table.Cell textAlign="end">
                     <HStack gap="2" justify="flex-end">
                       <IconButton variant="ghost" size="sm" onClick={() => openEditModal(locker)}>
