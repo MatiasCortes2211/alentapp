@@ -1,6 +1,6 @@
 export class DisciplineValidator {
 
-    validateEndDate(startDate: string, endDate: string): void {
+    async validateEndDate(startDate: string, endDate: string): Promise<void> {
         const start = new Date(startDate);
         const end = new Date(endDate);
         const today = new Date();

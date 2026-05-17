@@ -163,9 +163,29 @@ export function DisciplineView() {
                     <Input type="date" value={formData.end_date} onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} required />
                   </Field>
                 </Flex>
-                <Field label="¿La Disciplina es Total?" required>
-                  <Input type="boolean" value={formData.is_suspension_total} onChange={(e) => setFormData({ ...formData, is_suspension_total: e.target.value })} required />
+
+                <Field label="Tipo Suspension:" required>
+                  <Box 
+                    as="select" 
+                    value={formData.is_suspension_total} 
+                    onChange={(e: any) => setFormData({ ...formData, is_suspension_total: e.target.value })} 
+                    required
+                    w="full"
+                    h="10"
+                    px="3"
+                    borderRadius="md"
+                    borderWidth="1px"
+                    borderColor="border.muted"
+                    bg="transparent"
+                    outline="none"
+                   bg="whiteAlpha.100"
+                  color="gray"       
+                  >
+                    <option value="true">Total</option>
+                    <option value="false">Parcial</option>
+                  </Box>
                 </Field>
+
               </Stack>
             </DialogBody>
             <DialogFooter>
