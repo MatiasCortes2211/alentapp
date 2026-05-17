@@ -33,6 +33,10 @@ model Member {
     category   MemberCategory
     status     MemberStatus   @default(Activo)
     created_at DateTime       @default(now())
+    payments   Payment[]
+
+    lockers    Locker[]
+    medical_certificates MedicalCertificate[]
     disciplines Discipline[]
 
     @@map("members") // Para que en la DB la tabla se llame 'members' en minúscula
@@ -50,3 +54,81 @@ model Discipline {
 
     @@map("disciplines")
 } 
+
+// Locker ==========================================
+
+enum LockerStatus {
+    Available
+    Occupied
+    Maintenance
+}
+
+enum LockerLocation {
+    Male
+    Female
+    Kids
+}
+
+model Locker {
+    id                String         @id @default(uuid())
+    number            Int
+    location          LockerLocation
+    status            LockerStatus   @default(Available)
+    end_contract_date DateTime?
+    member_id         String?
+    member            Member?        @relation(fields: [member_id], references: [id])
+    is_deleted        Boolean        @default(false)
+
+    @@map("lockers")
+}
+
+// MedicalCertificate ==========================================
+
+model MedicalCertificate {
+    id             String   @id @default(uuid())
+    issue_date     DateTime @db.Date
+    expiry_date    DateTime @db.Date
+    doctor_license String
+    is_validated   Boolean  @default(true)
+    member_id      String
+    member         Member   @relation(fields: [member_id], references: [id])
+
+    @@map("medical_certificates")
+}
+
+// Payment ==========================================
+
+enum PaymentStatus {
+    PENDING
+    PAID
+    CANCELED
+}
+
+model Payment {
+    id           String        @id @default(uuid())
+    amount       Decimal
+    month        Int
+    year         Int
+    status       PaymentStatus @default(PENDING)
+    due_date     DateTime
+    payment_date DateTime?
+    is_deleted   Boolean       @default(false)
+    member_id    String
+    member       Member        @relation(fields: [member_id], references: [id])
+
+    @@map("payments")
+}
+
+// Sport ==========================================
+
+model Sport {
+    id String @id @default(uuid())
+    name String
+    description String
+    max_capacity Int
+    additional_price Float
+    requires_medical_certificate Boolean
+    is_deleted Boolean @default(false)
+    
+    @@map("sports")
+}
