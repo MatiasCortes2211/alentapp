@@ -61,3 +61,21 @@ export interface CreatePaymentRequest {
   due_date: string; // ISO Date String (YYYY-MM-DD)
   member_id: string; // UUID
 }
+
+export interface Sport {
+  id: string; // UUID
+  name: string;
+  description: string;
+  max_capacity: number;
+  additional_price: number;
+  requires_medical_certificate: boolean;
+  is_deleted: boolean;
+}
+
+export interface CreateSport {
+  name: string;
+  description: string;
+  max_capacity: number;
+  additional_price: number;
+  requires_medical_certificate: boolean;
+}
