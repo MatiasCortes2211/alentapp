@@ -8,13 +8,14 @@ import {
   Flex,
   Input,
   Center,
-  Table 
+  Table,
+  IconButton
 } from "@chakra-ui/react";
-import { LuPlus, LuRefreshCw } from "react-icons/lu";
+import { LuPlus, LuRefreshCw, LuPencil } from "react-icons/lu";
 import { useEffect, useState } from "react";
 import { disciplinesService } from "../services/disciplines";
 import { membersService } from "../services/members";
-import type { MemberDTO, CreateDiscipline } from "@alentapp/shared";
+import type { MemberDTO, CreateDiscipline, UpdateDiscipline, Discipline } from "@alentapp/shared";
 import { 
   DialogRoot, 
   DialogContent, 
@@ -35,6 +36,7 @@ export function DisciplineView() {
   
  
   const [disciplines, setDisciplines] = useState([]); 
+  const [editingDisciplineId, setEditingDisciplineId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
       reason: "",
@@ -45,18 +47,23 @@ export function DisciplineView() {
   });
 
   useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const data = await membersService.getAll();
-        setMembers(data);
-      } catch (err) {
-        console.error("Error al cargar socios", err);
-      }
-    };
-    fetchMembers();
+      const fetchData = async () => {
+          try {
+              const [membersData, disciplinesData] = await Promise.all([
+                  membersService.getAll(),
+                  disciplinesService.getAll(),
+              ]);
+              setMembers(membersData);
+              setDisciplines(disciplinesData);
+          } catch (err) {
+              console.error("Error al cargar datos", err);
+          }
+      };
+      fetchData();
   }, []);
 
   const openCreateModal = () => {
+    setEditingDisciplineId(null);
     setFormData({
       reason: "",
       start_date: new Date().toISOString().split('T')[0],
@@ -68,23 +75,58 @@ export function DisciplineView() {
     setIsDialogOpen(true);
   };
 
+  const openEditModal = (discipline: Discipline) => {
+    setEditingDisciplineId(discipline.id);
+    setFormData({
+        reason: discipline.reason,
+        start_date: discipline.start_date.split('T')[0],
+        end_date: discipline.end_date.split('T')[0],
+        is_total_suspension: discipline.is_total_suspension,
+        member_id: discipline.member_id,
+    });
+    setError(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleRefresh = async () => {
+    const data = await disciplinesService.getAll();
+    setDisciplines(data);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
     
     try {
-      const payload: CreateDiscipline = {
-        reason: formData.reason,
-        start_date: new Date(formData.start_date).toISOString(),
-        end_date: new Date(formData.end_date).toISOString(),
-        is_total_suspension: formData.is_total_suspension,
-        member_id: formData.member_id
-      };
+      if (editingDisciplineId) {
+        const payload: UpdateDiscipline = {
+          reason: formData.reason,
+          start_date: new Date(formData.start_date).toISOString(),
+          end_date: new Date(formData.end_date).toISOString(),
+          is_total_suspension: formData.is_total_suspension,
+          member_id: formData.member_id,
+        };
+        await disciplinesService.update(editingDisciplineId, payload);
+        const updatedDisciplines = await disciplinesService.getAll();
+        setDisciplines(updatedDisciplines);
+        setIsDialogOpen(false);
+        alert('¡Disciplina actualizada con éxito!');
+      } else {
+        const payload: CreateDiscipline = {
+          reason: formData.reason,
+          start_date: new Date(formData.start_date).toISOString(),
+          end_date: new Date(formData.end_date).toISOString(),
+          is_total_suspension: formData.is_total_suspension,
+          member_id: formData.member_id
+        };
 
-      await disciplinesService.create(payload);
-      setIsDialogOpen(false);
-      alert("¡Disciplina creada con éxito!"); 
+        await disciplinesService.create(payload);
+        const updatedDisciplines = await disciplinesService.getAll();
+        setDisciplines(updatedDisciplines);
+        setIsDialogOpen(false);
+        alert("¡Disciplina creada con éxito!"); 
+      }
     } catch (err: any) {
       setError(err.message || "Error al crear la disciplina");
     } finally {
@@ -104,7 +146,7 @@ export function DisciplineView() {
             </Text>
           </Stack>
           <HStack gap="3">
-            <Button variant="outline" disabled={true}>
+            <Button variant="outline" onClick={handleRefresh}>
               <LuRefreshCw /> Actualizar
             </Button>
             <Button colorPalette="blue" size="md" onClick={openCreateModal}>
@@ -117,6 +159,7 @@ export function DisciplineView() {
           <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle>Generar Nueva Disciplina</DialogTitle>
+              <DialogTitle>{editingDisciplineId ? 'Editar Disciplina' : 'Generar Nueva Disciplina'}</DialogTitle>
             </DialogHeader>
             <DialogBody>
               <Stack gap="4">
@@ -196,7 +239,7 @@ export function DisciplineView() {
                 <Button variant="outline">Cancelar</Button>
               </DialogActionTrigger>
               <Button type="submit" colorPalette="blue" loading={isSubmitting}>
-                Generar
+                {editingDisciplineId ? 'Guardar Cambios' : 'Generar'}
               </Button>
             </DialogFooter>
             <DialogCloseTrigger />
@@ -225,6 +268,30 @@ export function DisciplineView() {
               </Table.Header>
               <Table.Body>
                 {/*endpoint getAll */}
+                {disciplines.map((discipline) => {
+                  const member = members.find(m => m.id === discipline.member_id);
+                  return (
+                    <Table.Row key={discipline.id}>
+                      <Table.Cell>{member ? `${member.name} (${member.dni})` : discipline.member_id}</Table.Cell>
+                      <Table.Cell color="fg.muted">{discipline.start_date}</Table.Cell>
+                      <Table.Cell color="fg.muted">{discipline.end_date}</Table.Cell>
+                      <Table.Cell color="fg.muted">{discipline.is_total_suspension ? "Total" : "Parcial"}</Table.Cell>
+                      <Table.Cell color="fg.muted">{discipline.reason}</Table.Cell>
+                      <Table.Cell textAlign="end">
+                        <HStack gap="2" justify="flex-end">
+                          <IconButton
+                              variant="ghost"
+                              size="sm"
+                              aria-label="Editar disciplina"
+                              onClick={() => openEditModal(discipline)}
+                          >
+                            <LuPencil />
+                          </IconButton>
+                        </HStack>
+                      </Table.Cell>
+                    </Table.Row>
+                  );
+                })}
               </Table.Body>
             </Table.Root>
           )}
