@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+
 import { PostgresMemberRepository } from './infrastructure/PostgresMemberRepository.js';
 import { MemberValidator } from './domain/services/MemberValidator.js';
 import { CreateMemberUseCase } from './application/NewMemberUseCase.js';
@@ -13,11 +14,17 @@ import { MedicalCertificateValidator } from './domain/services/MedicalCertificat
 import { NewMedicalCertificateUseCase } from './application/NewMedicalCertificateUseCase.js';
 import { MedicalCertificateController } from './delivery/MedicalCertificateController.js';
 
+import { PostgresLockerRepository } from './infrastructure/PostgresLockerRepository.js';
+import { LockerValidator } from './domain/services/LockerValidator.js';
+import { CreateLockerUseCase } from './application/NewLockerUseCase.js';
+import { LockerController } from './delivery/LockerController.js';
+
 import { PostgresPaymentRepository } from './infrastructure/PostgresPaymentRepository.js';
 import { PaymentValidator } from './domain/services/PaymentValidator.js'; 
 import { CreatePaymentUseCase } from './application/NewPaymentUseCase.js'; 
 import { PaymentController } from './delivery/PaymentController.js'; 
 import { GetPaymentsUseCase } from './application/GetPaymentsUseCase.js';
+
 import { PostgresSportRepository } from './infrastructure/PostgresSportRepository.js';
 import { SportValidator } from './domain/services/SportValidator.js';
 import { CreateSportUseCase } from './application/NewSportUseCase.js';
@@ -58,7 +65,15 @@ export function buildApp() {
         deleteMemberUseCase
     );
 
-    // --- INSTANCIAS DE CERTIFICADOS MÉDICOS
+    // Locker
+    const lockerRepo = new PostgresLockerRepository();
+    const lockerValidator = new LockerValidator(lockerRepo);
+    
+    const createLockerUseCase = new CreateLockerUseCase(lockerRepo, memberRepo, lockerValidator);
+
+    const lockerController = new LockerController(createLockerUseCase);
+    
+    // MedicalCertificate
     const certificateRepo = new PostgresMedicalCertificateRepository();
     const certificateValidator = new MedicalCertificateValidator();
     
@@ -71,6 +86,7 @@ export function buildApp() {
 
     const certificateController = new MedicalCertificateController(newCertificateUseCase);
 
+    // Payment
     const paymentRepo = new PostgresPaymentRepository();
     const paymentValidator = new PaymentValidator(paymentRepo);
     
@@ -79,7 +95,7 @@ export function buildApp() {
 
     const paymentController = new PaymentController(createPaymentUseCase, getPaymentsUseCase );
 
-    // Configuración para Sport
+    // Sport
     const sportRepo = new PostgresSportRepository();
     const sportValidator = new SportValidator(sportRepo);
 
@@ -94,12 +110,13 @@ export function buildApp() {
     server.put('/api/v1/socios/:id', memberController.update.bind(memberController));
     server.delete('/api/v1/socios/:id', memberController.delete.bind(memberController));
 
-    // Rutas de Certificados Médicos
+    server.post('/api/v1/lockers', lockerController.create.bind(lockerController));
+
     server.post('/api/v1/medical-certificates', certificateController.create.bind(certificateController));
+    
     server.post('/api/v1/payments', paymentController.create.bind(paymentController));
     server.get('/api/v1/payments', paymentController.getAll.bind(paymentController));
 
-    //Sport endpoints
     server.post('/api/v1/sports', sportController.create.bind(sportController));
 
 

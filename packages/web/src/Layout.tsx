@@ -33,24 +33,23 @@ function Layout() {
                                 Miembros
                             </Text>
                         </RouterLink>
-                        {/* Botón de Certificados Médicos */}
-                        <RouterLink to="/salud">
-                            <Text
-                                fontWeight="semibold"
-                                fontSize="sm"
-                                textTransform="uppercase"
-                                letterSpacing="wider"
-                                color="fg.muted"
+                        <RouterLink to="/lockers">
+                            <Text 
+                                fontWeight="semibold" 
+                                fontSize="sm" 
+                                textTransform="uppercase" 
+                                letterSpacing="wider" 
+                                color="fg.muted" 
                                 _hover={{ color: "blue.500", textDecoration: "none" }}
                             >
-                                Certificados Médicos
+                                Casilleros
                             </Text>
                         </RouterLink>
-                        <RouterLink to="/payments">
-                            <Text
-                                fontWeight="semibold"
-                                fontSize="sm"
-                                textTransform="uppercase"
+                        <RouterLink to="/payments">    
+                            <Text 
+                                fontWeight="semibold" 
+                                fontSize="sm" 
+                                textTransform="uppercase" 
                                 letterSpacing="wider"
                                 color="fg.muted"
                                 _hover={{ color: "blue.500", textDecoration: "none" }}
@@ -68,6 +67,18 @@ function Layout() {
                                 _hover={{ color: "blue.500", textDecoration: "none" }}
                             >
                                 Deportes
+                            </Text>
+                        </RouterLink>
+                        <RouterLink to="/salud">
+                            <Text
+                                fontWeight="semibold"
+                                fontSize="sm"
+                                textTransform="uppercase"
+                                letterSpacing="wider"
+                                color="fg.muted"
+                                _hover={{ color: "blue.500", textDecoration: "none" }}
+                            >
+                                Certificados Médicos
                             </Text>
                         </RouterLink>
                     </HStack>
