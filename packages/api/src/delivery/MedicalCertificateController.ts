@@ -1,60 +1,41 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { z } from 'zod';
 import { NewMedicalCertificateUseCase } from '../application/NewMedicalCertificateUseCase.js';
 import { CreateMedicalCertificate } from '@alentapp/shared';
-
-// Esquema de validación de entrada (Zod) - Paso 1 del flujo técnico
-const createCertificateSchema = z.object({
-  issue_date: z.string().min(1, "La fecha de emisión es obligatoria"),
-  expiry_date: z.string().min(1, "La fecha de vencimiento es obligatoria"),
-  doctor_license: z.string().min(1, "La matrícula del médico es obligatoria"),
-  member_id: z.string().uuid("El ID del socio debe ser un UUID válido"),
-});
 
 export class MedicalCertificateController {
   constructor(
     private readonly newMedicalCertificateUseCase: NewMedicalCertificateUseCase
   ) {}
 
-  // Método para crear un nuevo certificado médico - Paso 2 del flujo técnico
   async create(
     request: FastifyRequest<{ Body: CreateMedicalCertificate }>,
     reply: FastifyReply
   ) {
     try {
-      // 1. Validar formato de datos con Zod
-      const validatedData = createCertificateSchema.parse(request.body);
-
-      // 2. Ejecutar Caso de Uso (Orquestación y Reglas de Negocio)
-      const certificate = await this.newMedicalCertificateUseCase.execute(validatedData);
-
-      // Escenario de éxito: 201 Created
+      const certificate = await this.newMedicalCertificateUseCase.execute(request.body);
       return reply.status(201).send({ data: certificate });
 
     } catch (error: any) {
-      // Manejo de errores según Casos de Borde del TDD
-      
-      // Errores de Zod (400 Bad Request) unificados a propiedad 'message' para cumplir con el TDD
-      if (error instanceof z.ZodError) {
-        const customMessage = error.issues.map(issue => issue.message).join(", ");
-        return reply.status(400).send({ 
-          message: customMessage || "Datos faltantes o inválidos"
-        });
-      }
-
-      // Socio inexistente (404 Not Found)
+      // 1. Socio inexistente (404 Not Found)
       if (error.message.includes('Socio inexistente')) {
         return reply.status(404).send({ error: error.message });
       }
 
-      // Validaciones de fechas del Dominio (400 Bad Request)
-      if (error.message.includes('vencimiento') || error.message.includes('emisión')) {
-        return reply.status(400).send({ error: error.message });
+      // 2. Captura total de errores de validación (estructurales, vacíos o de negocio)
+      if (
+        error.message.includes('obligatoria') || 
+        error.message.includes('vencimiento') || 
+        error.message.includes('emisión') || 
+        error.message.includes('válido') ||
+        error.message.includes('invalid') ||
+        error.message.includes('Required')
+      ) {
+        return reply.status(400).send({ message: error.message });
       }
 
-      // Error de Infraestructura / Genérico (500)
+      // 3. Fallo genérico controlado
       request.log.error(error);
-      return reply.status(500).send({ error: "Error interno, reintente más tarde" });
+      return reply.status(500).send({ error: 'Internal server error' });
     }
   }
 }
