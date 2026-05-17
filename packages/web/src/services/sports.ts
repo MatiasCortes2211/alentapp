@@ -17,5 +17,14 @@ export const sportsService = {
         }
         const result = await response.json();
         return result.data;
+    },
+
+    async getAll(): Promise<Sport[]> {
+        const response = await fetch(`${API_URL}/sports`);
+        if (!response.ok) {
+            throw new Error('Error al obtener los deportes');
+        }  
+        const result = await response.json();
+        return result.data;
     }
 };
