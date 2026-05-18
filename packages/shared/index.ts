@@ -85,6 +85,15 @@ export interface CreateMedicalCertificate {
   member_id: string;
 }
 
+export interface UpdateMedicalCertificate {
+  issue_date?: string;
+  expiry_date?: string;
+  doctor_license?: string;
+  is_validated?: boolean;
+  member_id?: string;
+}
+
+
 // ==========================================
 // Payment
 // ==========================================
