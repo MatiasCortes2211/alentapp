@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { CreateLockerUseCase } from '../application/NewLockerUseCase.js';
 import { GetLockersUseCase } from '../application/GetLockersUseCase.js';
 import { UpdateLockerUseCase } from '../application/UpdateLockerUseCase.js';
+import { DeleteLockerUseCase } from '../application/DeleteLockerUseCase.js';
 import { CreateLockerRequest, UpdateLockerRequest } from '@alentapp/shared';
 
 export class LockerController {
@@ -9,6 +10,7 @@ export class LockerController {
         private readonly createLockerUseCase: CreateLockerUseCase,
         private readonly getLockersUseCase: GetLockersUseCase,
         private readonly updateLockerUseCase: UpdateLockerUseCase,
+        private readonly deleteLockerUseCase: DeleteLockerUseCase,
     ) {}
 
     async getAll(_request: FastifyRequest, reply: FastifyReply) {
@@ -62,6 +64,27 @@ export class LockerController {
                 return reply.status(409).send({ error: error.message });
             }
             return reply.status(400).send({ error: error.message });
+        }
+    }
+
+    async delete(
+        request: FastifyRequest<{ Params: { id: string } }>,
+        reply: FastifyReply,
+    ) {
+        try {
+            await this.deleteLockerUseCase.execute(request.params.id);
+            return reply.status(204).send(); 
+        } catch (error: any) {
+            if (error.message.includes('no existe')) {
+                return reply.status(404).send({ error: error.message });
+            }
+            if (error.message.includes('ya fue eliminado previamente')) {
+                return reply.status(409).send({ error: error.message });
+            }
+            if (error.message.includes('formato del ID es inválido')) {
+                return reply.status(400).send({ error: error.message });
+            }
+            return reply.status(500).send({ error: error.message });
         }
     }
 }

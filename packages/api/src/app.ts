@@ -19,6 +19,7 @@ import { LockerValidator } from './domain/services/LockerValidator.js';
 import { CreateLockerUseCase } from './application/NewLockerUseCase.js';
 import { GetLockersUseCase } from './application/GetLockersUseCase.js';
 import { UpdateLockerUseCase } from './application/UpdateLockerUseCase.js';
+import { DeleteLockerUseCase } from './application/DeleteLockerUseCase.js';
 import { LockerController } from './delivery/LockerController.js';
 
 import { PostgresPaymentRepository } from './infrastructure/PostgresPaymentRepository.js';
@@ -85,8 +86,14 @@ export function buildApp() {
     const createLockerUseCase = new CreateLockerUseCase(lockerRepo, memberRepo, lockerValidator);
     const getLockersUseCase = new GetLockersUseCase(lockerRepo);
     const updateLockerUseCase = new UpdateLockerUseCase(lockerRepo, memberRepo, lockerValidator);
+    const deleteLockerUseCase = new DeleteLockerUseCase(lockerRepo);
 
-    const lockerController = new LockerController(createLockerUseCase, getLockersUseCase, updateLockerUseCase);
+    const lockerController = new LockerController(
+        createLockerUseCase, 
+        getLockersUseCase, 
+        updateLockerUseCase,
+        deleteLockerUseCase,
+    );
     
     // MedicalCertificate
     const certificateRepo = new PostgresMedicalCertificateRepository();
@@ -149,6 +156,7 @@ export function buildApp() {
     server.post('/api/v1/lockers', lockerController.create.bind(lockerController));
     server.get('/api/v1/lockers', lockerController.getAll.bind(lockerController));
     server.patch('/api/v1/lockers/:id', lockerController.update.bind(lockerController));
+    server.delete('/api/v1/lockers/:id', lockerController.delete.bind(lockerController));
 
     server.post('/api/v1/medical-certificates', certificateController.create.bind(certificateController));
     

@@ -46,9 +46,12 @@ export class PostgresLockerRepository implements LockerRepository {
 
     async findByNumber(number: number): Promise<LockerDTO | null> {
         const locker = await prisma.locker.findFirst({
-            where: { number },
+            where: {
+                number: number,
+                is_deleted: false
+            }
         });
-
+        
         return locker ? this.mapToDTO(locker) : null;
     }
 
