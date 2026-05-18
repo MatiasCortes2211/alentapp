@@ -16,7 +16,7 @@ import {
 import { LuPlus, LuRefreshCw, LuActivity, LuEye } from "react-icons/lu";
 import { useEffect, useState } from "react";
 import { membersService } from "../services/members";
-import { medicalCertificateService } from "../services/medicalCertificateService";
+import { medicalCertificateService } from "../services/medicalCertificate";
 import type { MemberDTO, CreateMedicalCertificate, MedicalCertificateDTO } from "@alentapp/shared"; 
 import {
     DialogRoot,
