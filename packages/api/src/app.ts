@@ -34,6 +34,7 @@ import { SportValidator } from './domain/services/SportValidator.js';
 import { CreateSportUseCase } from './application/NewSportUseCase.js';
 import { GetSportsUseCase } from './application/GetSportsUseCase.js';
 import { UpdateSportUseCase } from './application/UpdateSportUseCase.js';
+import { DeleteSportUseCase } from './application/DeleteSportUseCase.js';
 import { SportController } from './delivery/SportController.js';
 
 import { PostgresDisciplineRepository } from './infrastructure/PostgresDisciplineRepository.js';
@@ -117,11 +118,14 @@ export function buildApp() {
     const sportValidator = new SportValidator(sportRepo);
 
     const createSportUseCase = new CreateSportUseCase(sportRepo, sportValidator);
-    const getSportsUseCase = new GetSportsUseCase(sportRepo);    const updateSportUseCase = new UpdateSportUseCase(sportRepo, sportValidator);
+    const getSportsUseCase = new GetSportsUseCase(sportRepo);
+    const updateSportUseCase = new UpdateSportUseCase(sportRepo, sportValidator);
+    const deleteSportUseCase = new DeleteSportUseCase(sportRepo);
     const sportController = new SportController(
         createSportUseCase,
         updateSportUseCase,
-        getSportsUseCase
+        getSportsUseCase,
+        deleteSportUseCase
     );
 
     // Configuración para Discipline
@@ -156,6 +160,8 @@ export function buildApp() {
     server.post('/api/v1/sports', sportController.create.bind(sportController));
     server.get('/api/v1/sports', sportController.getAll.bind(sportController));
     server.patch('/api/v1/sports/:id', sportController.update.bind(sportController));
+    server.delete('/api/v1/sports/:id', sportController.delete.bind(sportController));
+
     //Endpoints para Discipline
     server.post('/api/v1/disciplines', disciplineController.create.bind(disciplineController));
     server.get('/api/v1/disciplines', disciplineController.findAll.bind(disciplineController));

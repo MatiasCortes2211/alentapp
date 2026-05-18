@@ -7,4 +7,5 @@ export interface SportRepository {
     findById(id: string): Promise<Sport | null>;
     update(id: string, data: Partial<Pick<Sport, 'description' | 'max_capacity'>>): Promise<Sport>;
     countActiveEnrollments(sportId: string): Promise<number>;
+    delete(id: string): Promise<void>;
 }

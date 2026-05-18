@@ -42,6 +42,7 @@ export class PostgresSportRepository implements SportRepository {
         const sport = await prisma.sport.findFirst({
             where: {
                 name,
+                is_deleted: false,
             },
         });
 
@@ -85,6 +86,13 @@ export class PostgresSportRepository implements SportRepository {
     }
 
 
+
+    async delete(id: string): Promise<void> {
+        await prisma.sport.update({
+            where: { id },
+            data: { is_deleted: true },
+        });
+    }
 
     private mapToDTO(sport: DBSport): Sport {
         return {
