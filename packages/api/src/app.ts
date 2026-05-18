@@ -12,8 +12,9 @@ import { MemberController } from './delivery/MemberController.js';
 import { PostgresMedicalCertificateRepository } from './infrastructure/PostgresMedicalCertificateRepository.js';
 import { MedicalCertificateValidator } from './domain/services/MedicalCertificateValidator.js';
 import { NewMedicalCertificateUseCase } from './application/NewMedicalCertificateUseCase.js';
-import { MedicalCertificateController } from './delivery/MedicalCertificateController.js';
 import { GetMedicalCertificatesUseCase } from './application/GetMedicalCertificatesUseCase.js'; 
+import { UpdateMedicalCertificateUseCase } from './application/UpdateMedicalCertificateUseCase.js'; 
+import { MedicalCertificateController } from './delivery/MedicalCertificateController.js';
 
 import { PostgresLockerRepository } from './infrastructure/PostgresLockerRepository.js';
 import { LockerValidator } from './domain/services/LockerValidator.js';
@@ -91,6 +92,7 @@ export function buildApp() {
     const updateLockerUseCase = new UpdateLockerUseCase(lockerRepo, memberRepo, lockerValidator);
     const deleteLockerUseCase = new DeleteLockerUseCase(lockerRepo);
 
+    // ✅ CORREGIDO: Una única declaración con todas las dependencias
     const lockerController = new LockerController(
         createLockerUseCase, 
         getLockersUseCase, 
@@ -102,20 +104,19 @@ export function buildApp() {
     const certificateRepo = new PostgresMedicalCertificateRepository();
     const certificateValidator = new MedicalCertificateValidator();
     
-    // El caso de uso necesita ambos repos para validar socio y persistir certificado
     const newCertificateUseCase = new NewMedicalCertificateUseCase(
         certificateRepo,
         memberRepo,
         certificateValidator
     );
 
-    // 1. Instancia del nuevo caso de uso del READ
     const getMedicalCertificatesUseCase = new GetMedicalCertificatesUseCase(certificateRepo);
+    const updateMedicalCertificateUseCase = new UpdateMedicalCertificateUseCase(certificateRepo);
 
-    // 2. ÚNICA DECLARACIÓN del controlador pasando ambas dependencias
     const certificateController = new MedicalCertificateController(
         newCertificateUseCase,
-        getMedicalCertificatesUseCase
+        getMedicalCertificatesUseCase,
+        updateMedicalCertificateUseCase
     );
 
     // Payment
@@ -127,8 +128,13 @@ export function buildApp() {
     const deletePaymentUseCase = new DeletePaymentUseCase(paymentRepo);
     const updatePaymentUseCase = new UpdatePaymentUseCase(paymentRepo, paymentValidator);
 
-    const paymentController = new PaymentController(createPaymentUseCase, getPaymentsUseCase, deletePaymentUseCase, updatePaymentUseCase);
-
+    // ✅ CORREGIDO: Una única declaración con todas las dependencias nuevas de main
+    const paymentController = new PaymentController(
+        createPaymentUseCase, 
+        getPaymentsUseCase, 
+        deletePaymentUseCase, 
+        updatePaymentUseCase
+    );
 
     // Sport
     const sportRepo = new PostgresSportRepository();
@@ -138,6 +144,7 @@ export function buildApp() {
     const getSportsUseCase = new GetSportsUseCase(sportRepo);
     const updateSportUseCase = new UpdateSportUseCase(sportRepo, sportValidator);
     const deleteSportUseCase = new DeleteSportUseCase(sportRepo);
+    
     const sportController = new SportController(
         createSportUseCase,
         updateSportUseCase,
@@ -145,7 +152,7 @@ export function buildApp() {
         deleteSportUseCase
     );
 
-    // Configuración para Discipline
+    // Configuration for Discipline
     const disciplineRepo = new PostgresDisciplineRepository();
     const disciplineValidator = new DisciplineValidator();
 
@@ -161,31 +168,36 @@ export function buildApp() {
         updateDisciplineUseCase
     );
 
+    // Rutas Socios
     server.get('/api/v1/socios', memberController.getAll.bind(memberController));
     server.post('/api/v1/socios', memberController.create.bind(memberController));
     server.put('/api/v1/socios/:id', memberController.update.bind(memberController));
     server.delete('/api/v1/socios/:id', memberController.delete.bind(memberController));
 
+    // Rutas Lockers
     server.post('/api/v1/lockers', lockerController.create.bind(lockerController));
     server.get('/api/v1/lockers', lockerController.getAll.bind(lockerController));
     server.patch('/api/v1/lockers/:id', lockerController.update.bind(lockerController));
     server.delete('/api/v1/lockers/:id', lockerController.delete.bind(lockerController));
 
+    // Rutas Certificados Médicos
     server.post('/api/v1/medical-certificates', certificateController.create.bind(certificateController));
     server.get('/api/v1/medical-certificates/member/:memberId', certificateController.getByMember.bind(certificateController));
+    server.patch('/api/v1/medical-certificates/:id', certificateController.update.bind(certificateController));
 
-    
+    // Rutas Pagos
     server.post('/api/v1/payments', paymentController.create.bind(paymentController));
     server.get('/api/v1/payments', paymentController.getAll.bind(paymentController));
     server.delete('/api/v1/payments/:id', paymentController.delete.bind(paymentController));
     server.patch('/api/v1/payments/:id', paymentController.update.bind(paymentController));
 
+    // Rutas Deportes
     server.post('/api/v1/sports', sportController.create.bind(sportController));
     server.get('/api/v1/sports', sportController.getAll.bind(sportController));
     server.patch('/api/v1/sports/:id', sportController.update.bind(sportController));
     server.delete('/api/v1/sports/:id', sportController.delete.bind(sportController));
 
-    //Endpoints para Discipline
+    // Rutas Discipline
     server.post('/api/v1/disciplines', disciplineController.create.bind(disciplineController));
     server.get('/api/v1/disciplines', disciplineController.findAll.bind(disciplineController));
     server.delete('/api/v1/disciplines/:id', disciplineController.delete.bind(disciplineController));
@@ -199,7 +211,6 @@ export function buildApp() {
     return server;
 }
 
-// Solo iniciar el servidor si el script se ejecuta directamente (no cuando es importado por vitest)
 if (process.argv[1] && process.argv[1].endsWith('app.ts')) {
     const server = buildApp();
     const port = parseInt(process.env.PORT || '3000', 10);
