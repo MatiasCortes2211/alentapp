@@ -1,11 +1,11 @@
-import { MedicalCertificateDTO, CreateMedicalCertificate } from '@alentapp/shared';
+import { MedicalCertificateDTO, CreateMedicalCertificate, UpdateMedicalCertificate } from '@alentapp/shared';
 
 // Esta interfaz es el "Puerto de Salida". El dominio dice: 
 // "No me importa si usás Postgres o Mongo, dame un objeto que cumpla esto".
 
 export interface MedicalCertificateRepository {
 
-  //Registra un nuevo certificado médico (TDD-0007)
+  // Registra un nuevo certificado médico (TDD-0007)
   create(data: CreateMedicalCertificate): Promise<MedicalCertificateDTO>;
 
   /**
@@ -18,4 +18,14 @@ export interface MedicalCertificateRepository {
 
   // Busca los certificados médicos de un socio por su ID 
   findByMemberId(memberId: string): Promise<MedicalCertificateDTO[]>;
+
+  // ==========================================
+  // 🚀 NUEVOS MÉTODOS PARA EL UPDATE:
+  // ==========================================
+  
+  // Busca un certificado médico específico por su ID único para validar si existe
+  findById(id: string): Promise<MedicalCertificateDTO | null>;
+
+  // Actualiza parcialmente los campos del certificado (ej. is_validated: false)
+  update(id: string, data: UpdateMedicalCertificate): Promise<MedicalCertificateDTO>;
 }

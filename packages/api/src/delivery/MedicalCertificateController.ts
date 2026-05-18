@@ -1,12 +1,14 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { NewMedicalCertificateUseCase } from '../application/NewMedicalCertificateUseCase.js';
-import { CreateMedicalCertificate } from '@alentapp/shared';
 import { GetMedicalCertificatesUseCase } from '../application/GetMedicalCertificatesUseCase.js';
+import { UpdateMedicalCertificateUseCase } from '../application/UpdateMedicalCertificateUseCase.js'; 
+import { CreateMedicalCertificate, UpdateMedicalCertificate } from '@alentapp/shared';
 
 export class MedicalCertificateController {
   constructor(
     private readonly newMedicalCertificateUseCase: NewMedicalCertificateUseCase,
-    private readonly getMedicalCertificatesUseCase: GetMedicalCertificatesUseCase
+    private readonly getMedicalCertificatesUseCase: GetMedicalCertificatesUseCase,
+    private readonly updateMedicalCertificateUseCase: UpdateMedicalCertificateUseCase 
   ) {}
 
   async create(
@@ -18,12 +20,10 @@ export class MedicalCertificateController {
       return reply.status(201).send({ data: certificate });
 
     } catch (error: any) {
-      // 1. Socio inexistente (404 Not Found)
       if (error.message.includes('Socio inexistente')) {
         return reply.status(404).send({ error: error.message });
       }
 
-      // 2. Captura total de errores de validación (estructurales, vacíos o de negocio)
       if (
         error.message.includes('obligatoria') || 
         error.message.includes('vencimiento') || 
@@ -35,13 +35,11 @@ export class MedicalCertificateController {
         return reply.status(400).send({ message: error.message });
       }
 
-      // 3. Fallo genérico controlado
       request.log.error(error);
       return reply.status(500).send({ error: 'Internal server error' });
     }
   }
 
-  // NUEVO MÉTODO AGREGADO ABAJO PARA EL READ:
   async getByMember(
     request: FastifyRequest<{ Params: { memberId: string } }>,
     reply: FastifyReply
@@ -50,15 +48,54 @@ export class MedicalCertificateController {
       const { memberId } = request.params;
       const certificates = await this.getMedicalCertificatesUseCase.execute(memberId);
       
-      // Devolvemos el array con un estado 200 OK
       return reply.status(200).send({ data: certificates });
 
     } catch (error: any) {
-      // Si el ID vino vacío o inválido y saltó la regla del Use Case
       if (error.message.includes('requerido')) {
         return reply.status(400).send({ message: error.message });
       }
 
+      if (error.message.includes('Socio inexistente')) {
+        return reply.status(404).send({ error: error.message });
+      }
+
+      request.log.error(error);
+      return reply.status(500).send({ error: 'Internal server error' });
+    }
+  }
+
+  // =========================================================================
+  // 🚀 MÉTODO UPDATE ADAPTADO Y CORREGIDO
+  // =========================================================================
+  async update(
+    request: FastifyRequest<{ Params: { id: string }; Body: UpdateMedicalCertificate }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const { id } = request.params;
+      const updatedCertificate = await this.updateMedicalCertificateUseCase.execute(id, request.body);
+
+      return reply.status(200).send({ data: updatedCertificate });
+
+    } catch (error: any) {
+      // 1. Capturamos si el ID es inválido o si las fechas son incoherentes (400 Bad Request)
+      if (
+        error.statusCode === 400 || 
+        error.message.includes('400') || 
+        error.message.includes('Fechas inválidas') ||
+        error.message.includes('válido')
+      ) {
+        const cleanMessage = error.message.replace('400: ', '');
+        return reply.status(400).send({ message: cleanMessage });
+      }
+
+      // 2. Capturamos si el recurso no existe en PostgreSQL (404 Not Found)
+      if (error.statusCode === 404 || error.message.includes('404') || error.message.includes('inexistente')) {
+        const cleanMessage = error.message.replace('404: ', '');
+        return reply.status(404).send({ error: cleanMessage });
+      }
+
+      // 3. Fallo de infraestructura o base de datos (500 Internal Server Error)
       request.log.error(error);
       return reply.status(500).send({ error: 'Internal server error' });
     }
