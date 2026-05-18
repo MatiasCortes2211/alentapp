@@ -12,4 +12,6 @@ const UpdatePaymentSchema = z.object({
     status: z.enum(['PAID', 'CANCELED'], { message: "El estado debe ser PAID o CANCELED" }),
 });
 
-export { CreatePaymentSchema, UpdatePaymentSchema };
+const PaymentIdSchema = z.string().uuid({ message: "El formato del ID es inválido" });
+
+export { CreatePaymentSchema, UpdatePaymentSchema, PaymentIdSchema };

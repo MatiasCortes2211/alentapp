@@ -1,4 +1,5 @@
-import { z, ZodError } from 'zod';
+import { ZodError } from 'zod';
+import { PaymentIdSchema } from '../domain/services/PaymentSchema.js';
 import { PaymentRepository } from '../domain/PaymentRepository.js';
 
 export class DeletePaymentUseCase {
@@ -7,12 +8,12 @@ export class DeletePaymentUseCase {
     async execute(id: string): Promise<void> {
 
         try {
-            z.string().uuid({ message: "El formato del ID es inválido" }).parse(id);
+            PaymentIdSchema.parse(id);
         } catch (error) {
             if (error instanceof ZodError) throw new Error(error.issues[0].message);
             throw error;
         }
-        
+
         // 1. Verificar existencia del pago
         const existingPayment = await this.paymentRepository.findById(id);
         if (!existingPayment) {
