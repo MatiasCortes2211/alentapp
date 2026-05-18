@@ -150,7 +150,15 @@ export function DisciplineView() {
   };
 
   return (
-    <DialogRoot open={isDialogOpen} onOpenChange={(e) => setIsDialogOpen(e.open)}>
+    <DialogRoot
+      open={isDialogOpen} 
+      onOpenChange={(e) => {
+        setIsDialogOpen(e.open);
+          if (!e.open) {
+            setEditingDisciplineId(null);
+          }
+      }}
+    >
       <Stack gap="8">
         
         <Flex justify="space-between" align="center">
@@ -237,7 +245,6 @@ export function DisciplineView() {
                     borderColor="border.muted"
                     bg="transparent"
                     outline="none"
-                   bg="whiteAlpha.100"
                   color="gray"       
                   >
                     <option value="true">Total</option>
