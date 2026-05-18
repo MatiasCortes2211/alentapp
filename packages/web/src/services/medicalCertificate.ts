@@ -3,7 +3,7 @@ import type { MedicalCertificateDTO, CreateMedicalCertificate, UpdateMedicalCert
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1';
 
 export const medicalCertificateService = {
-  // 1. Crear Certificado Original (Paula / TDD-0007)
+  // 1. Crear Certificado Original
   async create(data: CreateMedicalCertificate): Promise<MedicalCertificateDTO> {
     const response = await fetch(`${API_URL}/medical-certificates`, {
       method: 'POST',
@@ -23,7 +23,7 @@ export const medicalCertificateService = {
     return result.data;
   },
 
-  // 2. Obtener historial por Socio (Paula / TDD-0007)
+  // 2. Obtener historial por Socio
   async getByMemberId(memberId: string): Promise<MedicalCertificateDTO[]> {
     const response = await fetch(`${API_URL}/medical-certificates/member/${memberId}`, {
       method: 'GET',
@@ -41,7 +41,7 @@ export const medicalCertificateService = {
     return result.data;
   },
 
-  // 3. Modificar Validación/Vencimiento (Tu Update de Main - TDD-0008)
+  // 3. Modificar Validación/Vencimiento
   async update(id: string, data: UpdateMedicalCertificate): Promise<MedicalCertificateDTO> {
     const response = await fetch(`${API_URL}/medical-certificates/${id}`, {
       method: 'PATCH',
@@ -60,9 +60,7 @@ export const medicalCertificateService = {
     return result.data;
   },
 
-  // =========================================================================
-  // 🚀 4. Borrado Físico Seguro (TDD-0009) — ¡CORREGIDO Y SIN HEADERS EXTRALIMITADOS!
-  // =========================================================================
+  // Funcion Delete
   async delete(id: string): Promise<void> {
     const response = await fetch(`${API_URL}/medical-certificates/${id}`, {
       method: 'DELETE', // ✅ Sin el Content-Type para evitar el FST_ERR_CTP_EMPTY_JSON_BODY de Fastify

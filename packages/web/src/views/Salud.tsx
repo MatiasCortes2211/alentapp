@@ -52,17 +52,17 @@ export function SaludView() {
     // Diccionario local para asociar a cada miembro con sus certificados reales en la grilla principal
     const [certificatesMap, setCertificatesMap] = useState<Record<string, MedicalCertificateDTO[]>>({});
 
-    // 1. State para el modal de carga original (TDD-0007)
+    // 1. State para el modal de carga original 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedMember, setSelectedMember] = useState<MemberDTO | null>(null);
 
-    // 2. State para el modal de historial clínico (TDD-0007 / TDD-0009)
+    // 2. State para el modal de historial clínico 
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [historyCertificates, setHistoryCertificates] = useState<MedicalCertificateDTO[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-    // 3. State para el modal de edición de un certificado (TDD-0008)
+    // 3. State para el modal de edición de un certificado
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [editingCertId, setEditingCertId] = useState<string | null>(null);
     const [editFormData, setEditFormData] = useState<UpdateMedicalCertificate>({
@@ -70,7 +70,7 @@ export function SaludView() {
         is_validated: true,
     });
 
-    // Form state original de creación basado en tu TDD-0007
+ 
     const [formData, setFormData] = useState<CreateMedicalCertificate>({
         member_id: "",
         issue_date: "",
@@ -139,7 +139,7 @@ export function SaludView() {
         setIsEditOpen(true);
     };
 
-    // Submit de Creación Original (TDD-0007)
+    // Submit de Creación Original
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -161,7 +161,7 @@ export function SaludView() {
         }
     };
 
-    // Submit de Edición (TDD-0008)
+    // Submit de Edición 
     const handleUpdateStatus = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -179,7 +179,7 @@ export function SaludView() {
         }
     };
 
-    // Manejador del Hard Delete en el Legajo (TDD-0009)
+    // Manejador del Hard Delete en el Legajo 
     const handleDeleteCertificate = async (certId: string, license: string) => {
         if (window.confirm(`¿Estás seguro de que deseas eliminar físicamente el certificado MN ${license}? Esta acción removerá el registro de la base de datos de forma segura.`)) {
             try {

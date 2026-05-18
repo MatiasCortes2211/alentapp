@@ -23,7 +23,7 @@ type DBMedicalCertificate = {
 
 export class PostgresMedicalCertificateRepository implements MedicalCertificateRepository {
     
-    // 1. Crear Certificado (Paula / TDD-0007)
+    // 1. Crear Certificado 
     async create(data: CreateMedicalCertificate): Promise<MedicalCertificateDTO> {
         const certificate = await prisma.medicalCertificate.create({
             data: {
@@ -37,7 +37,7 @@ export class PostgresMedicalCertificateRepository implements MedicalCertificateR
         return this.mapToDTO(certificate as DBMedicalCertificate);
     }
 
-    // 2. Invalidar Anteriores (Paula / TDD-0007)
+    // 2. Invalidar Anteriores 
     async invalidatePriorCertificates(memberId: string): Promise<void> {
         await prisma.medicalCertificate.updateMany({
             where: {
@@ -50,7 +50,7 @@ export class PostgresMedicalCertificateRepository implements MedicalCertificateR
         });
     }
 
-    // 3. Buscar por ID de Socio (Paula / TDD-0007)
+    // 3. Buscar por ID de Socio 
     async findByMemberId(memberId: string): Promise<MedicalCertificateDTO[]> {
         const certificates = await prisma.medicalCertificate.findMany({
             where: {
@@ -63,7 +63,7 @@ export class PostgresMedicalCertificateRepository implements MedicalCertificateR
         return certificates.map(cert => this.mapToDTO(cert as DBMedicalCertificate));
     }
 
-    // 4. Buscar por ID único (Tu Update de Main - TDD-0008)
+    // 4. Buscar por ID único
     async findById(id: string): Promise<MedicalCertificateDTO | null> {
         const certificate = await prisma.medicalCertificate.findUnique({
             where: { id },
@@ -72,7 +72,7 @@ export class PostgresMedicalCertificateRepository implements MedicalCertificateR
         return this.mapToDTO(certificate as DBMedicalCertificate);
     }
 
-    // 5. Actualizar campos parciales (Tu Update de Main - TDD-0008)
+    // 5. Actualizar campos parciales 
     async update(id: string, data: UpdateMedicalCertificate): Promise<MedicalCertificateDTO> {
         const updateData: any = {};
 
@@ -89,16 +89,13 @@ export class PostgresMedicalCertificateRepository implements MedicalCertificateR
         return this.mapToDTO(updatedCertificate as DBMedicalCertificate);
     }
 
-    // =========================================================================
-    // 🚀 6. BAJA FISICA EN POSTGRESQL (TDD-0009)
-    // =========================================================================
+    // Funcion Delete
     async delete(id: string): Promise<void> {
         await prisma.medicalCertificate.delete({
             where: { id },
         });
     }
 
-    // ✅ UNA SOLA COPIA LIMPIA DE MAP_TO_DTO
     private mapToDTO(cert: DBMedicalCertificate): MedicalCertificateDTO {
         return {
             id: cert.id,
