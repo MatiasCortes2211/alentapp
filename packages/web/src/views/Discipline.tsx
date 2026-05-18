@@ -158,7 +158,6 @@ export function DisciplineView() {
         <DialogContent>
           <form onSubmit={handleSubmit}>
             <DialogHeader>
-              <DialogTitle>Generar Nueva Disciplina</DialogTitle>
               <DialogTitle>{editingDisciplineId ? 'Editar Disciplina' : 'Generar Nueva Disciplina'}</DialogTitle>
             </DialogHeader>
             <DialogBody>
