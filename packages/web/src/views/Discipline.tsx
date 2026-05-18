@@ -8,9 +8,10 @@ import {
   Flex,
   Input,
   Center,
-  Table 
+  Table,
+  IconButton
 } from "@chakra-ui/react";
-import { LuPlus, LuRefreshCw } from "react-icons/lu";
+import { LuPlus, LuRefreshCw, LuTrash2 } from "react-icons/lu";
 import { useEffect, useState } from "react";
 import { disciplinesService } from "../services/disciplines";
 import { membersService } from "../services/members";
