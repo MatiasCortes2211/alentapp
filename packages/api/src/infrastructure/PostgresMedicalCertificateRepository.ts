@@ -1,7 +1,7 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/client/client.js';
 import { MedicalCertificateRepository } from '../domain/MedicalCertificateRepository.js';
-import { MedicalCertificateDTO, CreateMedicalCertificate } from '@alentapp/shared';
+import { MedicalCertificateDTO, CreateMedicalCertificate, UpdateMedicalCertificate } from '@alentapp/shared'; // 👈 Agregamos UpdateMedicalCertificate
 
 if (!process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL environment variable is not set');
@@ -68,6 +68,39 @@ export class PostgresMedicalCertificateRepository implements MedicalCertificateR
 
         // Mapeamos el array de la DB al DTO usando tu función mapToDTO
         return certificates.map(cert => this.mapToDTO(cert as DBMedicalCertificate));
+    }
+
+    // =========================================================================
+    // 🚀 NUEVOS MÉTODOS IMPLEMENTADOS PARA EL UPDATE:
+    // =========================================================================
+
+    // Busca un certificado médico específico por su ID único
+    async findById(id: string): Promise<MedicalCertificateDTO | null> {
+        const certificate = await prisma.medicalCertificate.findUnique({
+            where: { id },
+        });
+
+        if (!certificate) return null;
+
+        return this.mapToDTO(certificate as DBMedicalCertificate);
+    }
+
+    // Actualiza parcialmente un certificado médico existente
+    async update(id: string, data: UpdateMedicalCertificate): Promise<MedicalCertificateDTO> {
+        // Armamos el objeto dinámico por si te mandan campos parciales
+        const updateData: any = {};
+
+        if (data.is_validated !== undefined) updateData.is_validated = data.is_validated;
+        if (data.doctor_license !== undefined) updateData.doctor_license = data.doctor_license;
+        if (data.issue_date !== undefined) updateData.issue_date = new Date(data.issue_date);
+        if (data.expiry_date !== undefined) updateData.expiry_date = new Date(data.expiry_date);
+
+        const updatedCertificate = await prisma.medicalCertificate.update({
+            where: { id },
+            data: updateData,
+        });
+
+        return this.mapToDTO(updatedCertificate as DBMedicalCertificate);
     }
 
     // Método privado para mapear la estructura de la base de datos a un DTO que la aplicación pueda usar sin depender de la estructura interna de la base de datos
