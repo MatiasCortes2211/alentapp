@@ -19,6 +19,7 @@ export class UpdateDisciplineUseCase {
             if (error instanceof ZodError) {
                 throw new Error(error.issues[0].message);
             }
+            throw Error;
         }
 
         const discipline = await this.disciplineRepository.findById(id);
