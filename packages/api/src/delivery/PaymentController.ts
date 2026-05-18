@@ -35,10 +35,11 @@ export class PaymentController {
             }
 
             if (
-                error.message.includes('mayor a cero') || 
-                error.message.includes('entre 1 y 12') || 
-                error.message.includes('no puede ser anterior a hoy') ||
-                error.message.includes('es requerido')
+                error.message.includes('mayor a cero') ||         
+                error.message.includes('entre 1 y 12') ||          
+                error.message.includes('no puede ser anterior a hoy') || 
+                error.message.includes('UUID válido') ||          
+                error.message.includes('mayor o igual a 2024')  
             ) {
                 return reply.status(400).send({ error: error.message });
             }
@@ -79,8 +80,14 @@ export class PaymentController {
             if (error.message.includes('ya fue eliminado')) {
                 return reply.status(409).send({ error: error.message });
             }
+            if (error.message.includes('El formato del ID es inválido')) {
+            return reply.status(400).send({ error: error.message });
+            }
+
             return reply.status(500).send({ error: "Error interno, reintente más tarde" });
+            
         }
+        
     }
 
        async update( 
@@ -103,6 +110,9 @@ export class PaymentController {
 
             if (error.message.includes('ya se encuentra en estado')) {
                 return reply.status(409).send({ error: error.message });
+            }
+            if (error.message.includes('El estado debe ser PAID o CANCELED')) {
+            return reply.status(400).send({ error: error.message });
             }
 
             return reply.status(500).send({ error: "Error interno, reintente más tarde" });
