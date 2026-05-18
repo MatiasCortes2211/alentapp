@@ -8,7 +8,7 @@ import { GetMembersUseCase } from './application/GetMembersUseCase.js';
 import { UpdateMemberUseCase } from './application/UpdateMemberUseCase.js';
 import { DeleteMemberUseCase } from './application/DeleteMemberUseCase.js';
 import { MemberController } from './delivery/MemberController.js';
-// Imports de Certificados Médicos
+
 import { PostgresMedicalCertificateRepository } from './infrastructure/PostgresMedicalCertificateRepository.js';
 import { MedicalCertificateValidator } from './domain/services/MedicalCertificateValidator.js';
 import { NewMedicalCertificateUseCase } from './application/NewMedicalCertificateUseCase.js';
@@ -18,6 +18,7 @@ import { PostgresLockerRepository } from './infrastructure/PostgresLockerReposit
 import { LockerValidator } from './domain/services/LockerValidator.js';
 import { CreateLockerUseCase } from './application/NewLockerUseCase.js';
 import { GetLockersUseCase } from './application/GetLockersUseCase.js';
+import { UpdateLockerUseCase } from './application/UpdateLockerUseCase.js';
 import { LockerController } from './delivery/LockerController.js';
 
 import { PostgresPaymentRepository } from './infrastructure/PostgresPaymentRepository.js';
@@ -31,6 +32,7 @@ import { PostgresSportRepository } from './infrastructure/PostgresSportRepositor
 import { SportValidator } from './domain/services/SportValidator.js';
 import { CreateSportUseCase } from './application/NewSportUseCase.js';
 import { GetSportsUseCase } from './application/GetSportsUseCase.js';
+import { UpdateSportUseCase } from './application/UpdateSportUseCase.js';
 import { DeleteSportUseCase } from './application/DeleteSportUseCase.js';
 import { SportController } from './delivery/SportController.js';
 
@@ -80,8 +82,9 @@ export function buildApp() {
     
     const createLockerUseCase = new CreateLockerUseCase(lockerRepo, memberRepo, lockerValidator);
     const getLockersUseCase = new GetLockersUseCase(lockerRepo);
+    const updateLockerUseCase = new UpdateLockerUseCase(lockerRepo, memberRepo, lockerValidator);
 
-    const lockerController = new LockerController(createLockerUseCase, getLockersUseCase);
+    const lockerController = new LockerController(createLockerUseCase, getLockersUseCase, updateLockerUseCase);
     
     // MedicalCertificate
     const certificateRepo = new PostgresMedicalCertificateRepository();
@@ -111,10 +114,11 @@ export function buildApp() {
     const sportValidator = new SportValidator(sportRepo);
 
     const createSportUseCase = new CreateSportUseCase(sportRepo, sportValidator);
-    const getSportsUseCase = new GetSportsUseCase(sportRepo);
+    const getSportsUseCase = new GetSportsUseCase(sportRepo);    const updateSportUseCase = new UpdateSportUseCase(sportRepo, sportValidator);
     const deleteSportUseCase = new DeleteSportUseCase(sportRepo);
     const sportController = new SportController(
         createSportUseCase,
+        updateSportUseCase,
         getSportsUseCase,
         deleteSportUseCase
     );
@@ -136,6 +140,7 @@ export function buildApp() {
 
     server.post('/api/v1/lockers', lockerController.create.bind(lockerController));
     server.get('/api/v1/lockers', lockerController.getAll.bind(lockerController));
+    server.patch('/api/v1/lockers/:id', lockerController.update.bind(lockerController));
 
     server.post('/api/v1/medical-certificates', certificateController.create.bind(certificateController));
     
@@ -145,7 +150,7 @@ export function buildApp() {
 
     server.post('/api/v1/sports', sportController.create.bind(sportController));
     server.get('/api/v1/sports', sportController.getAll.bind(sportController));
-    server.delete('/api/v1/sports/:id', sportController.delete.bind(sportController));
+    server.patch('/api/v1/sports/:id', sportController.update.bind(sportController));    server.delete('/api/v1/sports/:id', sportController.delete.bind(sportController));
 
     //Endpoints para Discipline
     server.post('/api/v1/disciplines', disciplineController.create.bind(disciplineController));

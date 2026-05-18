@@ -140,6 +140,11 @@ export interface CreateSport {
   requires_medical_certificate: boolean;
 }
 
+export interface UpdateSport {
+  description?: string;
+  max_capacity?: number;
+}
+
 // ==========================================
 // Discipline
 // ==========================================
