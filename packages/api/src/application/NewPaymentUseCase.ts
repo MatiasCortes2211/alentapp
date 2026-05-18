@@ -1,3 +1,5 @@
+import { ZodError } from 'zod';
+import { CreatePaymentSchema } from '../domain/services/PaymentSchema.js';
 import { PaymentRepository } from '../domain/PaymentRepository.js';
 import { MemberRepository } from '../domain/MemberRepository.js'; 
 import { PaymentValidator } from '../domain/services/PaymentValidator.js'; 
@@ -12,7 +14,13 @@ export class CreatePaymentUseCase {
 
     async execute(data: CreatePaymentRequest): Promise<PaymentDTO> {
 
-        this.paymentValidator.validateRequiredFields(data)
+        
+        try {
+            CreatePaymentSchema.parse(data);
+        } catch (error) {
+            if (error instanceof ZodError) throw new Error(error.issues[0].message);
+            throw error;
+        }
         
         // 1. el miembro debe existir
         const member = await this.memberRepository.findById(data.member_id);
@@ -21,8 +29,6 @@ export class CreatePaymentUseCase {
         }
 
         // 2. Validaciones de negocio (centralizadas)
-        this.paymentValidator.validateAmount(data.amount);
-        this.paymentValidator.validateMonth(data.month);
         this.paymentValidator.validateDueDate(data.due_date);
         await this.paymentValidator.validateNoDuplicateActivePayment(data.member_id, data.month, data.year);
         //usa await porque viaja a la BD para verificar si ya existe un pago activo

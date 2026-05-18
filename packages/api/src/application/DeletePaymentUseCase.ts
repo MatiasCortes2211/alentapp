@@ -1,9 +1,19 @@
+import { ZodError } from 'zod';
+import { PaymentIdSchema } from '../domain/services/PaymentSchema.js';
 import { PaymentRepository } from '../domain/PaymentRepository.js';
 
 export class DeletePaymentUseCase {
     constructor(private readonly paymentRepository: PaymentRepository) {}
 
     async execute(id: string): Promise<void> {
+
+        try {
+            PaymentIdSchema.parse(id);
+        } catch (error) {
+            if (error instanceof ZodError) throw new Error(error.issues[0].message);
+            throw error;
+        }
+
         // 1. Verificar existencia del pago
         const existingPayment = await this.paymentRepository.findById(id);
         if (!existingPayment) {
