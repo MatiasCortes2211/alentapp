@@ -55,6 +55,21 @@ export class PostgresMedicalCertificateRepository implements MedicalCertificateR
         });
     }
 
+    // Busca todos los certificados de un socio ordenados por el más nuevo
+    async findByMemberId(memberId: string): Promise<MedicalCertificateDTO[]> {
+        const certificates = await prisma.medicalCertificate.findMany({
+            where: {
+                member_id: memberId,
+            },
+            orderBy: {
+                issue_date: 'desc', // Más recientes primero para la tabla del Front
+            },
+        });
+
+        // Mapeamos el array de la DB al DTO usando tu función mapToDTO
+        return certificates.map(cert => this.mapToDTO(cert as DBMedicalCertificate));
+    }
+
     // Método privado para mapear la estructura de la base de datos a un DTO que la aplicación pueda usar sin depender de la estructura interna de la base de datos
     private mapToDTO(cert: DBMedicalCertificate): MedicalCertificateDTO {
         return {

@@ -1,3 +1,5 @@
+import { ZodError } from 'zod';
+import { UpdatePaymentSchema, PaymentIdSchema } from '../domain/services/PaymentSchema.js';
 import { PaymentRepository } from '../domain/PaymentRepository.js';
 import { PaymentValidator } from '../domain/services/PaymentValidator.js';
 import { PaymentDTO, PaymentStatus, UpdatePaymentRequest } from '@alentapp/shared';
@@ -9,6 +11,20 @@ export class UpdatePaymentUseCase {
     ) {}
 
     async execute(id: string, data: UpdatePaymentRequest): Promise<PaymentDTO> {
+
+        try {
+            PaymentIdSchema.parse(id);
+        } catch (error) {
+            if (error instanceof ZodError) throw new Error(error.issues[0].message);
+            throw error;
+        }
+
+        try {
+            UpdatePaymentSchema.parse(data);
+        } catch (error) {
+            if (error instanceof ZodError) throw new Error(error.issues[0].message);
+            throw error;
+        }
 
         // 1. El pago debe existir
         const existingPayment = await this.paymentRepository.findById(id);

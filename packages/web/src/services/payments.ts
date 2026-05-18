@@ -32,7 +32,7 @@ export const paymentsService = {
     return result.data;
   },
 
-    async update(id: string, data: UpdatePaymentRequest): Promise<PaymentDTO> { 
+  async update(id: string, data: UpdatePaymentRequest): Promise<PaymentDTO> { 
     const response = await fetch(`${API_URL}/payments/${id}`, {
       method: 'PATCH',
       headers: {
@@ -49,4 +49,14 @@ export const paymentsService = {
     return result.data;
   },
 
+  async delete(id: string): Promise<void> {
+    const response = await fetch(`${API_URL}/payments/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al eliminar el pago');
+    }
+  },
 };

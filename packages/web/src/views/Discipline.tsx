@@ -11,7 +11,7 @@ import {
   Table,
   IconButton
 } from "@chakra-ui/react";
-import { LuPlus, LuRefreshCw, LuPencil } from "react-icons/lu";
+import { LuPlus, LuRefreshCw, LuTrash2, LuPencil } from "react-icons/lu";
 import { useEffect, useState } from "react";
 import { disciplinesService } from "../services/disciplines";
 import { membersService } from "../services/members";
@@ -35,7 +35,7 @@ export function DisciplineView() {
   const [members, setMembers] = useState<MemberDTO[]>([]);
   
  
-  const [disciplines, setDisciplines] = useState([]); 
+  const [disciplines, setDisciplines] = useState<Discipline[]>([]); 
   const [editingDisciplineId, setEditingDisciplineId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -47,19 +47,19 @@ export function DisciplineView() {
   });
 
   useEffect(() => {
-      const fetchData = async () => {
-          try {
-              const [membersData, disciplinesData] = await Promise.all([
-                  membersService.getAll(),
-                  disciplinesService.getAll(),
-              ]);
-              setMembers(membersData);
-              setDisciplines(disciplinesData);
-          } catch (err) {
-              console.error("Error al cargar datos", err);
-          }
-      };
-      fetchData();
+  const fetchData = async () => {
+    try {
+      const [membersData, discilinesData] = await Promise.all([
+        membersService.getAll(),
+        disciplinesService.getAll(),
+      ]);
+      setMembers(membersData);
+      setDisciplines(discilinesData);
+    } catch (err) {
+      console.error("Error al cargar datos", err);
+    }
+  };
+    fetchData();
   }, []);
 
   const openCreateModal = () => {
@@ -134,6 +134,21 @@ export function DisciplineView() {
     }
   };
 
+  const handleDeleteDiscipline = async (discipline: Discipline) => {
+      const member = members.find(m => m.id === discipline.member_id);
+      const memberName = member ? member.name : 'este socio';
+      
+      if (window.confirm(`¿Estás seguro de que deseas eliminar la disciplina de "${memberName}"? Esta acción no se puede deshacer.`)) {
+          try {
+              await disciplinesService.delete(discipline.id);
+              setDisciplines(prev => prev.filter(d => d.id !== discipline.id));
+              alert('¡Disciplina eliminada con éxito!');
+          } catch (err: any) {
+              alert(err.message || 'Error al eliminar la disciplina');
+          }
+      }
+  };
+
   return (
     <DialogRoot open={isDialogOpen} onOpenChange={(e) => setIsDialogOpen(e.open)}>
       <Stack gap="8">
@@ -181,7 +196,6 @@ export function DisciplineView() {
                     borderColor="border.muted"
                     bg="transparent"
                     outline="none"
-                   bg="whiteAlpha.100"
                   color="gray"       
                   >
                     <option value="" disabled>Seleccione un socio</option>
@@ -260,7 +274,7 @@ export function DisciplineView() {
                   <Table.ColumnHeader py="4">Socio</Table.ColumnHeader>
                   <Table.ColumnHeader py="4">Fecha de Inicio</Table.ColumnHeader>
                   <Table.ColumnHeader py="4">Fecha de Fin</Table.ColumnHeader>
-                  <Table.ColumnHeader py="4">Disciplina Total</Table.ColumnHeader>
+                  <Table.ColumnHeader py="4">Tipo de Sanción</Table.ColumnHeader>
                   <Table.ColumnHeader py="4">Razón</Table.ColumnHeader>
                   <Table.ColumnHeader py="4" textAlign="end">Acciones</Table.ColumnHeader>
                 </Table.Row>

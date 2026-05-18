@@ -15,4 +15,7 @@ export interface MedicalCertificateRepository {
    * cumplir el criterio de aceptación del PRD.
    */
   invalidatePriorCertificates(memberId: string): Promise<void>;
+
+  // Busca los certificados médicos de un socio por su ID 
+  findByMemberId(memberId: string): Promise<MedicalCertificateDTO[]>;
 }
