@@ -166,7 +166,6 @@ export function DisciplineView() {
                     borderColor="border.muted"
                     bg="transparent"
                     outline="none"
-                   bg="whiteAlpha.100"
                   color="gray"       
                   >
                     <option value="" disabled>Seleccione un socio</option>
