@@ -26,6 +26,7 @@ import { PaymentValidator } from './domain/services/PaymentValidator.js';
 import { CreatePaymentUseCase } from './application/NewPaymentUseCase.js'; 
 import { PaymentController } from './delivery/PaymentController.js'; 
 import { GetPaymentsUseCase } from './application/GetPaymentsUseCase.js';
+import { DeletePaymentUseCase } from './application/DeletePaymentUseCase.js';
 import { UpdatePaymentUseCase } from './application/UpdatePaymentUseCase.js';
 
 import { PostgresSportRepository } from './infrastructure/PostgresSportRepository.js';
@@ -40,6 +41,7 @@ import { PostgresDisciplineRepository } from './infrastructure/PostgresDisciplin
 import { DisciplineValidator } from './domain/services/DisciplineValidator.js';
 import { CreateDisciplineUseCase } from './application/NewDisciplineUseCase.js';
 import { DisciplineController } from './delivery/DisciplineController.js';
+import { GetDisciplineUseCase } from './application/GetDisciplineUseCase.js';
 
 export function buildApp() {
     const server = Fastify({
@@ -105,9 +107,11 @@ export function buildApp() {
     
     const createPaymentUseCase = new CreatePaymentUseCase(paymentRepo, memberRepo, paymentValidator);
     const getPaymentsUseCase = new GetPaymentsUseCase(paymentRepo); 
+    const deletePaymentUseCase = new DeletePaymentUseCase(paymentRepo);
     const updatePaymentUseCase = new UpdatePaymentUseCase(paymentRepo, paymentValidator);
 
-    const paymentController = new PaymentController(createPaymentUseCase, getPaymentsUseCase, updatePaymentUseCase);
+    const paymentController = new PaymentController(createPaymentUseCase, getPaymentsUseCase, deletePaymentUseCase, updatePaymentUseCase);
+
 
     // Sport
     const sportRepo = new PostgresSportRepository();
@@ -129,8 +133,11 @@ export function buildApp() {
 
     const createDisciplineUseCase = new CreateDisciplineUseCase(disciplineRepo, disciplineValidator, memberRepo);
 
+    const getDisciplineUseCase = new GetDisciplineUseCase(disciplineRepo);
+
     const disciplineController = new DisciplineController(
-        createDisciplineUseCase
+        createDisciplineUseCase,
+        getDisciplineUseCase
     );
 
     server.get('/api/v1/socios', memberController.getAll.bind(memberController));
@@ -146,6 +153,7 @@ export function buildApp() {
     
     server.post('/api/v1/payments', paymentController.create.bind(paymentController));
     server.get('/api/v1/payments', paymentController.getAll.bind(paymentController));
+    server.delete('/api/v1/payments/:id', paymentController.delete.bind(paymentController));
     server.patch('/api/v1/payments/:id', paymentController.update.bind(paymentController));
 
     server.post('/api/v1/sports', sportController.create.bind(sportController));
@@ -154,6 +162,7 @@ export function buildApp() {
 
     //Endpoints para Discipline
     server.post('/api/v1/disciplines', disciplineController.create.bind(disciplineController));
+    server.get('/api/v1/disciplines', disciplineController.findAll.bind(disciplineController));
 
     server.get('/', async (req, rep) => {
         rep.status(200).send({ msg: 'asd' })

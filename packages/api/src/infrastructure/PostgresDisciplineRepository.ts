@@ -37,6 +37,15 @@ export class PostgresDisciplineRepository implements DisciplineRepository {
         return this.mapToDTO(discipline);
     }
 
+    async findAll(): Promise<Discipline[]> {
+        const disciplines = await prisma.discipline.findMany({
+            orderBy: { start_date: 'desc' },
+            where: { is_deleted: false },
+        });
+
+        return disciplines.map(this.mapToDTO);
+    }
+
     private mapToDTO(discipline: DBDiscipline): Discipline {
         return {
             id: discipline.id,

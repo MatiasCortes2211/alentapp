@@ -79,6 +79,15 @@ export class PostgresPaymentRepository implements PaymentRepository {
         return payment ? this.mapToDTO(payment as unknown as DBPayment) : null;
     }
 
+    async delete(id: string): Promise<void> {
+        await prisma.payment.update({
+            where: { id },
+            data: {
+                is_deleted: true,
+            },
+        });
+    }
+
     async update(id: string, status: PaymentStatus.Paid | PaymentStatus.Canceled): Promise<PaymentDTO> {
     const payment = await prisma.payment.update({
         where: { id },
@@ -87,7 +96,7 @@ export class PostgresPaymentRepository implements PaymentRepository {
             payment_date: status === PaymentStatus.Paid ? new Date() : null,
         },
     });
-
+    
     return this.mapToDTO(payment as unknown as DBPayment);
     }
 
