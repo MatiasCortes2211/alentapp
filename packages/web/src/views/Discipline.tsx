@@ -247,19 +247,7 @@ export function DisciplineView() {
                   <Table.ColumnHeader py="4">Fecha de Fin</Table.ColumnHeader>
                   <Table.ColumnHeader py="4">Tipo de Sanción</Table.ColumnHeader>
                   <Table.ColumnHeader py="4">Razón</Table.ColumnHeader>
-                  <Table.ColumnHeader py="4" textAlign="end">
-                        <HStack gap="2" justify="flex-end">
-                          <IconButton 
-                            variant="ghost" 
-                            size="sm" 
-                            colorPalette="red" 
-                            aria-label="Eliminar disciplina"
-                            onClick={() => handleDeleteDiscipline(discipline)}
-                          >
-                            <LuTrash2 />
-                          </IconButton>
-                        </HStack>
-                  </Table.ColumnHeader>
+                  <Table.ColumnHeader py="4" textAlign="end">Acciones</Table.ColumnHeader>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -273,7 +261,19 @@ export function DisciplineView() {
                       <Table.Cell color="fg.muted">{discipline.end_date}</Table.Cell>
                       <Table.Cell color="fg.muted">{discipline.is_total_suspension ? "Total" : "Parcial"}</Table.Cell>
                       <Table.Cell color="fg.muted">{discipline.reason}</Table.Cell>
-                      <Table.Cell textAlign="end">-</Table.Cell>
+                      <Table.Cell textAlign="end">
+                        <HStack gap="2" justify="flex-end">
+                          <IconButton 
+                            variant="ghost" 
+                            size="sm" 
+                            colorPalette="red" 
+                            aria-label="Eliminar disciplina"
+                            onClick={() => handleDeleteDiscipline(discipline)}
+                          >
+                            <LuTrash2 />
+                          </IconButton>
+                        </HStack>
+                      </Table.Cell>
                     </Table.Row>
                   );
                 })}
