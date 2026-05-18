@@ -2,11 +2,13 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { CreateDisciplineUseCase } from '../application/NewDisciplineUseCase.js';
 import { CreateDiscipline } from '@alentapp/shared';
 import { GetDisciplineUseCase } from '../application/GetDisciplineUseCase.js';
+import { DeleteDisciplineUseCase } from '../application/DeleteDisciplineUseCase.js';
 
 export class DisciplineController {
     constructor(
         private readonly createDisciplineUseCase: CreateDisciplineUseCase,
         private readonly getDisciplineUseCase: GetDisciplineUseCase,
+        private readonly deleteDisciplineUseCase: DeleteDisciplineUseCase,
     ) {}
 
     async create(
@@ -36,6 +38,24 @@ export class DisciplineController {
             return reply.status(200).send({ data: disciplines });
         } catch (error) {
             return reply.status(500).send({ error: 'Error al obtener las disciplinas' });
+        }
+    }
+    
+    async delete(
+        request: FastifyRequest<{Params:{id:string}}>,
+        reply: FastifyReply
+        ){
+        try {
+            await this.deleteDisciplineUseCase.execute(request.params.id);
+            return reply.status(204).send();
+        } catch (error: any) {
+            if (error.message.includes('La disciplina no existe')){
+                return reply.status(404).send({ error: error.message });
+            }
+            if (error.message.includes('La disciplina ya fue eliminada')){
+                return reply.status(409).send({ error: error.message });
+            }
+            return reply.status(500).send({ error: 'Error al eliminar la disciplina' });
         }
     }
 }

@@ -8,9 +8,10 @@ import {
   Flex,
   Input,
   Center,
-  Table 
+  Table,
+  IconButton
 } from "@chakra-ui/react";
-import { LuPlus, LuRefreshCw } from "react-icons/lu";
+import { LuPlus, LuRefreshCw, LuTrash2 } from "react-icons/lu";
 import { useEffect, useState } from "react";
 import { disciplinesService } from "../services/disciplines";
 import { membersService } from "../services/members";
@@ -103,6 +104,21 @@ export function DisciplineView() {
     }
   };
 
+  const handleDeleteDiscipline = async (discipline: Discipline) => {
+      const member = members.find(m => m.id === discipline.member_id);
+      const memberName = member ? member.name : 'este socio';
+      
+      if (window.confirm(`¿Estás seguro de que deseas eliminar la disciplina de "${memberName}"? Esta acción no se puede deshacer.`)) {
+          try {
+              await disciplinesService.delete(discipline.id);
+              setDisciplines(prev => prev.filter(d => d.id !== discipline.id));
+              alert('¡Disciplina eliminada con éxito!');
+          } catch (err: any) {
+              alert(err.message || 'Error al eliminar la disciplina');
+          }
+      }
+  };
+
   return (
     <DialogRoot open={isDialogOpen} onOpenChange={(e) => setIsDialogOpen(e.open)}>
       <Stack gap="8">
@@ -150,7 +166,6 @@ export function DisciplineView() {
                     borderColor="border.muted"
                     bg="transparent"
                     outline="none"
-                   bg="whiteAlpha.100"
                   color="gray"       
                   >
                     <option value="" disabled>Seleccione un socio</option>
@@ -245,7 +260,19 @@ export function DisciplineView() {
                       <Table.Cell color="fg.muted">{discipline.end_date}</Table.Cell>
                       <Table.Cell color="fg.muted">{discipline.is_total_suspension ? "Total" : "Parcial"}</Table.Cell>
                       <Table.Cell color="fg.muted">{discipline.reason}</Table.Cell>
-                      <Table.Cell textAlign="end">-</Table.Cell>
+                      <Table.Cell textAlign="end">
+                        <HStack gap="2" justify="flex-end">
+                          <IconButton 
+                            variant="ghost" 
+                            size="sm" 
+                            colorPalette="red" 
+                            aria-label="Eliminar disciplina"
+                            onClick={() => handleDeleteDiscipline(discipline)}
+                          >
+                            <LuTrash2 />
+                          </IconButton>
+                        </HStack>
+                      </Table.Cell>
                     </Table.Row>
                   );
                 })}
