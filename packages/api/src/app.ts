@@ -92,7 +92,7 @@ export function buildApp() {
     const updateLockerUseCase = new UpdateLockerUseCase(lockerRepo, memberRepo, lockerValidator);
     const deleteLockerUseCase = new DeleteLockerUseCase(lockerRepo);
 
-    // ✅ CORREGIDO: Una única declaración con todas las dependencias
+  
     const lockerController = new LockerController(
         createLockerUseCase, 
         getLockersUseCase, 
@@ -128,7 +128,6 @@ export function buildApp() {
     const deletePaymentUseCase = new DeletePaymentUseCase(paymentRepo);
     const updatePaymentUseCase = new UpdatePaymentUseCase(paymentRepo, paymentValidator);
 
-    // ✅ CORREGIDO: Una única declaración con todas las dependencias nuevas de main
     const paymentController = new PaymentController(
         createPaymentUseCase, 
         getPaymentsUseCase, 
