@@ -174,3 +174,11 @@ export interface CreateDiscipline {
   is_total_suspension: boolean;
   member_id: string; // UUID
 }
+
+export interface UpdateDiscipline {
+  reason?: string;
+  start_date?: string;
+  end_date?: string;
+  is_total_suspension?: boolean;
+  member_id?: string;
+}
