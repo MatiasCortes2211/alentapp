@@ -3,20 +3,20 @@ import {
     Button,
     Heading,
     HStack,
+    IconButton,
     Stack,
     Text,
     Box,
     Flex,
     Spinner,
     Center,
-    Input,
-    Badge
+    Input
 } from "@chakra-ui/react";
-import { LuPlus, LuRefreshCw, LuEye, LuPencilLine } from "react-icons/lu";
+import { LuPlus, LuRefreshCw, LuEye, LuPencil, LuTrash2 } from "react-icons/lu";
 import { useEffect, useState } from "react";
 import { membersService } from "../services/members";
-import { medicalCertificateService } from "../services/medicalCertificate";
-import type { MemberDTO, CreateMedicalCertificate, MedicalCertificateDTO, UpdateMedicalCertificate } from "@alentapp/shared"; 
+import { medicalCertificateService } from "../services/medicalCertificate"; 
+import type { MemberDTO, MedicalCertificateDTO, CreateMedicalCertificate, UpdateMedicalCertificate } from "@alentapp/shared";
 import {
     DialogRoot,
     DialogContent,
@@ -28,25 +28,49 @@ import {
     DialogCloseTrigger
 } from "../components/ui/dialog";
 import { Field } from "../components/ui/field";
+import { 
+  SelectRoot, 
+  SelectTrigger, 
+  SelectValueText, 
+  SelectContent, 
+  SelectItem, 
+  createListCollection 
+} from "../components/ui/select";
+
+const statusOptions = createListCollection({
+  items: [
+    { label: "Vigente", value: "true" },
+    { label: "Inválido / Vencido", value: "false" },
+  ],
+});
 
 export function SaludView() {
     const [members, setMembers] = useState<MemberDTO[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Modales
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-    const [isEditOpen, setIsEditOpen] = useState(false); 
+    // Diccionario local para asociar a cada miembro con sus certificados reales en la grilla principal
+    const [certificatesMap, setCertificatesMap] = useState<Record<string, MedicalCertificateDTO[]>>({});
 
+    // 1. State para el modal de carga original (TDD-0007)
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedMember, setSelectedMember] = useState<MemberDTO | null>(null);
-    const [selectedCertificate, setSelectedCertificate] = useState<MedicalCertificateDTO | null>(null);
 
+    // 2. State para el modal de historial clínico (TDD-0007 / TDD-0009)
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [historyCertificates, setHistoryCertificates] = useState<MedicalCertificateDTO[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-    // Alta (TDD-0007)
+    // 3. State para el modal de edición de un certificado (TDD-0008)
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editingCertId, setEditingCertId] = useState<string | null>(null);
+    const [editFormData, setEditFormData] = useState<UpdateMedicalCertificate>({
+        expiry_date: "",
+        is_validated: true,
+    });
+
+    // Form state original de creación basado en tu TDD-0007
     const [formData, setFormData] = useState<CreateMedicalCertificate>({
         member_id: "",
         issue_date: "",
@@ -54,18 +78,26 @@ export function SaludView() {
         doctor_license: "",
     });
 
-    // 🎯 FIEL AL TDD-0008: SOLO ESTOS DOS ATRIBUTOS EXISTEN ACÁ
-    const [editFormData, setEditFormData] = useState<UpdateMedicalCertificate>({
-        expiry_date: "",
-        is_validated: true
-    });
-
-    const fetchMembers = async () => {
+    const loadAllData = async () => {
         setIsLoading(true);
         setError(null);
         try {
-            const data = await membersService.getAll();
-            setMembers(data);
+            const membersData = await membersService.getAll();
+            setMembers(membersData);
+
+            // Buscamos los certificados de cada socio en paralelo para poblar los botones de la grilla
+            const maps: Record<string, MedicalCertificateDTO[]> = {};
+            await Promise.all(
+                membersData.map(async (m) => {
+                    try {
+                        const certs = await medicalCertificateService.getByMemberId(m.id);
+                        maps[m.id] = certs;
+                    } catch {
+                        maps[m.id] = [];
+                    }
+                })
+            );
+            setCertificatesMap(maps);
         } catch (err: any) {
             setError(err.message || "Error al cargar los miembros");
         } finally {
@@ -84,87 +116,44 @@ export function SaludView() {
         setIsDialogOpen(true);
     };
 
-    const openHistoryModal = async (member: MemberDTO) => {
+    const handleOpenHistory = async (member: MemberDTO) => {
         setSelectedMember(member);
         setIsHistoryOpen(true);
         setIsLoadingHistory(true);
         try {
-            const certs = await medicalCertificateService.getByMemberId(member.id);
-            setHistoryCertificates(certs);
+            const data = await medicalCertificateService.getByMemberId(member.id);
+            setHistoryCertificates(data);
         } catch (err: any) {
-            alert(err.message || "Error al cargar el historial clínico");
+            alert(err.message || "Error al recuperar el historial del socio.");
         } finally {
             setIsLoadingHistory(false);
         }
     };
 
-    // Abre el editor para CUALQUIER certificado (venga de la tabla principal o del historial)
-    const openEditModal = (cert: MedicalCertificateDTO, member?: MemberDTO) => {
-        if (member) setSelectedMember(member);
-        setSelectedCertificate(cert);
+    const openEditModal = (cert: MedicalCertificateDTO) => {
+        setEditingCertId(cert.id);
         setEditFormData({
-            expiry_date: cert.expiry_date.split('T')[0],
-            is_validated: cert.is_validated
+            expiry_date: String(cert.expiry_date).split('T')[0],
+            is_validated: cert.is_validated,
         });
         setIsEditOpen(true);
     };
 
-    // Editar el actual/vigente directo de la tabla principal
-    const handleQuickEdit = async (member: MemberDTO) => {
-        try {
-            const certs = await medicalCertificateService.getByMemberId(member.id);
-            const activeCert = certs.find(c => c.is_validated === true);
-            if (!activeCert) {
-                alert("Este socio no tiene ningún certificado vigente activo. Buscalo en el historial o cargá uno nuevo.");
-                return;
-            }
-            openEditModal(activeCert, member);
-        } catch (err: any) {
-            alert("Error al buscar el certificado activo");
-        }
-    };
-
-    // PATCH RESTRICTO
-    const handleUpdateSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!selectedCertificate) return;
-        setIsSubmitting(true);
-        try {
-            // Mandamos SOLO lo que tu diseño técnico acepta en el Request Body
-            await medicalCertificateService.update(selectedCertificate.id, {
-                expiry_date: editFormData.expiry_date ? new Date(editFormData.expiry_date).toISOString() : undefined,
-                is_validated: editFormData.is_validated
-            });
-
-            alert("¡Certificado médico actualizado con éxito!");
-            setIsEditOpen(false);
-
-            if (isHistoryOpen && selectedMember) {
-                const updatedCerts = await medicalCertificateService.getByMemberId(selectedMember.id);
-                setHistoryCertificates(updatedCerts);
-            }
-            fetchMembers();
-        } catch (err: any) {
-            alert(err.message || "Error al actualizar el registro");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
+    // Submit de Creación Original (TDD-0007)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
             await medicalCertificateService.create({
                 member_id: formData.member_id,
-                issue_date: new Date(formData.issue_date).toISOString(), 
-                expiry_date: new Date(formData.expiry_date).toISOString(), 
+                issue_date: new Date(formData.issue_date).toISOString(),
+                expiry_date: new Date(formData.expiry_date).toISOString(),
                 doctor_license: formData.doctor_license.trim()
             });
 
             setIsDialogOpen(false);
             alert("¡Certificado registrado con éxito!");
-            fetchMembers();
+            loadAllData();
         } catch (err: any) {
             alert(err.message || "Error interno del servidor");
         } finally {
@@ -172,25 +161,44 @@ export function SaludView() {
         }
     };
 
+    // Submit de Edición (TDD-0008)
+    const handleUpdateStatus = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            if (editingCertId) {
+                await medicalCertificateService.update(editingCertId, editFormData);
+                setIsEditOpen(false);
+                setIsHistoryOpen(false); // Cierra por si estaba abierto el historial
+                loadAllData(); // Refresh global
+            }
+        } catch (err: any) {
+            alert(err.message || "Error al actualizar la condición médica");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // Manejador del Hard Delete en el Legajo (TDD-0009)
+    const handleDeleteCertificate = async (certId: string, license: string) => {
+        if (window.confirm(`¿Estás seguro de que deseas eliminar físicamente el certificado MN ${license}? Esta acción removerá el registro de la base de datos de forma segura.`)) {
+            try {
+                await medicalCertificateService.delete(certId);
+                setIsHistoryOpen(false);
+                loadAllData();
+            } catch (err: any) {
+                alert(err.message || "Error al eliminar el certificado");
+            }
+        }
+    };
+
     useEffect(() => {
-        fetchMembers();
+        loadAllData();
     }, []);
 
     return (
-        <Stack gap="8">
-            <Flex justify="space-between" align="center">
-                <Stack gap="1">
-                    <Heading size="2xl" fontWeight="bold">Gestión de Salud</Heading>
-                    <Text color="fg.muted" fontSize="md">
-                        Administra los certificados médicos y aptitudes físicas de los socios.
-                    </Text>
-                </Stack>
-                <Button variant="outline" onClick={fetchMembers} disabled={isLoading}>
-                    <LuRefreshCw /> Actualizar lista
-                </Button>
-            </Flex>
-
-            {/* MODAL 1: Cargar Certificado (Alta) */}
+        <>
+            {/* 1. Modal original de CREAR Certificado */}
             <DialogRoot open={isDialogOpen} onOpenChange={(e) => setIsDialogOpen(e.open)}>
                 <DialogContent>
                     <form onSubmit={handleSubmit}>
@@ -238,23 +246,71 @@ export function SaludView() {
                 </DialogContent>
             </DialogRoot>
 
-            {/* MODAL 2: Historial de Certificados (READ con opción de Editar individual) */}
-            <DialogRoot size="xl" open={isHistoryOpen} onOpenChange={(e) => setIsHistoryOpen(e.open)}>
+            {/* 2. Modal de EDITAR Certificado */}
+            <DialogRoot open={isEditOpen} onOpenChange={(e) => setIsEditOpen(e.open)}>
+                <DialogContent>
+                    <form onSubmit={handleUpdateStatus}>
+                        <DialogHeader>
+                            <DialogTitle>Modificar Condición Sanitaria</DialogTitle>
+                        </DialogHeader>
+                        <DialogBody>
+                            <Stack gap="4">
+                                <Field label="Fecha de Vencimiento" required>
+                                    <Input 
+                                        type="date" 
+                                        value={editFormData.expiry_date}
+                                        onChange={(e) => setEditFormData({ ...editFormData, expiry_date: e.target.value })}
+                                        required
+                                    />
+                                </Field>
+                                <Field label="Estado de Validación" required>
+                                    <SelectRoot 
+                                        collection={statusOptions} 
+                                        value={[String(editFormData.is_validated)]}
+                                        onValueChange={(e) => setEditFormData({ ...editFormData, is_validated: e.value[0] === "true" })}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValueText placeholder="Seleccione el estado" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {statusOptions.items.map((opt) => (
+                                                <SelectItem item={opt} key={opt.value}>
+                                                    {opt.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </SelectRoot>
+                                </Field>
+                            </Stack>
+                        </DialogBody>
+                        <DialogFooter>
+                            <DialogActionTrigger asChild>
+                                <Button variant="outline">Cancelar</Button>
+                            </DialogActionTrigger>
+                            <Button type="submit" colorPalette="blue" loading={isSubmitting}>
+                                Guardar Cambios
+                            </Button>
+                        </DialogFooter>
+                        <DialogCloseTrigger />
+                    </form>
+                </DialogContent>
+            </DialogRoot>
+
+            {/* 3. Modal de VER HISTORIAL CLINICO */}
+            <DialogRoot open={isHistoryOpen} onOpenChange={(e) => setIsHistoryOpen(e.open)} size="lg">
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Historial Médico: {selectedMember?.name}</DialogTitle>
+                        <DialogTitle>Historial de Certificados: {selectedMember?.name}</DialogTitle>
                     </DialogHeader>
                     <DialogBody>
                         {isLoadingHistory ? (
-                            <Center h="150px"><Spinner size="md" color="blue.500" /></Center>
+                            <Center h="150px"><Spinner color="blue.500" /></Center>
                         ) : historyCertificates.length === 0 ? (
-                            <Text textAlign="center" color="fg.muted" py="6">
-                                El socio no posee ningún certificado cargado en el sistema.
-                            </Text>
+                            <Text color="fg.muted" textAlign="center" py="6">No registra certificados médicos cargados.</Text>
                         ) : (
                             <Table.Root size="sm" variant="line">
                                 <Table.Header>
-                                    <Table.Row bg="bg.muted/30">
+                                    <Table.Row bg="bg.muted/40">
                                         <Table.ColumnHeader>Emisión</Table.ColumnHeader>
                                         <Table.ColumnHeader>Vencimiento</Table.ColumnHeader>
                                         <Table.ColumnHeader>Matrícula</Table.ColumnHeader>
@@ -265,23 +321,23 @@ export function SaludView() {
                                 <Table.Body>
                                     {historyCertificates.map((cert) => (
                                         <Table.Row key={cert.id}>
-                                            <Table.Cell>{cert.issue_date.split('T')[0]}</Table.Cell>
-                                            <Table.Cell>{cert.expiry_date.split('T')[0]}</Table.Cell>
-                                            <Table.Cell>{cert.doctor_license}</Table.Cell>
+                                            <Table.Cell>{String(cert.issue_date).split('T')[0]}</Table.Cell>
+                                            <Table.Cell>{String(cert.expiry_date).split('T')[0]}</Table.Cell>
+                                            <Table.Cell>MN {cert.doctor_license}</Table.Cell>
                                             <Table.Cell>
-                                                <Badge colorPalette={cert.is_validated ? "green" : "red"}>
-                                                    {cert.is_validated ? "Vigente" : "Invalido"}
-                                                </Badge>
+                                                <Box display="inline-block" px="2" py="0.5" borderRadius="md" bg={cert.is_validated ? 'green.50' : 'red.50'} color={cert.is_validated ? 'green.700' : 'red.700'} fontSize="xs" fontWeight="bold">
+                                                    {cert.is_validated ? 'Vigente' : 'Inválido'}
+                                                </Box>
                                             </Table.Cell>
                                             <Table.Cell textAlign="end">
-                                                <Button
-                                                    size="xs"
-                                                    colorPalette="gray"
-                                                    variant="subtle"
-                                                    onClick={() => openEditModal(cert)}
-                                                >
-                                                    <LuPencilLine /> Editar
-                                                </Button>
+                                                <HStack gap="1" justify="flex-end">
+                                                    <IconButton variant="ghost" size="xs" aria-label="Editar" onClick={() => openEditModal(cert)}>
+                                                        <LuPencil />
+                                                    </IconButton>
+                                                    <IconButton variant="ghost" size="xs" colorPalette="red" aria-label="Eliminar Físico" onClick={() => handleDeleteCertificate(cert.id, cert.doctor_license)}>
+                                                        <LuTrash2 />
+                                                    </IconButton>
+                                                </HStack>
                                             </Table.Cell>
                                         </Table.Row>
                                     ))}
@@ -291,118 +347,89 @@ export function SaludView() {
                     </DialogBody>
                     <DialogFooter>
                         <DialogActionTrigger asChild>
-                            <Button variant="outline">Cerrar</Button>
+                            <Button variant="outline">Cerrar Historial</Button>
                         </DialogActionTrigger>
                     </DialogFooter>
                     <DialogCloseTrigger />
                 </DialogContent>
             </DialogRoot>
 
-            {/* 🚀 MODAL 3: EDITOR QUIRÚRGICO (SÓLO VENCIMIENTO Y ESTADO) */}
-            <DialogRoot open={isEditOpen} onOpenChange={(e) => setIsEditOpen(e.open)}>
-                <DialogContent>
-                    <form onSubmit={handleUpdateSubmit}>
-                        <DialogHeader>
-                            <DialogTitle>Modificar Certificado Médico</DialogTitle>
-                        </DialogHeader>
-                        <DialogBody>
-                            <Stack gap="4">
-                                {/* 🛠️ SOLO FECHA DE VENCIMIENTO */}
-                                <Field label="Nueva Fecha de Vencimiento" required helperText="Debe ser mayor a la fecha de emisión original.">
-                                    <Input
-                                        type="date"
-                                        value={editFormData.expiry_date}
-                                        onChange={(e) => setEditFormData({ ...editFormData, expiry_date: e.target.value })}
-                                        required
-                                    />
-                                </Field>
+            {/* GRILLA GLOBAL DE SOCIOS */}
+            <Stack gap="8">
+                <Flex justify="space-between" align="center">
+                    <Stack gap="1">
+                        <Heading size="2xl" fontWeight="bold">Gestión de Salud</Heading>
+                        <Text color="fg.muted" fontSize="md">
+                            Administra los certificados médicos y aptitudes físicas de los socios.
+                        </Text>
+                    </Stack>
+                    <Button variant="outline" onClick={loadAllData} disabled={isLoading}>
+                        <LuRefreshCw /> Actualizar lista
+                    </Button>
+                </Flex>
 
-                                {/* 🛠️ SOLO CONTROL DE ESTADO VALIDADO */}
-                                <Field label="Estado del Certificado" helperText="Al dejarlo como Vigente pasará a ser la aptitud actual del socio.">
-                                    <select
-                                        value={editFormData.is_validated ? "true" : "false"}
-                                        onChange={(e) => setEditFormData({ ...editFormData, is_validated: e.target.value === "true" })}
-                                        style={{
-                                            width: "100%",
-                                            padding: "8px",
-                                            borderRadius: "6px",
-                                            border: "1px solid #E2E8F0",
-                                            background: "white"
-                                        }}
-                                    >
-                                        <option value="true">Vigente / Validado</option>
-                                        <option value="false">Invalido / Revocado</option>
-                                    </select>
-                                </Field>
-                            </Stack>
-                        </DialogBody>
-                        <DialogFooter>
-                            <DialogActionTrigger asChild>
-                                <Button variant="outline">Cancelar</Button>
-                            </DialogActionTrigger>
-                            <Button type="submit" colorPalette="orange" loading={isSubmitting}>
-                                Guardar Cambios
-                            </Button>
-                        </DialogFooter>
-                        <DialogCloseTrigger />
-                    </form>
-                </DialogContent>
-            </DialogRoot>
-
-            {/* TABLA PRINCIPAL DE SOCIOS */}
-            <Box bg="bg.panel" borderRadius="xl" boxShadow="sm" borderWidth="1px" overflow="hidden">
-                {isLoading ? (
-                    <Center h="300px"><Spinner size="xl" color="blue.500" /></Center>
-                ) : (
-                    <Table.Root size="md" variant="line" interactive>
-                        <Table.Header>
-                            <Table.Row bg="bg.muted/50">
-                                <Table.ColumnHeader py="4">Socio</Table.ColumnHeader>
-                                <Table.ColumnHeader py="4">DNI</Table.ColumnHeader>
-                                <Table.ColumnHeader py="4" textAlign="end">Acciones</Table.ColumnHeader>
-                            </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
-                            {members.map((member) => (
-                                <Table.Row key={member.id} _hover={{ bg: "bg.muted/30" }}>
-                                    <Table.Cell fontWeight="semibold">{member.name}</Table.Cell>
-                                    <Table.Cell color="fg.muted">{member.dni}</Table.Cell>
-                                    <Table.Cell textAlign="end">
-                                        <HStack gap="2" justify="flex-end">
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                colorPalette="gray"
-                                                onClick={() => openHistoryModal(member)}
-                                            >
-                                                <LuEye /> Ver Historial
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                colorPalette="orange"
-                                                onClick={() => handleQuickEdit(member)}
-                                            >
-                                                <LuPencilLine /> Editar Actual
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                colorPalette="blue"
-                                                variant="ghost"
-                                                onClick={() => openCreateModal(member)}
-                                            >
-                                                <LuPlus /> Cargar Certificado
-                                            </Button>
-                                        </HStack>
-                                    </Table.Cell>
-                                </Table.Row>
-                            ))}
-                        </Table.Body>
-                    </Table.Root>
+                {error && (
+                    <Box p="4" bg="red.50" color="red.700" borderRadius="md" border="1px solid" borderColor="red.200">
+                        <Text fontWeight="bold">Error:</Text>
+                        <Text>{error}</Text>
+                    </Box>
                 )}
-            </Box>
-        </Stack>
+
+                <Box bg="bg.panel" borderRadius="xl" boxShadow="sm" borderWidth="1px" overflow="hidden">
+                    {isLoading ? (
+                        <Center h="300px"><Spinner size="xl" color="blue.500" /></Center>
+                    ) : (
+                        <Table.Root size="md" variant="line" interactive>
+                            <Table.Header>
+                                <Table.Row bg="bg.muted/50">
+                                    <Table.ColumnHeader py="4">Socio</Table.ColumnHeader>
+                                    <Table.ColumnHeader py="4">DNI</Table.ColumnHeader>
+                                    <Table.ColumnHeader py="4" textAlign="end">Acciones Sanitarias</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
+                                {members.map((member) => {
+                                    // 🚀 BUSQUEDA DEL VIGENTE: Filtramos los certificados del socio para encontrar el activo
+                                    const misCerts = certificatesMap[member.id] || [];
+                                    const certificadoVigente = misCerts.find(c => c.is_validated === true);
+
+                                    return (
+                                        <Table.Row key={member.id} _hover={{ bg: "bg.muted/30" }}>
+                                            <Table.Cell fontWeight="semibold">{member.name}</Table.Cell>
+                                            <Table.Cell color="fg.muted">{member.dni}</Table.Cell>
+                                            <Table.Cell textAlign="end">
+                                                <HStack gap="2" justify="flex-end">
+                                                    {/* 👁️ Ver Historial Completo */}
+                                                    <Button size="sm" variant="ghost" onClick={() => handleOpenHistory(member)}>
+                                                        <LuEye /> Historial
+                                                    </Button>
+
+                                                    {/* 📝 ¡BOTÓN EDITAR EL VIGENTE AFUERA! Aparece solo si el socio tiene uno activo */}
+                                                    {certificadoVigente && (
+                                                        <Button 
+                                                            size="sm" 
+                                                            variant="outline" 
+                                                            colorPalette="orange" 
+                                                            onClick={() => openEditModal(certificadoVigente)}
+                                                        >
+                                                            <LuPencil /> Editar Vigente
+                                                        </Button>
+                                                    )}
+
+                                                    {/* ➕ Cargar Certificado */}
+                                                    <Button size="sm" colorPalette="blue" variant="ghost" onClick={() => openCreateModal(member)}>
+                                                        <LuPlus /> Cargar Certificado
+                                                    </Button>
+                                                </HStack>
+                                            </Table.Cell>
+                                        </Table.Row>
+                                    );
+                                })}
+                            </Table.Body>
+                        </Table.Root>
+                    )}
+                </Box>
+            </Stack>
+        </>
     );
 }
-
-export default SaludView;
