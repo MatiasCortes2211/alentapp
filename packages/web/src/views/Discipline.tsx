@@ -34,7 +34,7 @@ export function DisciplineView() {
   const [members, setMembers] = useState<MemberDTO[]>([]);
   
  
-  const [disciplines, setDisciplines] = useState([]); 
+  const [disciplines, setDisciplines] = useState<Discipline[]>([]); 
 
   const [formData, setFormData] = useState({
       reason: "",
@@ -45,15 +45,19 @@ export function DisciplineView() {
   });
 
   useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const data = await membersService.getAll();
-        setMembers(data);
-      } catch (err) {
-        console.error("Error al cargar socios", err);
-      }
-    };
-    fetchMembers();
+  const fetchData = async () => {
+    try {
+      const [membersData, discilinesData] = await Promise.all([
+        membersService.getAll(),
+        disciplinesService.getAll(),
+      ]);
+      setMembers(membersData);
+      setDisciplines(discilinesData);
+    } catch (err) {
+      console.error("Error al cargar datos", err);
+    }
+  };
+    fetchData();
   }, []);
 
   const openCreateModal = () => {
@@ -66,6 +70,11 @@ export function DisciplineView() {
     });
     setError(null);
     setIsDialogOpen(true);
+  };
+
+  const handleRefresh = async () => {
+    const data = await disciplinesService.getAll();
+    setDisciplines(data);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,6 +92,8 @@ export function DisciplineView() {
       };
 
       await disciplinesService.create(payload);
+      const updatedDisciplines = await disciplinesService.getAll(); 
+      setDisciplines(updatedDisciplines);  
       setIsDialogOpen(false);
       alert("¡Disciplina creada con éxito!"); 
     } catch (err: any) {
@@ -119,7 +130,7 @@ export function DisciplineView() {
             </Text>
           </Stack>
           <HStack gap="3">
-            <Button variant="outline" disabled={true}>
+            <Button variant="outline" onClick={handleRefresh}>
               <LuRefreshCw /> Actualizar
             </Button>
             <Button colorPalette="blue" size="md" onClick={openCreateModal}>
@@ -233,7 +244,7 @@ export function DisciplineView() {
                   <Table.ColumnHeader py="4">Socio</Table.ColumnHeader>
                   <Table.ColumnHeader py="4">Fecha de Inicio</Table.ColumnHeader>
                   <Table.ColumnHeader py="4">Fecha de Fin</Table.ColumnHeader>
-                  <Table.ColumnHeader py="4">Disciplina Total</Table.ColumnHeader>
+                  <Table.ColumnHeader py="4">Tipo de Sanción</Table.ColumnHeader>
                   <Table.ColumnHeader py="4">Razón</Table.ColumnHeader>
                   <Table.ColumnHeader py="4" textAlign="end">
                         <HStack gap="2" justify="flex-end">
@@ -252,6 +263,19 @@ export function DisciplineView() {
               </Table.Header>
               <Table.Body>
                 {/*endpoint getAll */}
+                {disciplines.map((discipline) => {
+                  const member = members.find(m => m.id === discipline.member_id);
+                  return (
+                    <Table.Row key={discipline.id}>
+                      <Table.Cell>{member ? `${member.name} (${member.dni})` : discipline.member_id}</Table.Cell>
+                      <Table.Cell color="fg.muted">{discipline.start_date}</Table.Cell>
+                      <Table.Cell color="fg.muted">{discipline.end_date}</Table.Cell>
+                      <Table.Cell color="fg.muted">{discipline.is_total_suspension ? "Total" : "Parcial"}</Table.Cell>
+                      <Table.Cell color="fg.muted">{discipline.reason}</Table.Cell>
+                      <Table.Cell textAlign="end">-</Table.Cell>
+                    </Table.Row>
+                  );
+                })}
               </Table.Body>
             </Table.Root>
           )}
