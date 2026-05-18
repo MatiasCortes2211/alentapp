@@ -14,6 +14,7 @@ import { MedicalCertificateValidator } from './domain/services/MedicalCertificat
 import { NewMedicalCertificateUseCase } from './application/NewMedicalCertificateUseCase.js';
 import { GetMedicalCertificatesUseCase } from './application/GetMedicalCertificatesUseCase.js'; 
 import { UpdateMedicalCertificateUseCase } from './application/UpdateMedicalCertificateUseCase.js'; 
+import { DeleteMedicalCertificateUseCase } from './application/DeleteMedicalCertificateUseCase.js'; 
 import { MedicalCertificateController } from './delivery/MedicalCertificateController.js';
 
 import { PostgresLockerRepository } from './infrastructure/PostgresLockerRepository.js';
@@ -91,7 +92,6 @@ export function buildApp() {
     const updateLockerUseCase = new UpdateLockerUseCase(lockerRepo, memberRepo, lockerValidator);
     const deleteLockerUseCase = new DeleteLockerUseCase(lockerRepo);
 
-    // ✅ CORREGIDO: Una única declaración con todas las dependencias
     const lockerController = new LockerController(
         createLockerUseCase, 
         getLockersUseCase, 
@@ -108,14 +108,16 @@ export function buildApp() {
         memberRepo,
         certificateValidator
     );
-
     const getMedicalCertificatesUseCase = new GetMedicalCertificatesUseCase(certificateRepo);
     const updateMedicalCertificateUseCase = new UpdateMedicalCertificateUseCase(certificateRepo);
+    const deleteMedicalCertificateUseCase = new DeleteMedicalCertificateUseCase(certificateRepo);
 
+    // ✅ Arreglado el cortocircuito: se inyectan los 4 casos de uso en una única instancia limpia
     const certificateController = new MedicalCertificateController(
         newCertificateUseCase,
         getMedicalCertificatesUseCase,
-        updateMedicalCertificateUseCase
+        updateMedicalCertificateUseCase,
+        deleteMedicalCertificateUseCase
     );
 
     // Payment
@@ -127,7 +129,6 @@ export function buildApp() {
     const deletePaymentUseCase = new DeletePaymentUseCase(paymentRepo);
     const updatePaymentUseCase = new UpdatePaymentUseCase(paymentRepo, paymentValidator);
 
-    // ✅ CORREGIDO: Una única declaración con todas las dependencias nuevas de main
     const paymentController = new PaymentController(
         createPaymentUseCase, 
         getPaymentsUseCase, 
@@ -180,7 +181,8 @@ export function buildApp() {
     // Rutas Certificados Médicos
     server.post('/api/v1/medical-certificates', certificateController.create.bind(certificateController));
     server.get('/api/v1/medical-certificates/member/:memberId', certificateController.getByMember.bind(certificateController));
-    server.patch('/api/v1/medical-certificates/:id', certificateController.update.bind(certificateController));
+    server.patch('/api/v1/medical-certificates/:id', certificateController.update.bind(certificateController)); //
+    server.delete('/api/v1/medical-certificates/:id', certificateController.delete.bind(certificateController)); // 🚀 NUEVA RUTA REGISTRADA (TDD-0009)
 
     // Rutas Pagos
     server.post('/api/v1/payments', paymentController.create.bind(paymentController));
