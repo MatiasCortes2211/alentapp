@@ -13,6 +13,7 @@ import { PostgresMedicalCertificateRepository } from './infrastructure/PostgresM
 import { MedicalCertificateValidator } from './domain/services/MedicalCertificateValidator.js';
 import { NewMedicalCertificateUseCase } from './application/NewMedicalCertificateUseCase.js';
 import { MedicalCertificateController } from './delivery/MedicalCertificateController.js';
+import { GetMedicalCertificatesUseCase } from './application/GetMedicalCertificatesUseCase.js'; 
 
 import { PostgresLockerRepository } from './infrastructure/PostgresLockerRepository.js';
 import { LockerValidator } from './domain/services/LockerValidator.js';
@@ -107,7 +108,14 @@ export function buildApp() {
         certificateValidator
     );
 
-    const certificateController = new MedicalCertificateController(newCertificateUseCase);
+    // 1. Instancia del nuevo caso de uso del READ
+    const getMedicalCertificatesUseCase = new GetMedicalCertificatesUseCase(certificateRepo);
+
+    // 2. ÚNICA DECLARACIÓN del controlador pasando ambas dependencias
+    const certificateController = new MedicalCertificateController(
+        newCertificateUseCase,
+        getMedicalCertificatesUseCase
+    );
 
     // Payment
     const paymentRepo = new PostgresPaymentRepository();
@@ -161,6 +169,8 @@ export function buildApp() {
     server.delete('/api/v1/lockers/:id', lockerController.delete.bind(lockerController));
 
     server.post('/api/v1/medical-certificates', certificateController.create.bind(certificateController));
+    server.get('/api/v1/medical-certificates/member/:memberId', certificateController.getByMember.bind(certificateController));
+
     
     server.post('/api/v1/payments', paymentController.create.bind(paymentController));
     server.get('/api/v1/payments', paymentController.getAll.bind(paymentController));

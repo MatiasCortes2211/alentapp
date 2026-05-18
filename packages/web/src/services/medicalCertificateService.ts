@@ -24,5 +24,23 @@ export const medicalCertificateService = {
 
     const result = await response.json();
     return result.data;
+  }, 
+
+  async getByMemberId(memberId: string): Promise<MedicalCertificateDTO[]> {
+    const response = await fetch(`${API_URL}/medical-certificates/member/${memberId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      const errorMessage = errorData.message || errorData.error || 'Error al obtener los certificados';
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    return result.data;
   },
 };
