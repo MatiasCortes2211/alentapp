@@ -45,6 +45,7 @@ import { CreateDisciplineUseCase } from './application/NewDisciplineUseCase.js';
 import { DisciplineController } from './delivery/DisciplineController.js';
 import { GetDisciplineUseCase } from './application/GetDisciplineUseCase.js';
 import { DeleteDisciplineUseCase } from './application/DeleteDisciplineUseCase.js';
+import { UpdateDisciplineUseCase } from './application/UpdateDisciplineUseCase.js';
 
 export function buildApp() {
     const server = Fastify({
@@ -149,13 +150,15 @@ export function buildApp() {
     const disciplineValidator = new DisciplineValidator();
 
     const createDisciplineUseCase = new CreateDisciplineUseCase(disciplineRepo, disciplineValidator, memberRepo);
-
+    const updateDisciplineUseCase = new UpdateDisciplineUseCase(disciplineRepo, disciplineValidator, memberRepo);
     const getDisciplineUseCase = new GetDisciplineUseCase(disciplineRepo);
     const deleteDisciplineUseCase = new DeleteDisciplineUseCase(disciplineRepo);
+
     const disciplineController = new DisciplineController(
         createDisciplineUseCase,
         getDisciplineUseCase,
-        deleteDisciplineUseCase
+        deleteDisciplineUseCase,
+        updateDisciplineUseCase
     );
 
     server.get('/api/v1/socios', memberController.getAll.bind(memberController));
@@ -186,6 +189,7 @@ export function buildApp() {
     server.post('/api/v1/disciplines', disciplineController.create.bind(disciplineController));
     server.get('/api/v1/disciplines', disciplineController.findAll.bind(disciplineController));
     server.delete('/api/v1/disciplines/:id', disciplineController.delete.bind(disciplineController));
+    server.patch('/api/v1/disciplines/:id', disciplineController.update.bind(disciplineController));
 
 
     server.get('/', async (req, rep) => {

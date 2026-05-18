@@ -300,6 +300,15 @@ export function DisciplineView() {
                           >
                             <LuPencil />
                           </IconButton>
+                          <IconButton 
+                            variant="ghost" 
+                            size="sm" 
+                            colorPalette="red" 
+                            aria-label="Eliminar disciplina"
+                            onClick={() => handleDeleteDiscipline(discipline)}
+                          >
+                            <LuTrash2 />
+                          </IconButton>
                         </HStack>
                       </Table.Cell>
                     </Table.Row>
