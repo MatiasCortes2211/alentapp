@@ -118,7 +118,8 @@ export function buildApp() {
     const sportValidator = new SportValidator(sportRepo);
 
     const createSportUseCase = new CreateSportUseCase(sportRepo, sportValidator);
-    const getSportsUseCase = new GetSportsUseCase(sportRepo);    const updateSportUseCase = new UpdateSportUseCase(sportRepo, sportValidator);
+    const getSportsUseCase = new GetSportsUseCase(sportRepo);
+    const updateSportUseCase = new UpdateSportUseCase(sportRepo, sportValidator);
     const deleteSportUseCase = new DeleteSportUseCase(sportRepo);
     const sportController = new SportController(
         createSportUseCase,
@@ -158,7 +159,8 @@ export function buildApp() {
 
     server.post('/api/v1/sports', sportController.create.bind(sportController));
     server.get('/api/v1/sports', sportController.getAll.bind(sportController));
-    server.patch('/api/v1/sports/:id', sportController.update.bind(sportController));    server.delete('/api/v1/sports/:id', sportController.delete.bind(sportController));
+    server.patch('/api/v1/sports/:id', sportController.update.bind(sportController));
+    server.delete('/api/v1/sports/:id', sportController.delete.bind(sportController));
 
     //Endpoints para Discipline
     server.post('/api/v1/disciplines', disciplineController.create.bind(disciplineController));

@@ -4,7 +4,6 @@ import { GetSportsUseCase } from '../application/GetSportsUseCase.js';
 import { UpdateSportUseCase } from '../application/UpdateSportUseCase.js';
 import { DeleteSportUseCase } from '../application/DeleteSportUseCase.js';
 import { CreateSport, UpdateSport } from '@alentapp/shared';
-import { request } from 'https';
 
 export class SportController {
     constructor(
