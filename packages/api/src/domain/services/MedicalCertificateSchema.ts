@@ -7,4 +7,8 @@ const CreateMedicalCertificateSchema = z.object({
   member_id: z.string().uuid({ message: "El ID del socio debe ser un UUID válido" }),
 });
 
-export { CreateMedicalCertificateSchema };
+const DeleteMedicalCertificateParamsSchema = z.object({
+  id: z.string().uuid({ message: 'El id debe tener formato UUID válido.' })
+});
+
+export { CreateMedicalCertificateSchema, DeleteMedicalCertificateParamsSchema};

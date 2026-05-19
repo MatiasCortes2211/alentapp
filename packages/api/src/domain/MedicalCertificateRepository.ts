@@ -19,13 +19,16 @@ export interface MedicalCertificateRepository {
   // Busca los certificados médicos de un socio por su ID 
   findByMemberId(memberId: string): Promise<MedicalCertificateDTO[]>;
 
-  // ==========================================
-  // 🚀 NUEVOS MÉTODOS PARA EL UPDATE:
-  // ==========================================
+  // =========================================================================
+  // MÉTODOS UNIFICADOS (TDD-0008 & TDD-0009): Update de Main + Delete Nuevo
+  // =========================================================================
   
   // Busca un certificado médico específico por su ID único para validar si existe
   findById(id: string): Promise<MedicalCertificateDTO | null>;
 
   // Actualiza parcialmente los campos del certificado (ej. is_validated: false)
   update(id: string, data: UpdateMedicalCertificate): Promise<MedicalCertificateDTO>;
+
+  // Remueve físicamente el registro de la base de datos de manera segura
+  delete(id: string): Promise<void>;
 }
