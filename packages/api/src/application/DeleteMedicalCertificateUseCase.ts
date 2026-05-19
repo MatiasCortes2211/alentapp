@@ -25,17 +25,6 @@ export class DeleteMedicalCertificateUseCase {
         }
 
         // 3. Si existe y el ID es correcto, procedemos al borrado físico seguro
-        try {
-            await this.repository.delete(id);
-        } catch (err: any) {
-            // Manejo de conflictos de integridad o caídas de DB
-            if (err.code === 'P2003') { // Código de restricción de clave foránea en Prisma
-                const error = new Error('Conflicto de integridad: El certificado posee dependencias externas que impiden su borrado físico.');
-                (error as any).statusCode = 409; // Conflict
-                throw error;
-            }
-            (err as any).statusCode = 500; // Internal Server Error
-            throw err;
-        }
+        await this.repository.delete(id);
     }
 }

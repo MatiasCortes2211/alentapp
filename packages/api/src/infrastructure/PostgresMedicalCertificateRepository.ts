@@ -91,9 +91,19 @@ export class PostgresMedicalCertificateRepository implements MedicalCertificateR
 
     // Funcion Delete
     async delete(id: string): Promise<void> {
-        await prisma.medicalCertificate.delete({
-            where: { id },
-        });
+        try {
+            await prisma.medicalCertificate.delete({
+                where: { id },
+            });
+        } catch (err: any) {
+            if (err.code === 'P2003') {
+                const error = new Error('Conflicto de integridad: El certificado posee dependencias externas que impiden su borrado físico.');
+                (error as any).statusCode = 409;
+                throw error;
+            }
+            (err as any).statusCode = 500;
+            throw err;
+        }
     }
 
     private mapToDTO(cert: DBMedicalCertificate): MedicalCertificateDTO {
