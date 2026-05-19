@@ -5,7 +5,7 @@ export class SportValidator {
 
     async validateNameIsUnique(name: string): Promise<void> {
         const sportWithSameName = await this.sportRepo.findByName(name);
-        if (sportWithSameName && !sportWithSameName.is_deleted) {
+        if (sportWithSameName) {
             throw new Error('Ya existe un deporte con ese nombre.');
         }
     }
