@@ -13,7 +13,7 @@ export const sportsService = {
         });
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Error al crear el deporte');
+            throw new Error(errorData.error || errorData.message || 'Error al crear el deporte');
         }
         const result = await response.json();
         return result.data;
