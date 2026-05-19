@@ -63,20 +63,13 @@ export const medicalCertificateService = {
   // Funcion Delete
   async delete(id: string): Promise<void> {
     const response = await fetch(`${API_URL}/medical-certificates/${id}`, {
-      method: 'DELETE', // ✅ Sin el Content-Type para evitar el FST_ERR_CTP_EMPTY_JSON_BODY de Fastify
+      method: 'DELETE', 
     });
 
-    // Si el backend tira error (400, 404, 409), procesamos el JSON con el mensaje real
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || errorData.message || 'Error al eliminar el certificado');
     }
-
-    // ✅ CONTROL DE ÉXITO 204: Si Fastify devuelve No Content, salimos limpios sin forzar un .json() vacío
-    if (response.status === 204) {
-      return;
-    }
-
-    await response.json().catch(() => ({}));
   }
 };
