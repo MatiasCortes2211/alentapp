@@ -112,7 +112,6 @@ export function buildApp() {
     const updateMedicalCertificateUseCase = new UpdateMedicalCertificateUseCase(certificateRepo);
     const deleteMedicalCertificateUseCase = new DeleteMedicalCertificateUseCase(certificateRepo);
 
-    // ✅ Arreglado el cortocircuito: se inyectan los 4 casos de uso en una única instancia limpia
     const certificateController = new MedicalCertificateController(
         newCertificateUseCase,
         getMedicalCertificatesUseCase,
@@ -182,7 +181,7 @@ export function buildApp() {
     server.post('/api/v1/medical-certificates', certificateController.create.bind(certificateController));
     server.get('/api/v1/medical-certificates/member/:memberId', certificateController.getByMember.bind(certificateController));
     server.patch('/api/v1/medical-certificates/:id', certificateController.update.bind(certificateController)); //
-    server.delete('/api/v1/medical-certificates/:id', certificateController.delete.bind(certificateController)); // 🚀 NUEVA RUTA REGISTRADA (TDD-0009)
+    server.delete('/api/v1/medical-certificates/:id', certificateController.delete.bind(certificateController)); // 
 
     // Rutas Pagos
     server.post('/api/v1/payments', paymentController.create.bind(paymentController));
