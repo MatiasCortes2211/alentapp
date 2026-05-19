@@ -1,8 +1,6 @@
 import { MedicalCertificateRepository } from '../domain/MedicalCertificateRepository.js';
-import { z } from 'zod';
+import { DeleteMedicalCertificateParamsSchema } from '../domain/services/MedicalCertificateSchema.js';
 
-// Esquema de Zod para validar que el ID recibido sea un UUID válido
-const deleteParamsSchema = z.string().uuid({ message: 'El id debe tener formato UUID válido.' });
 
 export class DeleteMedicalCertificateUseCase {
     constructor(
@@ -11,7 +9,7 @@ export class DeleteMedicalCertificateUseCase {
 
     async execute(id: string): Promise<void> {
         // 1. Extraer el ID y validar su formato con Zod
-        const validation = deleteParamsSchema.safeParse(id);
+        const validation = DeleteMedicalCertificateParamsSchema.safeParse({ id });
         if (!validation.success) {
             const error = new Error(validation.error.issues[0].message);
             (error as any).statusCode = 400; // Bad Request
