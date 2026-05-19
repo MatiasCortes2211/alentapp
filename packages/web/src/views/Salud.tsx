@@ -389,7 +389,7 @@ export function SaludView() {
                             </Table.Header>
                             <Table.Body>
                                 {members.map((member) => {
-                                    // 🚀 BUSQUEDA DEL VIGENTE: Filtramos los certificados del socio para encontrar el activo
+                                    
                                     const misCerts = certificatesMap[member.id] || [];
                                     const certificadoVigente = misCerts.find(c => c.is_validated === true);
 
@@ -416,7 +416,6 @@ export function SaludView() {
                                                         </Button>
                                                     )}
 
-                                                    {/* ➕ Cargar Certificado */}
                                                     <Button size="sm" colorPalette="blue" variant="ghost" onClick={() => openCreateModal(member)}>
                                                         <LuPlus /> Cargar Certificado
                                                     </Button>
