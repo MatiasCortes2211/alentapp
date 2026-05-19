@@ -41,7 +41,10 @@ export class PostgresSportRepository implements SportRepository {
     Promise<Sport | null> {
         const sport = await prisma.sport.findFirst({
             where: {
-                name,
+                name: {
+                    equals: name,
+                    mode: 'insensitive',
+                },
                 is_deleted: false,
             },
         });
