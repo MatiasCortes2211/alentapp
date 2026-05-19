@@ -57,19 +57,20 @@ export class SportController {
             const sport = await this.updateSportUseCase.execute(request.params.id, request.body);
             return reply.status(200).send({ data: sport });
         } catch (error: any) {
-            if (error.message.includes('Required') || error.message.includes('requerido')) {
+            const zodErrors = [
+                "La descripción no puede estar vacía.",
+                "La capacidad máxima debe ser mayor a 0.",
+                "ID inválido.",
+                "Required"
+            ];
+            
+            if (zodErrors.some(msg => error.message.includes(msg))) {
                 return reply.status(400).send({ error: error.message });
             }
             if (error.message.includes('El deporte no existe.')) {
                 return reply.status(404).send({ error: error.message });
             }
-            if (error.message.includes('max_capacity no puede ser menor a la cantidad de inscriptos activos.')) {
-                return reply.status(400).send({ error: error.message });
-            }
-            if (error.message.includes('description no puede estar vacío.')) {
-                return reply.status(400).send({ error: error.message });
-            }
-            if (error.message.includes('max_capacity debe ser mayor a 0.')) {
+            if (error.message.includes('La capacidad máxima no puede ser menor a la cantidad de inscriptos activos.')) {
                 return reply.status(400).send({ error: error.message });
             }
             return reply.status(500).send({ error: 'Internal server error' });
