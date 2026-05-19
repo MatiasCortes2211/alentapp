@@ -399,12 +399,10 @@ export function SaludView() {
                                             <Table.Cell color="fg.muted">{member.dni}</Table.Cell>
                                             <Table.Cell textAlign="end">
                                                 <HStack gap="2" justify="flex-end">
-                                                    {/* 👁️ Ver Historial Completo */}
                                                     <Button size="sm" variant="ghost" onClick={() => handleOpenHistory(member)}>
                                                         <LuEye /> Historial
                                                     </Button>
 
-                                                    {/* 📝 ¡BOTÓN EDITAR EL VIGENTE AFUERA! Aparece solo si el socio tiene uno activo */}
                                                     {certificadoVigente && (
                                                         <Button 
                                                             size="sm" 

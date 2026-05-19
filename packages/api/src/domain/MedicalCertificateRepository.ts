@@ -18,10 +18,6 @@ export interface MedicalCertificateRepository {
 
   // Busca los certificados médicos de un socio por su ID 
   findByMemberId(memberId: string): Promise<MedicalCertificateDTO[]>;
-
-  // =========================================================================
-  // MÉTODOS UNIFICADOS (TDD-0008 & TDD-0009): Update de Main + Delete Nuevo
-  // =========================================================================
   
   // Busca un certificado médico específico por su ID único para validar si existe
   findById(id: string): Promise<MedicalCertificateDTO | null>;
