@@ -169,8 +169,8 @@ export function SaludView() {
             if (editingCertId) {
                 await medicalCertificateService.update(editingCertId, editFormData);
                 setIsEditOpen(false);
-                setIsHistoryOpen(false); // Cierra por si estaba abierto el historial
-                loadAllData(); // Refresh global
+                setIsHistoryOpen(false); 
+                loadAllData(); 
             }
         } catch (err: any) {
             alert(err.message || "Error al actualizar la condición médica");
