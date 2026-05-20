@@ -96,7 +96,6 @@ export function SportsView() {
     try {
       await sportsService.update(editingSport.id, updateData);
       setIsDialogOpen(false);
-      setEditingSport(null);
       fetchSports();
     } catch (err: any) {
       alert(err.message || "Error al actualizar el deporte");
@@ -147,7 +146,7 @@ export function SportsView() {
       onOpenChange={(e) => {
         setIsDialogOpen(e.open);
         if (!e.open) {
-          setTimeout(() => setEditingSport(null), 200);
+          setEditingSport(null);
         }
       }}
     >
@@ -177,21 +176,39 @@ export function SportsView() {
               </DialogHeader>
               <DialogBody>
                   <Stack gap="4">
+                      <Field label="Nombre">
+                          <Input
+                              value={editingSport?.name || ""}
+                              disabled
+                          />
+                      </Field>
                       <Field label="Descripción">
-                        <Input
-                          value={updateData.description}
-                          onChange={(e) => setUpdateData({ ...updateData, description: e.target.value })}
-                        />
+                          <Input
+                              value={updateData.description}
+                              onChange={(e) => setUpdateData({ ...updateData, description: e.target.value })}
+                          />
                       </Field>
                       <Field label="Cupo Máximo">
-                        <Input
-                          type="text"
-                          value={updateData.max_capacity || ""}
-                          onChange={(e) => {
-                            const cleanValue = e.target.value.replace(/\D/g, "");
-                            setUpdateData({ ...updateData, max_capacity: cleanValue === "" ? 0 : Number(cleanValue) });
-                          }}
-                        />
+                          <Input
+                              type="text"
+                              value={updateData.max_capacity || ""}
+                              onChange={(e) => {
+                                  const cleanValue = e.target.value.replace(/\D/g, "");
+                                  setUpdateData({ ...updateData, max_capacity: cleanValue === "" ? 0 : Number(cleanValue) });
+                              }}
+                          />
+                      </Field>
+                      <Field label="Precio Adicional">
+                          <Input
+                              value={editingSport?.additional_price || ""}
+                              disabled
+                          />
+                      </Field>
+                      <Field label="Requiere Certificado Médico">
+                          <Input
+                              value={editingSport?.requires_medical_certificate ? "Sí" : "No"}
+                              disabled
+                          />
                       </Field>
                   </Stack>
               </DialogBody>
