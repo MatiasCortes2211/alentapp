@@ -183,8 +183,8 @@ export function buildApp() {
     // Rutas Certificados Médicos
     server.post('/api/v1/medical-certificates', certificateController.create.bind(certificateController));
     server.get('/api/v1/medical-certificates/member/:memberId', certificateController.getByMember.bind(certificateController));
-    server.patch('/api/v1/medical-certificates/:id', certificateController.update.bind(certificateController)); //
-    server.delete('/api/v1/medical-certificates/:id', certificateController.delete.bind(certificateController)); // 
+    server.patch('/api/v1/medical-certificates/:id', certificateController.update.bind(certificateController));
+    server.delete('/api/v1/medical-certificates/:id', certificateController.delete.bind(certificateController));
 
     // Rutas Pagos
     server.post('/api/v1/payments', paymentController.create.bind(paymentController));
