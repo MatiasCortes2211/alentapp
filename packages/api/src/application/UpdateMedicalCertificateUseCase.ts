@@ -27,7 +27,7 @@ export class UpdateMedicalCertificateUseCase {
             throw error;
         }
 
-        // 🚀 REGLA TDD-0008: Validar coherencia si viene una nueva fecha de vencimiento
+        // Validar coherencia si viene una nueva fecha de vencimiento
         if (data.expiry_date) {
             const newExpiry = new Date(data.expiry_date);
             const originalIssue = new Date(existingCertificate.issue_date);
@@ -39,8 +39,7 @@ export class UpdateMedicalCertificateUseCase {
             }
         }
 
-        // 🚀 REGLA DE NEGOCIO: Evitar duplicidad de estados activos en el historial
-        // Si administrativamente se está activando este certificado viejo
+        // Evitar duplicidad de estados activos en el historial
         if (data.is_validated === true) {
             // Apagamos todos los certificados que pertenezcan a este socio primero
             await this.repository.invalidatePriorCertificates(existingCertificate.member_id);

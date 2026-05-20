@@ -9,8 +9,8 @@ export class MedicalCertificateController {
   constructor(
     private readonly newMedicalCertificateUseCase: NewMedicalCertificateUseCase,
     private readonly getMedicalCertificatesUseCase: GetMedicalCertificatesUseCase,
-    private readonly updateMedicalCertificateUseCase: UpdateMedicalCertificateUseCase, // 👈 Se mantiene el update de main
-    private readonly deleteMedicalCertificateUseCase: DeleteMedicalCertificateUseCase // 👈 Concluye la inyección del delete
+    private readonly updateMedicalCertificateUseCase: UpdateMedicalCertificateUseCase, 
+    private readonly deleteMedicalCertificateUseCase: DeleteMedicalCertificateUseCase 
   ) {}
 
   async create(
@@ -66,9 +66,6 @@ export class MedicalCertificateController {
     }
   }
 
-  // =========================================================================
-  // 🚀 MÉTODO UPDATE ADAPTADO Y CORREGIDO (TDD-0008)
-  // =========================================================================
   async update(
     request: FastifyRequest<{ Params: { id: string }; Body: UpdateMedicalCertificate }>,
     reply: FastifyReply
@@ -103,9 +100,6 @@ export class MedicalCertificateController {
     }
   }
 
-  // =========================================================================
-  // MÉTODO DELETE CONTROLADO (TDD-0009)
-  // =========================================================================
   async delete(
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
