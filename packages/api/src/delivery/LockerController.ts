@@ -45,6 +45,9 @@ export class LockerController {
             if (error.message.includes('conjuntamente')) {
                 return reply.status(400).send({ error: error.message });
             }
+            if (error.message.includes('límite máximo de 100 casilleros')) {
+                return reply.status(400).send({ error: error.message });
+            }
             return reply.status(400).send({ error: error.message });
         }
     }

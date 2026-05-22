@@ -26,6 +26,9 @@ export class CreateLockerUseCase {
         // Validación de asignación mutua miembro <-> fecha fin contrato
         this.lockerValidator.validateAssignmentIntegrity(data.member_id, data.end_contract_date);
 
+        // Validación tope de 100 casilleros activos
+        await this.lockerValidator.validateMaxCapacity();
+
         // Validación de número único
         await this.lockerValidator.validateNumberIsUnique(data.number);
 
