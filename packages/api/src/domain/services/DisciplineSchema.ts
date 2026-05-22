@@ -12,6 +12,9 @@ const UpdateDisciplineSchema = z.object({
     start_date: z.string().min(1, {message: "La fecha de inicio es obligatoria"}).optional(),
     end_date: z.string().min(1, {message: "La fecha de fin es obligatoria"}).optional(),
     is_total_suspension: z.boolean({message: "Es suspensión Total debe ser un booleano"}).optional(),
-    member_id: z.string().uuid({message: "El id del socio debe ser un UUID válido"}).optional(),
+    member_id: z.string().uuid({message: "ID de miembro inválido"}).optional(),
 });
-export { CreateDisciplineSchema, UpdateDisciplineSchema };
+
+const DisciplineIdSchema = z.string().uuid({message: "ID de disciplina inválido"});
+
+export { CreateDisciplineSchema, UpdateDisciplineSchema, DisciplineIdSchema };
