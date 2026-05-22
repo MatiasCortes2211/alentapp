@@ -1,5 +1,5 @@
 import { ZodError } from "zod";
-import { UpdateDisciplineSchema } from "../domain/services/DisciplineSchema.js";
+import { UpdateDisciplineSchema, DisciplineIdSchema } from "../domain/services/DisciplineSchema.js";
 import { DisciplineRepository } from "../domain/DisciplineRepository.js";
 import { MemberRepository } from "../domain/MemberRepository.js";
 import { DisciplineValidator } from "../domain/services/DisciplineValidator.js";
@@ -21,6 +21,15 @@ export class UpdateDisciplineUseCase {
             }
             throw Error;
         }
+        try {
+            DisciplineIdSchema.parse(id);
+        } catch (error) {
+            if (error instanceof ZodError) {
+                throw new Error(error.issues[0].message);
+            }
+            throw Error;
+        }
+
 
         const discipline = await this.disciplineRepository.findById(id);
         if (!discipline) {
