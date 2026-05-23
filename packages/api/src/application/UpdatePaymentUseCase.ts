@@ -32,10 +32,15 @@ export class UpdatePaymentUseCase {
             throw new Error('El pago ingresado no existe en el sistema');
         }
 
-        // 2. Validaciones de negocio
+        // 2. Verificar que no este ya eliminado
+        if (existingPayment.is_deleted) {
+            throw new Error('Un pago no puede ser modificado si se encuentra eliminado');
+        }
+
+        // 3. Validaciones de negocio
         this.paymentValidator.validateStatusTransition(existingPayment.status);
 
-        // 3. Persistencia a través de la interfaz
+        // 4. Persistencia a través de la interfaz
         return this.paymentRepository.update(id, data.status as PaymentStatus.Paid | PaymentStatus.Canceled);
     }
 }
