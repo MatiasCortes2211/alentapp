@@ -109,9 +109,11 @@ export class PaymentController {
                 return reply.status(404).send({ error: error.message });
             }
 
-            if (error.message.includes('ya se encuentra en estado')) {
+            if (error.message.includes('ya se encuentra en estado') ||
+                error.message.includes('Un pago no puede ser modificado si se encuentra eliminado')) {
                 return reply.status(409).send({ error: error.message });
             }
+            
             if (error.message.includes('El estado debe ser PAID o CANCELED') ||
                 error.message.includes('El formato del ID es inválido')) {
                 return reply.status(400).send({ error: error.message });
