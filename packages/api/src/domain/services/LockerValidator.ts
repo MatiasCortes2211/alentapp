@@ -43,4 +43,10 @@ export class LockerValidator {
             throw new Error('Se ha alcanzado el límite máximo de 100 casilleros activos en el club');
         }
     }
+
+    validateMemberIsNotSuspended(memberStatus: string): void {
+        if (memberStatus === 'Suspendido') {
+            throw new Error('Un socio suspendido no puede alquilar casilleros');
+        }
+    }
 }

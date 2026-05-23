@@ -37,6 +37,9 @@ export class CreateLockerUseCase {
             if (!member) {
                 throw new Error('El socio ingresado no existe');
             }
+            
+            // Validación miembro no Suspendido
+            this.lockerValidator.validateMemberIsNotSuspended(member.status);
 
             if (data.status) {
                 this.lockerValidator.validateStatusForAssignment(data.status);

@@ -49,6 +49,9 @@ export class LockerController {
             if (error.message.includes('límite máximo de 100 casilleros')) {
                 return reply.status(400).send({ error: error.message });
             }
+            if (error.message.includes('socio suspendido')) {
+                return reply.status(400).send({ error: error.message });
+            }
             return reply.status(400).send({ error: error.message });
         }
     }
@@ -66,6 +69,9 @@ export class LockerController {
             }
             if (error.message.includes('Ya existe un casillero')) {
                 return reply.status(409).send({ error: error.message });
+            }
+            if (error.message.includes('socio suspendido')) {
+                return reply.status(400).send({ error: error.message });
             }
             return reply.status(400).send({ error: error.message });
         }
