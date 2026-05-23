@@ -79,7 +79,7 @@ export function SportsView() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await sportsService.create(formData as CreateSport);
+      await sportsService.create(formData);
       setIsDialogOpen(false);
       fetchSports();
     } catch (err: any) {
@@ -146,7 +146,7 @@ export function SportsView() {
       onOpenChange={(e) => {
         setIsDialogOpen(e.open);
         if (!e.open) {
-          setEditingSport(null);
+          setTimeout(() => setEditingSport(null), 200);
         }
       }}
     >
