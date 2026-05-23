@@ -40,7 +40,8 @@ export class PaymentController {
                 error.message.includes('no puede ser anterior a hoy') || 
                 error.message.includes('UUID válido') ||          
                 error.message.includes('mayor o igual a 2024') ||
-                error.message.includes('obligatorio')
+                error.message.includes('requerida') ||
+                error.message.includes('obligatori')
                 
             ) {
                 return reply.status(400).send({ error: error.message });
