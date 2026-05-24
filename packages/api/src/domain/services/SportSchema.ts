@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { id } from 'zod/locales';
 
 export const CreateSportSchema = z.object({
     name: z.string().min(1, {message: "El nombre no puede estar vacío."}),
