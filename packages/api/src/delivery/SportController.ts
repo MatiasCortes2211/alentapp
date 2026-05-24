@@ -74,6 +74,9 @@ export class SportController {
             if (error.message.includes('El deporte no existe.')) {
                 return reply.status(404).send({ error: error.message });
             }
+            if (error.message.includes('El deporte ya está eliminado.')) {
+                return reply.status(409).send({ error: error.message });
+            }
             if (error.message.includes('La capacidad máxima no puede ser menor a la cantidad de inscriptos activos.')) {
                 return reply.status(409).send({ error: error.message });
             }
