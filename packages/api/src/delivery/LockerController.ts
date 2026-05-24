@@ -18,7 +18,8 @@ export class LockerController {
             const lockers = await this.getLockersUseCase.execute();
             return reply.status(200).send({ data: lockers });
         } catch (error: any) {
-            return reply.status(500).send({ error: error.message });
+            console.error('[getAll Lockers Error]:', error);
+            return reply.status(500).send({ error: 'Ocurrió un error interno en el servidor.' });
         }
     }
 
@@ -45,6 +46,12 @@ export class LockerController {
             if (error.message.includes('conjuntamente')) {
                 return reply.status(400).send({ error: error.message });
             }
+            if (error.message.includes('límite máximo de 100 casilleros')) {
+                return reply.status(400).send({ error: error.message });
+            }
+            if (error.message.includes('socio suspendido')) {
+                return reply.status(400).send({ error: error.message });
+            }
             return reply.status(400).send({ error: error.message });
         }
     }
@@ -62,6 +69,9 @@ export class LockerController {
             }
             if (error.message.includes('Ya existe un casillero')) {
                 return reply.status(409).send({ error: error.message });
+            }
+            if (error.message.includes('socio suspendido')) {
+                return reply.status(400).send({ error: error.message });
             }
             return reply.status(400).send({ error: error.message });
         }
@@ -84,7 +94,8 @@ export class LockerController {
             if (error.message.includes('formato del ID es inválido')) {
                 return reply.status(400).send({ error: error.message });
             }
-            return reply.status(500).send({ error: error.message });
+            console.error('[delete Lockers Error]:', error);
+            return reply.status(500).send({ error: 'Ocurrió un error interno en el servidor.' });
         }
     }
 }
