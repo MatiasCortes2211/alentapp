@@ -97,7 +97,7 @@ export class SportController {
             if (zodErrors.some(msg => error.message.includes(msg))) {
                 return reply.status(400).send({ error: error.message });
             }
-            if (error.message.includes('El deporte no existe')) {
+            if (error.message.includes('El deporte no existe.')) {
                 return reply.status(404).send({ error: error.message });
             }
             if (error.message.includes('El deporte ya está eliminado.')) {
