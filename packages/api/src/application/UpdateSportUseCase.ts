@@ -13,13 +13,6 @@ export class UpdateSportUseCase {
     async execute(id: string, data: UpdateSport): Promise<Sport> {
         try {
             SportIdSchema.parse(id);
-        } catch (error) {
-            if (error instanceof ZodError) {
-                throw new Error(error.issues[0].message);
-            }
-            throw error;
-        }
-        try {
             UpdateSportSchema.parse(data);
         } catch (error) {
             if (error instanceof ZodError) {
