@@ -41,7 +41,8 @@ export class PaymentController {
                 error.message.includes('UUID válido') ||          
                 error.message.includes('mayor o igual a 2024') ||
                 error.message.includes('requerida') ||
-                error.message.includes('obligatori')
+                error.message.includes('obligatori') ||
+                error.message.includes('socio suspendido')
                 
             ) {
                 return reply.status(400).send({ error: error.message });
