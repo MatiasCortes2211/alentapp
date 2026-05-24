@@ -86,7 +86,9 @@ export class DisciplineController {
             if (error.message.includes('La fecha de fin debe ser posterior a la fecha de inicio')){
                 return reply.status(400).send({ error: error.message });
             }
-            if (error.message.includes('Required') || error.message.includes('requerido') || error.message.includes('vacía')){
+            if (error.message.includes('vací') ||
+                error.message.includes('Required') || 
+                error.message.includes('requerido') ){
                 return reply.status(400).send({ error: error.message });
             }
             return reply.status(500).send({ error: 'Error al actualizar la disciplina' });
