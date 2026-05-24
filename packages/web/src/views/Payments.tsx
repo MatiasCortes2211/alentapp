@@ -192,7 +192,7 @@ export function PaymentsView() {
                 </Field>
                 <Flex gap="4">
                   <Field label="Monto ($)" required>
-                    <Input type="number" min="1" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required />
+                    <Input type="number" step="0.01" min="1" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required />
                   </Field>
                 </Flex>
                 <Flex gap="4">
