@@ -26,6 +26,9 @@ export class CreateLockerUseCase {
         // Validación de asignación mutua miembro <-> fecha fin contrato
         this.lockerValidator.validateAssignmentIntegrity(data.member_id, data.end_contract_date);
 
+        // Validación tope de 100 casilleros activos
+        await this.lockerValidator.validateMaxCapacity();
+
         // Validación de número único
         await this.lockerValidator.validateNumberIsUnique(data.number);
 
@@ -34,6 +37,9 @@ export class CreateLockerUseCase {
             if (!member) {
                 throw new Error('El socio ingresado no existe');
             }
+            
+            // Validación miembro no Suspendido
+            this.lockerValidator.validateMemberIsNotSuspended(member.status);
 
             if (data.status) {
                 this.lockerValidator.validateStatusForAssignment(data.status);

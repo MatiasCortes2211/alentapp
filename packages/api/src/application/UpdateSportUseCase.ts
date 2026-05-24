@@ -1,7 +1,7 @@
 import { ZodError } from 'zod';
 import { SportRepository } from '../domain/SportRepository.js';
 import { SportValidator } from '../domain/services/SportValidator.js';
-import { UpdateSportSchema } from '../domain/services/SportSchema.js';
+import { UpdateSportSchema, SportIdSchema } from '../domain/services/SportSchema.js';
 import { Sport, UpdateSport } from '@alentapp/shared';
 
 export class UpdateSportUseCase {
@@ -12,6 +12,7 @@ export class UpdateSportUseCase {
 
     async execute(id: string, data: UpdateSport): Promise<Sport> {
         try {
+            SportIdSchema.parse(id);
             UpdateSportSchema.parse(data);
         } catch (error) {
             if (error instanceof ZodError) {

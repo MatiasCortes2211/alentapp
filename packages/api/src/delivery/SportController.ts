@@ -31,12 +31,16 @@ export class SportController {
             return reply.status(201).send({ data: sport });
         } catch (error: any) {
             const zodErrors = [
+                "El nombre es obligatorio.",
+                "La descripción es obligatoria.",
+                "La capacidad máxima es obligatoria.",
+                "El precio adicional es obligatorio.",
+                "El requisito de certificado médico es obligatorio.",
                 "El nombre no puede estar vacío.",
                 "La descripción no puede estar vacía.",
                 "La capacidad máxima debe ser mayor a 0.",
                 "El precio adicional debe ser mayor o igual a $0.",
-                "El requisito de certificado médico debe ser un valor booleano válido.",
-                "Required"
+                "El requisito de certificado médico debe ser un valor booleano válido."
             ];
 
             if (zodErrors.some(msg => error.message.includes(msg))) {
@@ -57,22 +61,23 @@ export class SportController {
             const sport = await this.updateSportUseCase.execute(request.params.id, request.body);
             return reply.status(200).send({ data: sport });
         } catch (error: any) {
-            if (error.message.includes('Required') || error.message.includes('requerido')) {
+            const zodErrors = [
+                "El ID es obligatorio.",
+                "La descripción no puede estar vacía.",
+                "La capacidad máxima debe ser mayor a 0.",
+                "ID inválido."
+            ];
+            
+            if (zodErrors.some(msg => error.message.includes(msg))) {
                 return reply.status(400).send({ error: error.message });
             }
             if (error.message.includes('El deporte no existe.')) {
                 return reply.status(404).send({ error: error.message });
             }
-            if (error.message.includes('max_capacity no puede ser menor a la cantidad de inscriptos activos.')) {
-                return reply.status(400).send({ error: error.message });
+            if (error.message.includes('La capacidad máxima no puede ser menor a la cantidad de inscriptos activos.')) {
+                return reply.status(409).send({ error: error.message });
             }
-            if (error.message.includes('description no puede estar vacío.')) {
-                return reply.status(400).send({ error: error.message });
-            }
-            if (error.message.includes('max_capacity debe ser mayor a 0.')) {
-                return reply.status(400).send({ error: error.message });
-            }
-            return reply.status(500).send({ error: 'Internal server error' });
+            return reply.status(500).send({ error: 'Ocurrió un error inesperado. Por favor, intentá de nuevo más tarde.' });
         }
     }
 

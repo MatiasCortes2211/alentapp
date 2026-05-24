@@ -19,7 +19,7 @@ export class SportValidator {
         if (newMaxCapacity !== undefined) {
             const activeEnrollments = await this.sportRepo.countActiveEnrollments(id);
             if (activeEnrollments > newMaxCapacity) {
-                throw new Error('max_capacity no puede ser menor a la cantidad de inscriptos activos.');
+                throw new Error('La capacidad máxima no puede ser menor a la cantidad de inscriptos activos.');
             }
         }
     }

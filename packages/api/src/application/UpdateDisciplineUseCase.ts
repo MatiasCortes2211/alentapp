@@ -1,5 +1,5 @@
 import { ZodError } from "zod";
-import { UpdateDisciplineSchema } from "../domain/services/DisciplineSchema.js";
+import { UpdateDisciplineSchema, DisciplineIdSchema } from "../domain/services/DisciplineSchema.js";
 import { DisciplineRepository } from "../domain/DisciplineRepository.js";
 import { MemberRepository } from "../domain/MemberRepository.js";
 import { DisciplineValidator } from "../domain/services/DisciplineValidator.js";
@@ -21,6 +21,15 @@ export class UpdateDisciplineUseCase {
             }
             throw Error;
         }
+        try {
+            DisciplineIdSchema.parse(id);
+        } catch (error) {
+            if (error instanceof ZodError) {
+                throw new Error(error.issues[0].message);
+            }
+            throw Error;
+        }
+
 
         const discipline = await this.disciplineRepository.findById(id);
         if (!discipline) {
@@ -41,6 +50,13 @@ export class UpdateDisciplineUseCase {
         const end_date = data.end_date ?? discipline.end_date;
         await this.disciplineValidator.validateEndDate(start_date, end_date);
 
-        return await this.disciplineRepository.update(id, data);
+        const updatedDiscipline = await this.disciplineRepository.update(id, data);
+        
+        if (data.member_id) {
+            await this.memberRepository.update(data.member_id, {status: 'Suspendido'});
+        }
+
+
+        return updatedDiscipline;
     }
 }

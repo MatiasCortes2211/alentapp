@@ -39,7 +39,10 @@ export class PaymentController {
                 error.message.includes('entre 1 y 12') ||          
                 error.message.includes('no puede ser anterior a hoy') || 
                 error.message.includes('UUID válido') ||          
-                error.message.includes('mayor o igual a 2024')  
+                error.message.includes('mayor o igual a 2024') ||
+                error.message.includes('requerida') ||
+                error.message.includes('obligatori') ||
+                error.message.includes('socio suspendido')
                 
             ) {
                 return reply.status(400).send({ error: error.message });

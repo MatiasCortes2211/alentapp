@@ -40,6 +40,11 @@ export class UpdateLockerUseCase {
         if (data.member_id) {
             const member = await this.memberRepository.findById(data.member_id);
             if (!member) throw new Error('El socio ingresado no existe');
+
+            // Valida que el socio no se este suspendido
+            if (data.member_id !== existingLocker.member_id) {
+                this.lockerValidator.validateMemberIsNotSuspended(member.status);
+            }
         }
 
         let finalStatus = data.status !== undefined ? data.status : existingLocker.status;
