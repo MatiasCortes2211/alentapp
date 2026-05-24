@@ -35,4 +35,18 @@ export class LockerValidator {
             throw new Error('Para asignar un casillero, debe ingresar tanto el socio como la fecha de fin de contrato conjuntamente');
         }
     }
+
+    async validateMaxCapacity(): Promise<void> {
+        const activeLockers = await this.lockerRepo.findAll();
+        
+        if (activeLockers.length >= 100) {
+            throw new Error('Se ha alcanzado el límite máximo de 100 casilleros activos en el club');
+        }
+    }
+
+    validateMemberIsNotSuspended(memberStatus: string): void {
+        if (memberStatus === 'Suspendido') {
+            throw new Error('Un socio suspendido no puede alquilar casilleros');
+        }
+    }
 }

@@ -169,8 +169,8 @@ export function SaludView() {
             if (editingCertId) {
                 await medicalCertificateService.update(editingCertId, editFormData);
                 setIsEditOpen(false);
-                setIsHistoryOpen(false); // Cierra por si estaba abierto el historial
-                loadAllData(); // Refresh global
+                setIsHistoryOpen(false); 
+                loadAllData(); 
             }
         } catch (err: any) {
             alert(err.message || "Error al actualizar la condición médica");
@@ -389,7 +389,7 @@ export function SaludView() {
                             </Table.Header>
                             <Table.Body>
                                 {members.map((member) => {
-                                    // 🚀 BUSQUEDA DEL VIGENTE: Filtramos los certificados del socio para encontrar el activo
+                                    
                                     const misCerts = certificatesMap[member.id] || [];
                                     const certificadoVigente = misCerts.find(c => c.is_validated === true);
 
@@ -399,12 +399,10 @@ export function SaludView() {
                                             <Table.Cell color="fg.muted">{member.dni}</Table.Cell>
                                             <Table.Cell textAlign="end">
                                                 <HStack gap="2" justify="flex-end">
-                                                    {/* 👁️ Ver Historial Completo */}
                                                     <Button size="sm" variant="ghost" onClick={() => handleOpenHistory(member)}>
                                                         <LuEye /> Historial
                                                     </Button>
 
-                                                    {/* 📝 ¡BOTÓN EDITAR EL VIGENTE AFUERA! Aparece solo si el socio tiene uno activo */}
                                                     {certificadoVigente && (
                                                         <Button 
                                                             size="sm" 
@@ -416,7 +414,6 @@ export function SaludView() {
                                                         </Button>
                                                     )}
 
-                                                    {/* ➕ Cargar Certificado */}
                                                     <Button size="sm" colorPalette="blue" variant="ghost" onClick={() => openCreateModal(member)}>
                                                         <LuPlus /> Cargar Certificado
                                                     </Button>
