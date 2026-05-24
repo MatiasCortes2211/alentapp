@@ -21,11 +21,18 @@ export class PaymentValidator {
         }
     }
 
-    validateStatusTransition(currentStatus: string): void {
+    validateStatusTransition(currentStatus: string): void   {
     if (currentStatus === 'PAID' || currentStatus === 'CANCELED') {
         throw new Error(
             `El pago ya se encuentra en estado ${currentStatus} y no puede ser modificado`
         );
     }
-}
+    }
+
+    validateMemberIsNotSuspended(memberStatus: string): void {
+        if (memberStatus === 'Suspendido') {
+            throw new Error('No se pueden gestionar pagos de un socio suspendido.');
+        }
+    }
+
 }
