@@ -33,6 +33,8 @@ export class CreateDisciplineUseCase {
             is_deleted: false, //Crea con is_deleted en false
         });
 
+        await this.memberRepository.update(data.member_id, {status: 'Suspendido'});
+
         return nuevaDisciplina;
     }
 }
