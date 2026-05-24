@@ -22,11 +22,13 @@ export class CreatePaymentUseCase {
             throw error;
         }
         
-        // 1. el miembro debe existir
+        // 1. el miembro debe existir y no debe estar suspendido
         const member = await this.memberRepository.findById(data.member_id);
         if (!member) {
             throw new Error('El miembro ingresado no existe en el sistema');
         }
+
+        this.paymentValidator.validateMemberIsNotSuspended(member.status);
 
         // 2. Validaciones de negocio (centralizadas)
         this.paymentValidator.validateDueDate(data.due_date);
