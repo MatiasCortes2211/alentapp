@@ -27,8 +27,9 @@ export class DisciplineController {
                 error.message.includes('La fecha de inicio es obligatoria') ||
                 error.message.includes('La fecha de fin es obligatoria') ||
                 error.message.includes('Es suspensión Total debe ser un booleano') ||
-                error.message.includes('Required') || 
-                error.message.includes('requerido') ) { //Required es el mensaje por defecto de error que devuelve zod cuando falta un campo requerido
+                error.message.includes('Required') || //Required es el mensaje por defecto de error que devuelve zod cuando falta un campo requerido
+                error.message.includes('requerido') ||
+                error.message.includes('obligatori')){ 
                 return reply.status(400).send({ error: error.message });
             }
             if (error.message.includes('La fecha de fin debe ser posterior a la fecha de inicio')){
