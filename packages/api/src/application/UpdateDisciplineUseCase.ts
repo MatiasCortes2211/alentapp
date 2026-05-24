@@ -50,6 +50,13 @@ export class UpdateDisciplineUseCase {
         const end_date = data.end_date ?? discipline.end_date;
         await this.disciplineValidator.validateEndDate(start_date, end_date);
 
-        return await this.disciplineRepository.update(id, data);
+        const updatedDiscipline = await this.disciplineRepository.update(id, data);
+        
+        if (data.member_id) {
+            await this.memberRepository.update(data.member_id, {status: 'Suspendido'});
+        }
+
+
+        return updatedDiscipline;
     }
 }
