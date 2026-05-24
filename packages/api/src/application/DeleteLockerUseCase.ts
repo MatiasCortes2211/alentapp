@@ -21,11 +21,6 @@ export class DeleteLockerUseCase {
             throw new Error('El casillero ya fue eliminado previamente');
         }
 
-        await this.lockerRepository.update(id, {
-            is_deleted: true,
-            status: 'Available',
-            member_id: null,           // Libera al socio
-            end_contract_date: null    // Limpia la fecha
-        });
+        await this.lockerRepository.delete(id);
     }
 }
