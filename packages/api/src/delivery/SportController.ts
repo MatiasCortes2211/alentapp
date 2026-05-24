@@ -90,13 +90,20 @@ export class SportController {
             await this.deleteSportUseCase.execute(id);
             return reply.status(204).send();
         } catch (error: any) {
+            const zodErrors = [
+                "El ID es obligatorio.",
+                "ID inválido."
+            ];
+            if (zodErrors.some(msg => error.message.includes(msg))) {
+                return reply.status(400).send({ error: error.message });
+            }
             if (error.message.includes('El deporte no existe')) {
                 return reply.status(404).send({ error: error.message });
             }
-            if (error.message.includes('El deporte ya está eliminado')) {
+            if (error.message.includes('El deporte ya está eliminado.')) {
                 return reply.status(409).send({ error: error.message });
             }
-            return reply.status(500).send({ error: 'Internal server error' });
+            return reply.status(500).send({ error: 'Ocurrió un error inesperado. Por favor, intentá de nuevo más tarde.' });
         }
     }
 }
