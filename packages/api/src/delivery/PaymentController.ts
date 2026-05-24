@@ -118,7 +118,8 @@ export class PaymentController {
             }
             
             if (error.message.includes('El estado debe ser PAID o CANCELED') ||
-                error.message.includes('El formato del ID es inválido')) {
+                error.message.includes('El formato del ID es inválido') ||
+                error.message.includes('socio suspendido')) {
                 return reply.status(400).send({ error: error.message });
             }
 
