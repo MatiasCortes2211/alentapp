@@ -87,6 +87,13 @@ export class PostgresDisciplineRepository implements DisciplineRepository {
             is_deleted: discipline.is_deleted,
         };
     }
+
+    async softDeleteByMemberId(memberId: string): Promise<void> {
+        await prisma.discipline.updateMany({
+            where: { member_id: memberId },
+            data: { is_deleted: true },
+        });
+    }
 }
 
 

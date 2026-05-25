@@ -71,12 +71,13 @@ export function buildApp() {
 
     const memberRepo = new PostgresMemberRepository();
     const paymentRepo = new PostgresPaymentRepository();
+    const disciplineRepo = new PostgresDisciplineRepository();
     const memberValidator = new MemberValidator(memberRepo);
     
     const createMemberUseCase = new CreateMemberUseCase(memberRepo, memberValidator);
     const getMembersUseCase = new GetMembersUseCase(memberRepo);
     const updateMemberUseCase = new UpdateMemberUseCase(memberRepo, memberValidator);
-    const deleteMemberUseCase = new DeleteMemberUseCase(memberRepo, paymentRepo);
+    const deleteMemberUseCase = new DeleteMemberUseCase(memberRepo, paymentRepo, disciplineRepo);
 
     const memberController = new MemberController(
         createMemberUseCase, 
@@ -153,7 +154,6 @@ export function buildApp() {
     );
 
     // Configuration for Discipline
-    const disciplineRepo = new PostgresDisciplineRepository();
     const disciplineValidator = new DisciplineValidator();
 
     const createDisciplineUseCase = new CreateDisciplineUseCase(disciplineRepo, disciplineValidator, memberRepo);
