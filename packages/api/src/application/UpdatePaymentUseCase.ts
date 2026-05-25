@@ -3,11 +3,13 @@ import { UpdatePaymentSchema, PaymentIdSchema } from '../domain/services/Payment
 import { PaymentRepository } from '../domain/PaymentRepository.js';
 import { PaymentValidator } from '../domain/services/PaymentValidator.js';
 import { PaymentDTO, PaymentStatus, UpdatePaymentRequest } from '@alentapp/shared';
+import { MemberRepository } from '../domain/MemberRepository.js';
 
 export class UpdatePaymentUseCase {
     constructor(
         private readonly paymentRepository: PaymentRepository,
-        private readonly paymentValidator: PaymentValidator
+        private readonly paymentValidator: PaymentValidator,
+        private readonly memberRepository: MemberRepository
     ) {}
 
     async execute(id: string, data: UpdatePaymentRequest): Promise<PaymentDTO> {
@@ -32,10 +34,18 @@ export class UpdatePaymentUseCase {
             throw new Error('El pago ingresado no existe en el sistema');
         }
 
-        // 2. Validaciones de negocio
+        const member = await this.memberRepository.findById(existingPayment.member_id);
+        this.paymentValidator.validateMemberIsNotSuspended(member.status);
+
+        // 2. Verificar que no este ya eliminado
+        if (existingPayment.is_deleted) {
+            throw new Error('Un pago no puede ser modificado si se encuentra eliminado');
+        }
+
+        // 3. Validaciones de negocio
         this.paymentValidator.validateStatusTransition(existingPayment.status);
 
-        // 3. Persistencia a través de la interfaz
+        // 4. Persistencia a través de la interfaz
         return this.paymentRepository.update(id, data.status as PaymentStatus.Paid | PaymentStatus.Canceled);
     }
 }
