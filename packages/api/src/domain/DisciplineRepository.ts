@@ -10,4 +10,6 @@ export interface DisciplineRepository {
   findById(id: string): Promise<Discipline | null>;
 
   update(id: string, data: UpdateDiscipline): Promise<Discipline>;
+  
+  softDeleteByMemberId(memberId: string): Promise<void>;
 }
