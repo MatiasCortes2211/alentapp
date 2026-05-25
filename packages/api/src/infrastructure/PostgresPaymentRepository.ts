@@ -96,7 +96,7 @@ export class PostgresPaymentRepository implements PaymentRepository {
             payment_date: status === PaymentStatus.Paid ? new Date() : null,
         },
     });
-    
+
     return this.mapToDTO(payment as unknown as DBPayment);
     }
 
@@ -114,4 +114,12 @@ export class PostgresPaymentRepository implements PaymentRepository {
             member_id: payment.member_id,
         };
     }
+
+    async softDeleteByMemberId(memberId: string): Promise<void> {
+        await prisma.payment.updateMany({
+            where: { member_id: memberId },
+            data: { is_deleted: true },
+        });
+    }
+
 }

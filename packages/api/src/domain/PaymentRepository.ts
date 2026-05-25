@@ -10,4 +10,5 @@ export interface PaymentRepository {
   findAll(): Promise<PaymentDTO[]>;
   delete(id: string): Promise<void>;
   update(id: string, status: PaymentStatus.Paid | PaymentStatus.Canceled): Promise<PaymentDTO>; 
+  softDeleteByMemberId(memberId: string): Promise<void>;
 }
