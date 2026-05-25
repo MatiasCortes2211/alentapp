@@ -70,12 +70,13 @@ export function buildApp() {
     });
 
     const memberRepo = new PostgresMemberRepository();
+    const paymentRepo = new PostgresPaymentRepository();
     const memberValidator = new MemberValidator(memberRepo);
     
     const createMemberUseCase = new CreateMemberUseCase(memberRepo, memberValidator);
     const getMembersUseCase = new GetMembersUseCase(memberRepo);
     const updateMemberUseCase = new UpdateMemberUseCase(memberRepo, memberValidator);
-    const deleteMemberUseCase = new DeleteMemberUseCase(memberRepo);
+    const deleteMemberUseCase = new DeleteMemberUseCase(memberRepo, paymentRepo);
 
     const memberController = new MemberController(
         createMemberUseCase, 
@@ -121,7 +122,6 @@ export function buildApp() {
     );
 
     // Payment
-    const paymentRepo = new PostgresPaymentRepository();
     const paymentValidator = new PaymentValidator(paymentRepo);
     
     const createPaymentUseCase = new CreatePaymentUseCase(paymentRepo, memberRepo, paymentValidator);
