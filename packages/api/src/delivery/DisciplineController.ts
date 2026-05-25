@@ -59,7 +59,10 @@ export class DisciplineController {
             await this.deleteDisciplineUseCase.execute(request.params.id);
             return reply.status(204).send();
         } catch (error: any) {
-            if (error.message.includes('La disciplina no existe')){
+            if (error.message.includes('ID de disciplina inválido')) {
+                return reply.status(400).send({ error: error.message });
+            }
+            if (error.message.includes('La disciplina no existe')) {
                 return reply.status(404).send({ error: error.message });
             }
             if (error.message.includes('La disciplina ya fue eliminada')){
@@ -83,7 +86,8 @@ export class DisciplineController {
             if (error.message.includes('El miembro ingresado no existe en el sistema')){
                 return reply.status(404).send({ error: error.message });
             }
-            if (error.message.includes('La fecha de fin debe ser posterior a la fecha de inicio')){
+            if (error.message.includes('La fecha de fin debe ser posterior a la fecha de inicio') ||
+                error.message.includes('ID de disciplina inválido')){
                 return reply.status(400).send({ error: error.message });
             }
             if (error.message.includes('vací') ||

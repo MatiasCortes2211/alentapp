@@ -33,7 +33,10 @@ export class CreateDisciplineUseCase {
             is_deleted: false, //Crea con is_deleted en false
         });
 
-        await this.memberRepository.update(data.member_id, {status: 'Suspendido'});
+        const disciplineIsValid = await this.disciplineValidator.validateDisciplineValidity(data.end_date);
+        if (disciplineIsValid) {
+            await this.memberRepository.update(data.member_id, {status: 'Suspendido'});
+        }
 
         return nuevaDisciplina;
     }
