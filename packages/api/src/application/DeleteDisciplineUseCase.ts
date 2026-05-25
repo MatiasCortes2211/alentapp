@@ -1,4 +1,6 @@
+import { ZodError } from "zod";
 import { DisciplineRepository } from "../domain/DisciplineRepository.js";
+import { DisciplineIdSchema } from "../domain/services/DisciplineSchema.js";
 
 export class DeleteDisciplineUseCase {
     constructor(
@@ -6,6 +8,15 @@ export class DeleteDisciplineUseCase {
     ) {}
 
     async execute(id: string): Promise<void> {
+        try {
+            DisciplineIdSchema.parse(id);
+        } catch (error) {
+            if (error instanceof ZodError) {
+                throw new Error(error.issues[0].message);
+            }   
+            throw error;
+        }
+
         const discipline = await this.disciplineRepository.findById(id);
         if (!discipline) {
             throw new Error('La disciplina no existe');
