@@ -48,8 +48,8 @@ model Discipline {
 	start_date DateTime
 	end_date DateTime
     is_total_suspension Boolean
-	member_id String
-	member Member @relation(fields: [member_id], references: [id])
+	member_id String?
+	member Member? @relation(fields: [member_id], references: [id], onDelete: SetNull)
 	is_deleted Boolean @default(false) 
 
     @@map("disciplines")
