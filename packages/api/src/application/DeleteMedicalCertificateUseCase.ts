@@ -1,10 +1,14 @@
 import { MedicalCertificateRepository } from '../domain/MedicalCertificateRepository.js';
+import { MemberRepository } from '../domain/MemberRepository.js';
+import { MedicalCertificateValidator } from '../domain/services/MedicalCertificateValidator.js';
 import { DeleteMedicalCertificateParamsSchema } from '../domain/services/MedicalCertificateSchema.js';
 
 
 export class DeleteMedicalCertificateUseCase {
     constructor(
-        private readonly repository: MedicalCertificateRepository
+        private readonly repository: MedicalCertificateRepository,
+        private readonly memberRepository: MemberRepository,
+        private readonly validator: MedicalCertificateValidator
     ) {}
 
     async execute(id: string): Promise<void> {
@@ -24,7 +28,18 @@ export class DeleteMedicalCertificateUseCase {
             throw error;
         }
 
-        // 3. Si existe y el ID es correcto, procedemos al borrado físico seguro
+        // 3. Buscar al socio dueño del certificado y validar que no esté suspendido
+        const member = await this.memberRepository.findById(existingCertificate.member_id);
+        if (member) {
+            try {
+                this.validator.validateMemberIsNotSuspended(member.status as string);
+            } catch (err: any) {
+                err.statusCode = 400; // Forzamos el código 400 Bad Request
+                throw err;
+            }
+        }
+
+        // 4. Si existe y el ID es correcto, procedemos al borrado físico seguro
         await this.repository.delete(id);
     }
 }
