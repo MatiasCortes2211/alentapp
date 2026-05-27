@@ -13,9 +13,15 @@ vi.mock('../infrastructure/PostgresSportRepository.js', () => {
             async findById(id: string) {
                 if (id === 'f47ac10b-58cc-4372-a567-0e02b2c3d479') return { id, is_deleted: false };
                 if (id === '8a3e74a8-92d5-455a-bd54-5264b3c43555') return { id, is_deleted: true };
+                if (id === '8a3e74a8-92d5-455a-bd54-5264b3c43500') return { id, is_deleted: false };
                 return null;
             }
-            async delete(_id: string) { return; }
+            async delete(id: string) { 
+                if (id === '8a3e74a8-92d5-455a-bd54-5264b3c43500') {
+                    throw new Error('Database connection failed');
+                }
+                return;
+             }
         }
     };
 });
@@ -76,6 +82,17 @@ describe('Sport API Integration Tests', () => {
             expect(response.statusCode).toBe(409);
             const body = JSON.parse(response.payload);
             expect(body.error).toBe('El deporte ya está eliminado.');
+        });
+
+        it('debe devolver status 500 si ocurre un error en el servidor', async () => {
+            const response = await app.inject({
+                method: 'DELETE',
+                url: '/api/v1/sports/8a3e74a8-92d5-455a-bd54-5264b3c43500'
+            });
+
+            expect(response.statusCode).toBe(500);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('Ocurrió un error inesperado. Por favor, intentá de nuevo más tarde.');
         });
     });
 });
