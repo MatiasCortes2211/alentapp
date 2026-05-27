@@ -53,7 +53,7 @@ export class MedicalCertificateValidator {
   // 3. valida si el socio se encuentra suspendido
   validateMemberIsNotSuspended(memberStatus: string): void {
     if (memberStatus === 'Suspendido') {
-      throw new Error('Un socio suspendido no puede realizar acciones sobre certificados médicos');
+      throw new Error('No se pueden hacer cambios a certificados de un miembro suspendido');
     }
   }
 
