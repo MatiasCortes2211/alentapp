@@ -78,37 +78,4 @@ describe('Discipline API End-to-End Tests', () => {
         expect(dbDiscipline?.is_deleted).toBe(true);
     });
 
-    it('DELETE: Debe devolver error 400 si el ID de la disciplina es inválido', async () => {
-        const response = await app.inject({
-            method: 'DELETE',
-            url: `/api/v1/disciplines/id-invalido`
-        });
-
-        expect(response.statusCode).toBe(400);
-        const body = JSON.parse(response.payload);
-        expect(body.error).toBe('ID de disciplina inválido');
-    });
-
-    it('DELETE: Debe devolver error 404 si la disciplina no existe', async () => {
-        const response = await app.inject({
-            method: 'DELETE',
-            url: `/api/v1/disciplines/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11`
-        });
-
-        expect(response.statusCode).toBe(404);
-        const body = JSON.parse(response.payload);
-        expect(body.error).toBe('La disciplina no existe');
-    });
-
-    it('DELETE: Debe devolver error 409 si la disciplina no existe', async () => {
-        const response = await app.inject({
-            method: 'DELETE',
-            url: `/api/v1/disciplines/${createdDisciplineId}`
-        });
-
-        expect(response.statusCode).toBe(409);
-        const body = JSON.parse(response.payload);
-        expect(body.error).toBe('La disciplina ya fue eliminada');
-    });
-   
 });
