@@ -32,7 +32,8 @@ export class MedicalCertificateController {
         error.message.includes('emisión') || 
         error.message.includes('válido') ||
         error.message.includes('invalid') ||
-        error.message.includes('Required')
+        error.message.includes('Required') ||
+        error.message.includes('suspendido')
       ) {
         return reply.status(400).send({ message: error.message });
       }
@@ -77,12 +78,14 @@ export class MedicalCertificateController {
       return reply.status(200).send({ data: updatedCertificate });
 
     } catch (error: any) {
-      // 1. Capturamos si el ID es inválido o si las fechas son incoherentes (400 Bad Request)
+      // 1. Capturamos si el ID es inválido, si las fechas son incoherentes o si el socio esta suspendido (400 Bad Request)
       if (
         error.statusCode === 400 || 
         error.message.includes('400') || 
         error.message.includes('Fechas inválidas') ||
-        error.message.includes('válido')
+        error.message.includes('válido') ||
+        error.message.includes('Suspendido') || 
+        error.message.includes('socio')
       ) {
         const cleanMessage = error.message.replace('400: ', '');
         return reply.status(400).send({ message: cleanMessage });

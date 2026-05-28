@@ -1,5 +1,7 @@
 import { MedicalCertificateRepository } from '../domain/MedicalCertificateRepository.js';
 import { MedicalCertificateDTO, UpdateMedicalCertificate } from '@alentapp/shared';
+import { MemberRepository } from '../domain/MemberRepository.js';
+import { MedicalCertificateValidator } from '../domain/services/MedicalCertificateValidator.js';
 import { z } from 'zod';
 
 // Esquema de Zod para validar que el ID de la URL sea un UUID correcto
@@ -7,7 +9,9 @@ const idParamSchema = z.string().uuid({ message: 'El id debe tener formato UUID 
 
 export class UpdateMedicalCertificateUseCase {
     constructor(
-        private readonly repository: MedicalCertificateRepository
+        private readonly repository: MedicalCertificateRepository,
+        private readonly memberRepository: MemberRepository,
+        private readonly validator: MedicalCertificateValidator
     ) {}
 
     async execute(id: string, data: UpdateMedicalCertificate): Promise<MedicalCertificateDTO> {
@@ -25,6 +29,17 @@ export class UpdateMedicalCertificateUseCase {
             const error = new Error('Recurso inexistente: Intento de modificar un certificado que no está en la base de datos.');
             (error as any).statusCode = 404; // Not Found
             throw error;
+        }
+
+        // Regla de Negocio: Verificar que el socio no esté suspendido
+       const member = await this.memberRepository.findById(existingCertificate.member_id);
+        if (member) {
+            try {
+                this.validator.validateMemberIsNotSuspended(member.status as string);
+            } catch (err: any) {
+                err.statusCode = 400; 
+                throw err;
+            }
         }
 
         // Validar coherencia si viene una nueva fecha de vencimiento

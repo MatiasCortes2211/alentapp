@@ -72,12 +72,14 @@ export function buildApp() {
     const memberRepo = new PostgresMemberRepository();
     const paymentRepo = new PostgresPaymentRepository();
     const disciplineRepo = new PostgresDisciplineRepository();
+    const lockerRepo = new PostgresLockerRepository();
+
     const memberValidator = new MemberValidator(memberRepo);
     
     const createMemberUseCase = new CreateMemberUseCase(memberRepo, memberValidator);
     const getMembersUseCase = new GetMembersUseCase(memberRepo);
     const updateMemberUseCase = new UpdateMemberUseCase(memberRepo, memberValidator);
-    const deleteMemberUseCase = new DeleteMemberUseCase(memberRepo, paymentRepo, disciplineRepo);
+    const deleteMemberUseCase = new DeleteMemberUseCase(memberRepo, paymentRepo, disciplineRepo, lockerRepo);
 
     const memberController = new MemberController(
         createMemberUseCase, 
@@ -87,7 +89,6 @@ export function buildApp() {
     );
 
     // Locker
-    const lockerRepo = new PostgresLockerRepository();
     const lockerValidator = new LockerValidator(lockerRepo);
     
     const createLockerUseCase = new CreateLockerUseCase(lockerRepo, memberRepo, lockerValidator);
@@ -112,8 +113,14 @@ export function buildApp() {
         certificateValidator
     );
     const getMedicalCertificatesUseCase = new GetMedicalCertificatesUseCase(certificateRepo);
-    const updateMedicalCertificateUseCase = new UpdateMedicalCertificateUseCase(certificateRepo);
-    const deleteMedicalCertificateUseCase = new DeleteMedicalCertificateUseCase(certificateRepo);
+    const updateMedicalCertificateUseCase = new UpdateMedicalCertificateUseCase(
+        certificateRepo, 
+        memberRepo, 
+        certificateValidator);
+    const deleteMedicalCertificateUseCase = new DeleteMedicalCertificateUseCase(
+        certificateRepo, 
+        memberRepo, 
+        certificateValidator);
 
     const certificateController = new MedicalCertificateController(
         newCertificateUseCase,
