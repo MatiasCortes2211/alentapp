@@ -105,4 +105,18 @@ export class PostgresLockerRepository implements LockerRepository {
             is_deleted: locker.is_deleted,
         };
     }
+
+    async releaseByMemberId(memberId: string): Promise<void> {
+        await prisma.locker.updateMany({
+            where: { 
+                member_id: memberId,
+                is_deleted: false           // Solo se acutualizan los lockers que estes activos
+            },
+            data: {
+                member_id: null,            // Deja de tener al miembro asociado
+                end_contract_date: null,    // Se libera la fecha de fin de contrato
+                status: 'Available',        // Pasa de "Ocupado" a "Disponible"
+            },
+        });
+    }
 }

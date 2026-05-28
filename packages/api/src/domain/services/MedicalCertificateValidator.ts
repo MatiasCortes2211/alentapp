@@ -49,4 +49,12 @@ export class MedicalCertificateValidator {
       throw new Error('No se puede cargar un certificado con fecha de vencimiento pasada');
     }
   }
+
+  // 3. valida si el socio se encuentra suspendido
+  validateMemberIsNotSuspended(memberStatus: string): void {
+    if (memberStatus === 'Suspendido') {
+      throw new Error('No se pueden hacer cambios a certificados de un miembro suspendido');
+    }
+  }
+
 }

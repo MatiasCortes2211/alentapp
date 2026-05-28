@@ -11,5 +11,7 @@ export interface LockerRepository {
     
     update(id: string, data: UpdateLockerRequest): Promise<LockerDTO>;
     
-    delete(id: string): Promise<void>; 
+    delete(id: string): Promise<void>;
+
+    releaseByMemberId(memberId: string): Promise<void>;
 }
