@@ -32,9 +32,7 @@ describe('Discipline API End-to-End Tests', () => {
                 name: 'Socio para Disciplina E2E',
                 email: testEmail,
                 birthdate: new Date('2026-01-01'),
-                category: 'Pleno',
-                status: 'Activo',
-                created_at: new Date('2026-05-27')
+                category: 'Pleno'
             }
         });
         createdMemberId = member.id;
@@ -44,7 +42,6 @@ describe('Discipline API End-to-End Tests', () => {
                 reason: 'Conducta Inapropiada E2E',
                 start_date: new Date('2026-05-27'),
                 end_date: new Date('2026-12-31'),
-                is_deleted: false,
                 is_total_suspension: false,
                 member_id: createdMemberId
             }
