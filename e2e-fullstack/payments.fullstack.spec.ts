@@ -76,4 +76,19 @@ test.describe('Payments Full-Stack E2E', () => {
     await expect(page.getByText('Ya existe un pago activo para este socio en el mismo mes y año')).toBeVisible({ timeout: 10000 });
   });
 
+
+  test('debe actualizar el pago a PAID y ver el cambio en la tabla', async ({ page }) => {
+    await page.goto('/payments');
+
+    // El pago del test anterior debería estar en PENDING
+    await expect(page.getByRole('cell', { name: 'PENDING' })).toBeVisible({ timeout: 10000 });
+
+    // Clic en Pagar
+    await page.getByRole('button', { name: 'Pagar' }).first().click();
+
+    // Verificar que el estado cambió a PAID
+    await expect(page.getByRole('cell', { name: 'PAID' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('cell', { name: 'PENDING' })).toBeHidden();
+  });
+
 });
