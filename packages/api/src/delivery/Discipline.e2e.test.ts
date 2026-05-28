@@ -67,7 +67,7 @@ describe('Discipline API End-to-End Tests', () => {
         await app.close();
     });
 
-    it('1. DELETE: Debe cambiar el estado de la disciplina is_deleted a true', async () => {
+    it('DELETE: Debe eliminar la disciplina cambiando su estado is_deleted a true y devolver código 204', async () => {
         const response = await app.inject({
             method: 'DELETE',
             url: `/api/v1/disciplines/${createdDisciplineId}`
@@ -81,7 +81,7 @@ describe('Discipline API End-to-End Tests', () => {
         expect(dbDiscipline?.is_deleted).toBe(true);
     });
 
-    it('2. DELETE: Debe devolver error 400 si el ID de la disciplina es inválido', async () => {
+    it('DELETE: Debe devolver error 400 si el ID de la disciplina es inválido', async () => {
         const response = await app.inject({
             method: 'DELETE',
             url: `/api/v1/disciplines/id-invalido`
@@ -92,7 +92,7 @@ describe('Discipline API End-to-End Tests', () => {
         expect(body.error).toBe('ID de disciplina inválido');
     });
 
-    it('3. DELETE: Debe devolver error 404 si la disciplina no existe', async () => {
+    it('DELETE: Debe devolver error 404 si la disciplina no existe', async () => {
         const response = await app.inject({
             method: 'DELETE',
             url: `/api/v1/disciplines/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11`
@@ -103,7 +103,7 @@ describe('Discipline API End-to-End Tests', () => {
         expect(body.error).toBe('La disciplina no existe');
     });
 
-    it('4. DELETE: Debe devolver error 409 si la disciplina no existe', async () => {
+    it('DELETE: Debe devolver error 409 si la disciplina no existe', async () => {
         const response = await app.inject({
             method: 'DELETE',
             url: `/api/v1/disciplines/${createdDisciplineId}`
