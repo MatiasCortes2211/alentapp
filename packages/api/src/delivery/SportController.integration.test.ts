@@ -1,15 +1,21 @@
+import 'dotenv/config'
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { buildApp } from '../app.js';
 
-vi.mock('../infrastructure/PostgresMemberRepository.js', () => ({ PostgresMemberRepository: class {} }));
-vi.mock('../infrastructure/PostgresMedicalCertificateRepository.js', () => ({ PostgresMedicalCertificateRepository: class {} }));
-vi.mock('../infrastructure/PostgresPaymentRepository.js', () => ({ PostgresPaymentRepository: class {} }));
-vi.mock('../infrastructure/PostgresDisciplineRepository.js', () => ({ PostgresDisciplineRepository: class {} }));
-vi.mock('../infrastructure/PostgresLockerRepository.js', () => ({ PostgresLockerRepository: class {} }));
 vi.mock('../infrastructure/PostgresSportRepository.js', () => {
     return {
         PostgresSportRepository: class {
+            async findByName(name: string) {
+                if (name === 'Fútbol') return { id: 'uuid-existente', name: 'Fútbol', is_deleted: false };
+                return null;
+            }
+            async create(data: any) {
+                if (data.name === 'Error') {
+                    throw new Error('Database connection failed');
+                }
+                return { id: 'nuevo-uuid-123', ...data, is_deleted: false };
+            }
             async findById(id: string) {
                 if (id === 'f47ac10b-58cc-4372-a567-0e02b2c3d479') return { id, is_deleted: false };
                 if (id === '8a3e74a8-92d5-455a-bd54-5264b3c43555') return { id, is_deleted: true };
@@ -37,6 +43,85 @@ describe('Sport API Integration Tests', () => {
     afterAll(async () => {
         await app.close();
     });
+
+    describe('POST /api/v1/sports', () => {
+        it('debe crear un nuevo deporte y devolver status 201', async () => {
+            const payload = {
+                name: 'Natación',
+                    description: 'Deporte con agua',
+                    max_capacity: 30,
+                    additional_price: 7500,
+                    requires_medical_certificate: true
+                };
+
+            const response = await app.inject({
+                method: 'POST',
+                url: '/api/v1/sports',
+                payload
+            });
+
+            expect(response.statusCode).toBe(201);
+            const body = JSON.parse(response.payload);
+            expect(body.data.id).toBeDefined();
+            expect(body.data.name).toBe('Natación');
+            expect(body.data.is_deleted).toBe(false);
+        });
+
+        it('debe devolver status 400 si hay un error de validación (faltan campos)', async () => {
+            const response = await app.inject({
+                method: 'POST',
+                url: '/api/v1/sports',
+                payload: {
+                    max_capacity: 20
+                }
+            });
+
+            expect(response.statusCode).toBe(400);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBeDefined();
+        });
+
+        it('debe devolver status 409 si el nombre del deporte ya existe', async () => {
+            const payload = {
+                name: 'Fútbol',
+                description: 'Deporte de equipo',
+                max_capacity: 22,
+                additional_price: 0,
+                requires_medical_certificate: true
+            };
+
+            const response = await app.inject({
+                method: 'POST',
+                url: '/api/v1/sports',
+                payload
+            });
+
+            expect(response.statusCode).toBe(409);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('Ya existe un deporte con ese nombre.');
+        });
+
+        it('debe devolver status 500 si ocurre un error en el servidor', async () => {
+            const payload = {
+                name: 'Error', // Este nombre está mockeado para forzar una excepción
+                description: 'Deporte que rompe la BD',
+                max_capacity: 10,
+                additional_price: 0,
+                requires_medical_certificate: false
+            };
+
+            const response = await app.inject({
+                method: 'POST',
+                url: '/api/v1/sports',
+                payload
+            });
+
+            expect(response.statusCode).toBe(500);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('Ocurrió un error inesperado. Por favor, intentá de nuevo más tarde.');
+        });
+    });
+        
 
     describe('DELETE /api/v1/sports/:id', () => {
         it('debe devolver status 204 si la eliminación es exitosa', async () => {
