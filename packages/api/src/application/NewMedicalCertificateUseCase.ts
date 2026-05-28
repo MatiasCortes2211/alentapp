@@ -19,6 +19,9 @@ export class NewMedicalCertificateUseCase {
             throw new Error('Socio inexistente');
         }
 
+        // Evitar que un socio suspendido presente nuevos certificados
+        this.validator.validateMemberIsNotSuspended(member.status as string);
+
         // Regla de Negocio: Invalidar automáticamente certificados anteriores
         await this.certificateRepository.invalidatePriorCertificates(data.member_id);
 
