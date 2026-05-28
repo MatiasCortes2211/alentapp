@@ -44,4 +44,13 @@ test.describe('Disciplines Full-Stack E2E', () => {
 
         await expect(page.getByText('No se encontraron disciplinas registradas.')).toBeVisible({ timeout: 10000 });
     });
+
+    test.afterAll(async ({ request }) => {
+        const response = await request.get('http://localhost:3001/api/v1/socios');
+        const body = await response.json();
+        const member = body.data.find((m: any) => m.dni === '99988877');
+        if (member) {
+            await request.delete(`http://localhost:3001/api/v1/socios/${member.id}`);
+        }
+    });
 });
