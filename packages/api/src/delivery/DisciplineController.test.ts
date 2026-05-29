@@ -29,7 +29,69 @@ describe('DisciplineController', () => {
         vi.clearAllMocks();
     });
 
+describe('create', () => {
+    const mockRequestCreate = {
+        body: {
+            reason: 'Conducta inapropiada',
+            start_date: '2026-01-01',
+            end_date: '2026-02-01',
+            is_total_suspension: false,
+            member_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+        }
+    };
+
+    it('debe devolver status 201 si la disciplina se crea correctamente', async () => {
+        const mockDiscipline = { id: 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', ...mockRequestCreate.body };
+        mockCreateUseCase.execute.mockResolvedValueOnce(mockDiscipline);
+
+        await controller.create(mockRequestCreate as any, mockReply as any);
+
+        expect(mockCreateUseCase.execute).toHaveBeenCalledWith(mockRequestCreate.body);
+        expect(mockReply.status).toHaveBeenCalledWith(201);
+        expect(mockReply.send).toHaveBeenCalledWith({ data: mockDiscipline });
+    });
+
+    it('debe devolver status 400 si falta un campo obligatorio', async () => {
+        mockCreateUseCase.execute.mockRejectedValueOnce(new Error('Campo obligatorio faltante'));
+
+        await controller.create(mockRequestCreate as any, mockReply as any);
+
+        expect(mockReply.status).toHaveBeenCalledWith(400);
+        expect(mockReply.send).toHaveBeenCalledWith({ error: 'Campo obligatorio faltante' });
+    });
+
+    it('debe devolver status 400 si la fecha de fin es anterior a la de inicio', async () => {
+        mockCreateUseCase.execute.mockRejectedValueOnce(new Error('La fecha de fin debe ser posterior a la fecha de inicio'));
+
+        await controller.create(mockRequestCreate as any, mockReply as any);
+
+        expect(mockReply.status).toHaveBeenCalledWith(400);
+        expect(mockReply.send).toHaveBeenCalledWith({ error: 'La fecha de fin debe ser posterior a la fecha de inicio' });
+    });
+
+    it('debe devolver status 404 si el miembro no existe', async () => {
+        mockCreateUseCase.execute.mockRejectedValueOnce(new Error('El miembro ingresado no existe en el sistema'));
+
+        await controller.create(mockRequestCreate as any, mockReply as any);
+
+        expect(mockReply.status).toHaveBeenCalledWith(404);
+        expect(mockReply.send).toHaveBeenCalledWith({ error: 'El miembro ingresado no existe en el sistema' });
+    });
+
+    it('debe devolver status 500 si hubo un error inesperado', async () => {
+        mockCreateUseCase.execute.mockRejectedValueOnce(new Error('Error inesperado'));
+
+        await controller.create(mockRequestCreate as any, mockReply as any);
+
+        expect(mockReply.status).toHaveBeenCalledWith(500);
+        expect(mockReply.send).toHaveBeenCalledWith({ error: 'Error al crear la disciplina' });
+    });
+});
+
     describe('delete', () => {
+        const mockRequest = {
+            params: { id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' },
+        };
         it('debe devolver status 204 si la eliminación es exitosa', async () => {
             mockDeleteUseCase.execute.mockResolvedValueOnce(undefined);
             
