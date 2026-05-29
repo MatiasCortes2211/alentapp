@@ -19,15 +19,71 @@ describe('SportController', () => {
         send: vi.fn()
     };
 
-    const mockRequest = {
-        params: { id: 'uuid-valido' },
-    };
+    let mockRequest: any;
 
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
+    describe('create', () => {
+        beforeEach(() => {
+            mockRequest = {
+                body: {
+                    name: 'Natación',
+                    description: 'Deporte individual',
+                    max_capacity: 15,
+                    additional_price: 10000,
+                    requires_medical_certificate: true,
+                }
+            };
+        });
+
+        it('debe devolver status 201 y el deporte creado si la creación es exitosa', async () => {
+            const expectedSport = { id: '1', ...mockRequest.body, is_deleted: false };
+            vi.mocked(mockCreateUseCase.execute).mockResolvedValueOnce(expectedSport);
+
+            await controller.create(mockRequest as any, mockReply as any);
+
+            expect(mockCreateUseCase.execute).toHaveBeenCalledWith(mockRequest.body);
+            expect(mockReply.status).toHaveBeenCalledWith(201);
+            expect(mockReply.send).toHaveBeenCalledWith({ data: expectedSport });
+        });
+
+        it('debe devolver status 400 si hay un error de validación (Zod)', async () => {
+            mockCreateUseCase.execute.mockRejectedValueOnce(new Error('El nombre es obligatorio.'));
+
+            await controller.create(mockRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(400);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'El nombre es obligatorio.' });
+        });
+
+        it('debe devolver status 409 si el nombre del deporte ya existe', async () => {
+            mockCreateUseCase.execute.mockRejectedValueOnce(new Error('Ya existe un deporte con ese nombre.'));
+
+            await controller.create(mockRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(409);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'Ya existe un deporte con ese nombre.' });
+        });
+
+        it('debe devolver status 500 para cualquier otro error', async () => {
+            mockCreateUseCase.execute.mockRejectedValueOnce(new Error('Error inesperado'));
+
+            await controller.create(mockRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(500);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'Ocurrió un error inesperado. Por favor, intentá de nuevo más tarde.' });
+        });
+    });
+
     describe('delete', () => {
+        beforeEach(() => {
+            mockRequest = {
+                params: { id: 'uuid-valido' },
+            };
+        });
+
         it('debe devolver status 204 si la eliminación es exitosa', async () => {
             mockDeleteUseCase.execute.mockResolvedValueOnce(undefined);
 
@@ -65,7 +121,7 @@ describe('SportController', () => {
             expect(mockReply.send).toHaveBeenCalledWith({ error: 'El deporte no existe.' });
         });
 
-        it('debe devolver status 409 si el deporte ya está eliminado', async () => {    
+        it('debe devolver status 409 si el deporte ya está eliminado', async () => {
             mockDeleteUseCase.execute.mockRejectedValueOnce(new Error('El deporte ya está eliminado.'));
 
             await controller.delete(mockRequest as any, mockReply as any);
@@ -78,6 +134,7 @@ describe('SportController', () => {
             mockDeleteUseCase.execute.mockRejectedValueOnce(new Error('Error inesperado'));
 
             await controller.delete(mockRequest as any, mockReply as any);
+
             expect(mockReply.status).toHaveBeenCalledWith(500);
             expect(mockReply.send).toHaveBeenCalledWith({ error: 'Ocurrió un error inesperado. Por favor, intentá de nuevo más tarde.' });
         });
