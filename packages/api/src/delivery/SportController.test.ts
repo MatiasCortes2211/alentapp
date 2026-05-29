@@ -77,6 +77,82 @@ describe('SportController', () => {
         });
     });
 
+    describe('update', () => {
+        beforeEach(() => {
+            mockRequest = {
+                params: { id: 'uuid-valido' },
+                body: { description: 'Nueva descripción', max_capacity: 20 }
+            };
+        });
+
+        it('debe devolver status 200 y el deporte actualizado si la operación es exitosa', async () => {
+            const mockSport = { id: mockRequest.params.id, ...mockRequest.body };
+            mockUpdateUseCase.execute.mockResolvedValueOnce(mockSport);
+
+            await controller.update(mockRequest as any, mockReply as any);
+
+            expect(mockUpdateUseCase.execute).toHaveBeenCalledWith(mockRequest.params.id, mockRequest.body);
+            expect(mockReply.status).toHaveBeenCalledWith(200);
+            expect(mockReply.send).toHaveBeenCalledWith({ data: mockSport });
+        });
+
+        it('debe devolver status 400 si se intentan modificar campos inmutables', async () => {
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error('Unrecognized key'));
+
+            await controller.update(mockRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(400);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'No se pueden modificar campos inmutables tras la creación del deporte.' });
+        });
+
+        it('debe devolver status 400 si hay un error de validación de Zod', async () => {
+            const zodErrorMessage = 'La capacidad máxima debe ser mayor a 0.';
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error(zodErrorMessage));
+
+            await controller.update(mockRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(400);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: zodErrorMessage });
+        });
+
+        it('debe devolver status 404 si el deporte no existe', async () => {
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error('El deporte no existe.'));
+
+            await controller.update(mockRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(404);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'El deporte no existe.' });
+        });
+
+        it('debe devolver status 409 si el deporte ya está eliminado', async () => {
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error('El deporte ya está eliminado.'));
+
+            await controller.update(mockRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(409);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'El deporte ya está eliminado.' });
+        });
+
+        it('debe devolver status 409 si la capacidad máxima es menor a los inscriptos', async () => {
+            const errorMessage = 'La capacidad máxima no puede ser menor a la cantidad de inscriptos activos.';
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error(errorMessage));
+
+            await controller.update(mockRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(409);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: errorMessage });
+        });
+
+        it('debe devolver status 500 ante cualquier otro error inesperado', async () => {
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error('Error inesperado'));
+
+            await controller.update(mockRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(500);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'Ocurrió un error inesperado. Por favor, intentá de nuevo más tarde.' });
+        });
+    });
+
     describe('delete', () => {
         beforeEach(() => {
             mockRequest = {
