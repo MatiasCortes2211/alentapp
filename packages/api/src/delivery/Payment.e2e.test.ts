@@ -5,7 +5,7 @@ import { buildApp } from '../app.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/client/client.js';
 
-describe('Payment API End-to-End Tests - Create', () => {
+describe('Payment API End-to-End Tests', () => {
     let app: FastifyInstance;
     let prisma: PrismaClient;
     let createdMemberId: string;
@@ -120,4 +120,46 @@ describe('Payment API End-to-End Tests - Create', () => {
         const body = JSON.parse(response.payload);
         expect(body.error).toBe('Ya existe un pago activo para este socio en el mismo mes y año');
     });
+
+    it('4. PATCH: Debe actualizar el pago a PAID en la base de datos real', async () => {
+        const response = await app.inject({
+            method: 'PATCH',
+            url: `/api/v1/payments/${createdPaymentId}`,
+            payload: { status: 'PAID' }
+        });
+
+        expect(response.statusCode).toBe(200);
+        const body = JSON.parse(response.payload);
+        expect(body.data.status).toBe('PAID');
+        expect(body.data.payment_date).not.toBeNull();
+
+        const dbPayment = await prisma.payment.findUnique({ where: { id: createdPaymentId } });
+        expect(dbPayment?.status).toBe('PAID');
+        expect(dbPayment?.payment_date).not.toBeNull();
+    });
+
+    it('5. PATCH: Debe fallar si el pago ya está en estado PAID', async () => {
+        const response = await app.inject({
+            method: 'PATCH',
+            url: `/api/v1/payments/${createdPaymentId}`,
+            payload: { status: 'CANCELED' }
+        });
+
+        expect(response.statusCode).toBe(409);
+        const body = JSON.parse(response.payload);
+        expect(body.error).toContain('ya se encuentra en estado');
+    });
+
+    it('6. PATCH: Debe fallar si el pago no existe', async () => {
+        const response = await app.inject({
+            method: 'PATCH',
+            url: `/api/v1/payments/123e4567-e89b-12d3-a456-000000000000`,
+            payload: { status: 'PAID' }
+        });
+
+        expect(response.statusCode).toBe(404);
+        const body = JSON.parse(response.payload);
+        expect(body.error).toBe('El pago ingresado no existe en el sistema');
+    });
+
 });

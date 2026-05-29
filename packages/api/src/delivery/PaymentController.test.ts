@@ -19,6 +19,12 @@ describe('PaymentController', () => {
         send: vi.fn()
     };
 
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    describe('create', () => {
+
     const mockRequest = {
         log: { info: vi.fn() },
         body: {
@@ -31,11 +37,6 @@ describe('PaymentController', () => {
         params: { id: '123e4567-e89b-12d3-a456-426614174000' }
     };
 
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
-
-    describe('create', () => {
         it('debe devolver status 201 y los datos si la creación es exitosa', async () => {
             const mockPago = { id: '123e4567-e89b-12d3-a456-426614174001', ...mockRequest.body };
             mockCreateUseCase.execute.mockResolvedValueOnce(mockPago);
@@ -91,4 +92,77 @@ describe('PaymentController', () => {
             expect(mockReply.send).toHaveBeenCalledWith({ error: 'Error interno, reintente más tarde' });
         });
     });
+
+    describe('update', () => {
+
+    const mockUpdateRequest = {
+            log: { info: vi.fn() },
+            params: { id: '123e4567-e89b-12d3-a456-426614174001' },
+            body: { status: 'PAID' }
+        };
+
+        it('debe devolver status 200 y el pago actualizado si la actualización es exitosa', async () => {
+            const mockPago = { 
+                id: '123e4567-e89b-12d3-a456-426614174001', 
+                status: 'PAID',
+                payment_date: new Date().toISOString()
+            };
+            mockUpdateUseCase.execute.mockResolvedValueOnce(mockPago);
+
+            await controller.update(mockUpdateRequest as any, mockReply as any);
+
+            expect(mockUpdateUseCase.execute).toHaveBeenCalledWith(
+                mockUpdateRequest.params.id,
+                mockUpdateRequest.body
+            );
+            expect(mockReply.status).toHaveBeenCalledWith(200);
+            expect(mockReply.send).toHaveBeenCalledWith({ data: mockPago });
+        });
+
+        it('debe devolver status 404 si el pago no existe', async () => {
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error('El pago ingresado no existe en el sistema'));
+
+            await controller.update(mockUpdateRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(404);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'El pago ingresado no existe en el sistema' });
+        });
+
+        it('debe devolver status 409 si el pago ya está en estado PAID o CANCELED', async () => {
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error('El pago ya se encuentra en estado PAID y no puede ser modificado'));
+
+            await controller.update(mockUpdateRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(409);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'El pago ya se encuentra en estado PAID y no puede ser modificado' });
+        });
+
+        it('debe devolver status 409 si el pago está eliminado', async () => {
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error('Un pago no puede ser modificado si se encuentra eliminado'));
+
+            await controller.update(mockUpdateRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(409);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'Un pago no puede ser modificado si se encuentra eliminado' });
+        });
+
+        it('debe devolver status 400 si el formato del ID es inválido', async () => {
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error('El formato del ID es inválido'));
+
+            await controller.update(mockUpdateRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(400);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'El formato del ID es inválido' });
+        });
+
+        it('debe devolver status 500 para cualquier otro error', async () => {
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error('Error de conexion de Prisma...'));
+
+            await controller.update(mockUpdateRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(500);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'Error interno, reintente más tarde' });
+        });
+    });
+
 });
