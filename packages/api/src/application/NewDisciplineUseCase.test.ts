@@ -100,7 +100,7 @@ describe('CreateDisciplineUseCase', () => {
     //Validaciones Zod
 
     it('debe lanzar error si faltan campos obligatorios', async () => {
-        const invalidRequest = { ...validRequest, amount: undefined } as any;
+        const invalidRequest = { ...validRequest, reason: undefined } as any;
         await expect(useCase.execute(invalidRequest)).rejects.toThrow();
         expect(mockDisciplineRepo.create).not.toHaveBeenCalled();
     });
