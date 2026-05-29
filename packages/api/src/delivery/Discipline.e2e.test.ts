@@ -90,6 +90,13 @@ describe('Discipline API End-to-End Tests', () => {
         const body = JSON.parse(response.payload);
         expect(body.data.is_deleted).toBe(false);
         expect(body.data.member_id).toBe(createdMemberId);
+
+        const dbDiscipline = await prisma.discipline.findUnique({
+            where: { id: body.data.id }
+        });
+        expect(dbDiscipline).not.toBeNull();
+        expect(dbDiscipline?.is_deleted).toBe(false);
+
         const dbMember = await prisma.member.findUnique({
             where: { id: createdMemberId }
         });
@@ -118,6 +125,13 @@ describe('Discipline API End-to-End Tests', () => {
         const body = JSON.parse(response.payload);
         expect(body.data.is_deleted).toBe(false);
         expect(body.data.member_id).toBe(createdMemberId);
+
+        const dbDiscipline = await prisma.discipline.findUnique({
+            where: { id: body.data.id }
+        });
+        expect(dbDiscipline).not.toBeNull();
+        expect(dbDiscipline?.is_deleted).toBe(false);
+
         const dbMember = await prisma.member.findUnique({
             where: { id: createdMemberId }
         });
