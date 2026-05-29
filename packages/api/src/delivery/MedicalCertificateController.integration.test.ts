@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { buildApp } from '../app.js';
@@ -111,6 +110,11 @@ vi.mock('../infrastructure/PostgresMemberRepository.js', () => {
     },
   };
 });
+
+vi.mock('../infrastructure/PostgresPaymentRepository.js', () => ({ PostgresPaymentRepository: class {} }));
+vi.mock('../infrastructure/PostgresSportRepository.js', () => ({ PostgresSportRepository: class {} }));
+vi.mock('../infrastructure/PostgresLockerRepository.js', () => ({ PostgresLockerRepository: class {} }));
+vi.mock('../infrastructure/PostgresDisciplineRepository.js', () => ({ PostgresDisciplineRepository: class {} }));
 
 // Tests
 
