@@ -11,6 +11,6 @@ export const CreateSportSchema = z.object({
 export const UpdateSportSchema = z.object({
     description: z.string().min(1, {message: "La descripción no puede estar vacía."}).optional(),
     max_capacity: z.number().int().positive({message: "La capacidad máxima debe ser mayor a 0."}).optional(),
-});
+}).strict();
 
 export const SportIdSchema = z.string({message: "El ID es obligatorio."}).uuid({message: "ID inválido."});
