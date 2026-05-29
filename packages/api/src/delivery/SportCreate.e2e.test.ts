@@ -63,7 +63,11 @@ describe('Sport API End-to-End Tests - Create', () => {
         
         expect(dbSport).not.toBeNull();
         expect(dbSport?.name).toBe(testSportName);
+        expect(dbSport?.description).toBe('Deporte de prueba para testear la creación');
         expect(dbSport?.max_capacity).toBe(15);
+        expect(dbSport?.additional_price).toBe(2000);
+        expect(dbSport?.requires_medical_certificate).toBe(true);
+        expect(dbSport?.is_deleted).toBe(false);
     });
 
     it('2. POST: Debe fallar con 400 si faltan campos obligatorios (Zod)', async () => {
