@@ -5,7 +5,7 @@ import { buildApp } from '../app.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/client/client.js';
 
-describe('Payment API End-to-End Tests - Create', () => {
+describe('Payment API End-to-End Tests', () => {
     let app: FastifyInstance;
     let prisma: PrismaClient;
     let createdMemberId: string;
