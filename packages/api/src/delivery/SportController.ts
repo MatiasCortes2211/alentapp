@@ -61,8 +61,6 @@ export class SportController {
             const sport = await this.updateSportUseCase.execute(request.params.id, request.body);
             return reply.status(200).send({ data: sport });
         } catch (error: any) {
-            console.log("ERROR CRUDAZO:", error);
-            console.log("MENSAJE:", error?.message);
             if (error.message.includes('Unrecognized key')) { // Del .strict() de Zod
                 return reply.status(400).send({ error: 'No se pueden modificar campos inmutables tras la creación del deporte.' });
             }
@@ -115,3 +113,4 @@ export class SportController {
         }
     }
 }
+
