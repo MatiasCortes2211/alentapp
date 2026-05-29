@@ -1,17 +1,9 @@
 import 'dotenv/config';
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { FastifyInstance } from 'fastify';
+import { buildApp } from '../app.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/client/client.js';
-
-// Mocks top-level para evitar cargar implementaciones reales que validan DATABASE_URL
-vi.mock('../infrastructure/PostgresMemberRepository.js', () => ({ PostgresMemberRepository: class {} }));
-vi.mock('../infrastructure/PostgresLockerRepository.js', () => ({ PostgresLockerRepository: class {} }));
-vi.mock('../infrastructure/PostgresPaymentRepository.js', () => ({ PostgresPaymentRepository: class {} }));
-vi.mock('../infrastructure/PostgresSportRepository.js', () => ({ PostgresSportRepository: class {} }));
-vi.mock('../infrastructure/PostgresDisciplineRepository.js', () => ({ PostgresDisciplineRepository: class {} }));
-vi.mock('../infrastructure/PostgresMedicalCertificateRepository.js', () => ({ PostgresMedicalCertificateRepository: class {} }));
-import { buildApp } from '../app.js';
 
 describe('Medical Certificate API End-to-End Tests - Create', () => {
     let app: FastifyInstance;
