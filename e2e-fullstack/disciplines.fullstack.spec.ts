@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Disciplines Full-Stack E2E', () => {
 
     test('debe crear un miembro y una disciplina real y mostrarla en la tabla', async ({ page }) => {
+        //Creo un miembro
         await page.goto('/members');
         await page.locator('button:has-text("Agregar Miembro")').click();
         await page.getByPlaceholder('Ej. Juan Pérez').fill('Socio E2E Discipline');
@@ -12,26 +13,35 @@ test.describe('Disciplines Full-Stack E2E', () => {
         await page.getByRole('button', { name: 'Crear Miembro' }).click();
         await expect(page.getByRole('button', { name: 'Crear Miembro' })).toBeHidden();
 
+        //Creo una disciplina no vigente
         await page.goto('/disciplines');
-        await expect(page.getByText('No se encontraron disciplinas registradas.')).toBeVisible({ timeout: 10000 });
+        //Definimos una fecha de fin que siempre sea futura para asignar a la disciplina
+        const today = new Date();
+        const futureDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate()).toISOString().split('T')[0];
 
+
+        await expect(page.getByText('No se encontraron disciplinas registradas.')).toBeVisible({ timeout: 10000 });
+        
         await page.locator('button:has-text("Generar Disciplina")').click();
         await expect(page.getByText('Generar Nueva Disciplina')).toBeVisible();
 
         await page.locator('select').first().selectOption({ label: 'Socio E2E Discipline (DNI: 99988877)' });
-
         await page.getByLabel(/Razón/i).fill('Conducta inapropiada E2E');
-
-        await page.getByLabel(/Fecha de Fin/i).fill('2026-12-31');
-
+        await page.getByLabel(/Fecha de Fin/i).fill(futureDate);
         await page.locator('select').last().selectOption({ value: 'false' });
-
         await page.getByRole('button', { name: 'Generar' }).click();
 
         page.on('dialog', (dialog) => dialog.accept());
 
         await expect(page.getByText('Conducta inapropiada E2E')).toBeVisible({ timeout: 10000 });
     });
+
+    test('debe verificar que el estado del miembro haya cambiado a suspendido si la disciplina es vigente', async ({ page }) => {
+        await page.goto('/members');
+        await expect(page.getByText('Socio E2E Discipline')).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText('Suspendido')).toBeVisible({ timeout: 10000 });
+    });
+
 
     test('debe eliminar la disciplina creada y mostrar el estado vacío', async ({ page }) => {
         await page.goto('/disciplines');
