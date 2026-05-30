@@ -7,7 +7,7 @@ test.describe('Lockers Full-Stack E2E', () => {
   const testLockerNumber = '8888'; 
 
   test('1. Debe crear un casillero exitosamente y mostrarlo en la tabla', async ({ page }) => {
-    await page.goto('http://localhost:5173/lockers');
+    await page.goto('/lockers');
 
     // Abrir modal
     await page.locator('button:has-text("Agregar Casillero")').click();
@@ -32,7 +32,7 @@ test.describe('Lockers Full-Stack E2E', () => {
   });
 
   test('2. Debe dar error al intentar crear un casillero con un número duplicado', async ({ page }) => {
-    await page.goto('http://localhost:5173/lockers');
+    await page.goto('/lockers');
 
     await page.locator('button:has-text("Agregar Casillero")').click();
     
@@ -56,7 +56,7 @@ test.describe('Lockers Full-Stack E2E', () => {
   });
 
   test('3. Debe editar el estado del casillero a Mantenimiento', async ({ page }) => {
-    await page.goto('http://localhost:5173/lockers');
+    await page.goto('/lockers');
 
     // Busca la fila del casillero de prueba
     const filaLocker = page.locator('tr').filter({ hasText: `#${testLockerNumber}` });
