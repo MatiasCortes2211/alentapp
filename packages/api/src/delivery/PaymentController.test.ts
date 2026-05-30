@@ -165,4 +165,59 @@ describe('PaymentController', () => {
         });
     });
 
+    describe('delete', () => {
+
+        const mockDeleteRequest = {
+            log: { info: vi.fn() },
+            params: { id: '123e4567-e89b-12d3-a456-426614174001' },
+            body: {}
+        };
+
+        it('debe devolver status 204 si el pago se elimina exitosamente', async () => {
+            mockDeleteUseCase.execute.mockResolvedValueOnce(undefined);
+
+            await controller.delete(mockDeleteRequest as any, mockReply as any);
+
+            expect(mockDeleteUseCase.execute).toHaveBeenCalledWith(mockDeleteRequest.params.id);
+            expect(mockReply.status).toHaveBeenCalledWith(204);
+            expect(mockReply.send).toHaveBeenCalledWith();
+        });
+
+        it('debe devolver status 404 si el pago no existe', async () => {
+            mockDeleteUseCase.execute.mockRejectedValueOnce(new Error('El pago ingresado no existe en el sistema'));
+
+            await controller.delete(mockDeleteRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(404);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'El pago ingresado no existe en el sistema' });
+        });
+
+        it('debe devolver status 409 si el pago ya fue eliminado', async () => {
+            mockDeleteUseCase.execute.mockRejectedValueOnce(new Error('El pago ya fue eliminado'));
+
+            await controller.delete(mockDeleteRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(409);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'El pago ya fue eliminado' });
+        });
+
+        it('debe devolver status 400 si el formato del ID es inválido', async () => {
+            mockDeleteUseCase.execute.mockRejectedValueOnce(new Error('El formato del ID es inválido'));
+
+            await controller.delete(mockDeleteRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(400);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'El formato del ID es inválido' });
+        });
+
+        it('debe devolver status 500 para cualquier otro error', async () => {
+            mockDeleteUseCase.execute.mockRejectedValueOnce(new Error('Error de conexion de Prisma...'));
+
+            await controller.delete(mockDeleteRequest as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(500);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'Error interno, reintente más tarde' });
+        });
+    });
+
 });
