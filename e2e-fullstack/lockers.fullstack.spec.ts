@@ -55,4 +55,23 @@ test.describe('Lockers Full-Stack E2E', () => {
     await page.getByRole('button', { name: 'Crear Casillero' }).click();
   });
 
+  test('3. Debe editar el estado del casillero a Mantenimiento', async ({ page }) => {
+    await page.goto('/lockers');
+
+    // Busca la fila del casillero de prueba
+    const filaLocker = page.locator('tr').filter({ hasText: `#${testLockerNumber}` });
+    
+    await filaLocker.locator('button').first().click();
+    await expect(page.getByText('Editar Casillero')).toBeVisible();
+    
+    // Cambia el estado
+    await page.getByRole('combobox', { name: 'Estado' }).click();
+    await page.getByRole('option', { name: 'Mantenimiento' }).click();
+    
+    await page.getByRole('button', { name: 'Guardar Cambios' }).click();
+
+    // Verifica que la etiqueta "Maintenance" aparece en la tabla
+    await expect(filaLocker.getByText('Maintenance')).toBeVisible({ timeout: 10000 });
+  });
+
 });
