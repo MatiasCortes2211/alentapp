@@ -19,6 +19,15 @@ vi.mock('../infrastructure/PostgresMedicalCertificateRepository.js', () => {
       }
 
       async findById(id: string) {
+        if (id === 'c77bc10b-58cc-4372-a567-0e02b2c3d999') {
+          return {
+            id,
+            member_id: '123e4567-e89b-12d3-a456-426614174000',
+            issue_date: '2026-05-28T00:00:00.000Z',
+            expiry_date: '2026-08-28T00:00:00.000Z',
+            doctor_license: 'MN-998877',
+          };
+        }
         return null;
       }
 
@@ -118,7 +127,7 @@ vi.mock('../infrastructure/PostgresDisciplineRepository.js', () => ({ PostgresDi
 
 // Tests
 
-describe('MedicalCertificateController - Integration Tests (Funcionalidad CREATE)', () => {
+describe('MedicalCertificateController - Integration Tests (Funcionalidades CREATE y UPDATE)', () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
@@ -204,6 +213,7 @@ describe('MedicalCertificateController - Integration Tests (Funcionalidad CREATE
       );
     });
 
+    // Test 4
     it('[TEST 4] debe retornar 400 Bad Request si expiry_date es anterior o igual a issue_date', async () => {
       const payload = {
         member_id: '123e4567-e89b-12d3-a456-426614174000', 
@@ -249,6 +259,30 @@ describe('MedicalCertificateController - Integration Tests (Funcionalidad CREATE
       expect(body.message).toContain(
         'No se puede cargar un certificado con fecha de vencimiento pasada'
       );
+    });
+  });
+
+  describe('PATCH /api/v1/medical-certificates/:id', () => {
+    // Test 6
+    it('[TEST 6] debe retornar 200 OK y actualizar los campos correctamente', async () => {
+      const certId = 'c77bc10b-58cc-4372-a567-0e02b2c3d999';
+      const payload = {
+        expiry_date: '2026-12-31T00:00:00.000Z',
+        is_validated: true
+      };
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/medical-certificates/${certId}`,
+        payload,
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.payload);
+
+      expect(body).toHaveProperty('data');
+      expect(body.data.id).toBe(certId);
+      expect(body.data.expiry_date).toBe(payload.expiry_date);
     });
   });
 });
