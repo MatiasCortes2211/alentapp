@@ -52,7 +52,7 @@ export class UpdateDisciplineUseCase {
 
         const updatedDiscipline = await this.disciplineRepository.update(id, data);
         
-        if (data.end_date) {
+        if (data.end_date && discipline.member_id) {
             const disciplineIsValid = await this.disciplineValidator.validateDisciplineValidity(end_date);
             if (disciplineIsValid) {
                 await this.memberRepository.update(discipline.member_id, { status: 'Suspendido' });
