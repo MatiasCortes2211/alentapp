@@ -111,10 +111,10 @@ vi.mock('../infrastructure/PostgresMemberRepository.js', () => {
   };
 });
 
-vi.mock('../infrastructure/PostgresPaymentRepository.js', () => ({ PostgresPaymentRepository: class {} }));
-vi.mock('../infrastructure/PostgresSportRepository.js', () => ({ PostgresSportRepository: class {} }));
-vi.mock('../infrastructure/PostgresLockerRepository.js', () => ({ PostgresLockerRepository: class {} }));
-vi.mock('../infrastructure/PostgresDisciplineRepository.js', () => ({ PostgresDisciplineRepository: class {} }));
+vi.mock('../infrastructure/PostgresPaymentRepository.js', () => ({ PostgresPaymentRepository: class { } }));
+vi.mock('../infrastructure/PostgresSportRepository.js', () => ({ PostgresSportRepository: class { } }));
+vi.mock('../infrastructure/PostgresLockerRepository.js', () => ({ PostgresLockerRepository: class { } }));
+vi.mock('../infrastructure/PostgresDisciplineRepository.js', () => ({ PostgresDisciplineRepository: class { } }));
 
 // Tests
 
@@ -134,9 +134,9 @@ describe('MedicalCertificateController - Integration Tests (Funcionalidad CREATE
     // Test 1
     it('[TEST 1] debe retornar 201 Created y crear el certificado médico para un socio activo', async () => {
       const payload = {
-        member_id: '123e4567-e89b-12d3-a456-426614174000', 
+        member_id: '123e4567-e89b-12d3-a456-426614174000',
         issue_date: '2026-05-28T00:00:00.000Z',
-        expiry_date: '2026-08-28T00:00:00.000Z', 
+        expiry_date: '2026-08-28T00:00:00.000Z',
         doctor_license: 'MN-998877',
       };
 
@@ -161,7 +161,7 @@ describe('MedicalCertificateController - Integration Tests (Funcionalidad CREATE
     // Test 2
     it('[TEST 2] debe retornar 404 Not Found si el socio no existe en el sistema', async () => {
       const payload = {
-        member_id: '123e4567-e89b-12d3-a456-000000000000', 
+        member_id: '123e4567-e89b-12d3-a456-000000000000',
         issue_date: '2026-05-28T00:00:00.000Z',
         expiry_date: '2026-08-28T00:00:00.000Z',
         doctor_license: 'MN-998877',
@@ -206,9 +206,9 @@ describe('MedicalCertificateController - Integration Tests (Funcionalidad CREATE
 
     it('[TEST 4] debe retornar 400 Bad Request si expiry_date es anterior o igual a issue_date', async () => {
       const payload = {
-        member_id: '123e4567-e89b-12d3-a456-426614174000', 
+        member_id: '123e4567-e89b-12d3-a456-426614174000',
         issue_date: '2026-06-15T00:00:00.000Z',
-        expiry_date: '2026-06-10T00:00:00.000Z', 
+        expiry_date: '2026-06-10T00:00:00.000Z',
         doctor_license: 'MN-998877',
       };
 
@@ -230,9 +230,9 @@ describe('MedicalCertificateController - Integration Tests (Funcionalidad CREATE
     // Test 5
     it('[TEST 5] debe retornar 400 Bad Request si la fecha de vencimiento está en el pasado', async () => {
       const payload = {
-        member_id: '123e4567-e89b-12d3-a456-426614174000', 
+        member_id: '123e4567-e89b-12d3-a456-426614174000',
         issue_date: '2025-01-01T00:00:00.000Z',
-        expiry_date: '2025-02-01T00:00:00.000Z', 
+        expiry_date: '2025-02-01T00:00:00.000Z',
         doctor_license: 'MN-998877',
       };
 
@@ -249,6 +249,32 @@ describe('MedicalCertificateController - Integration Tests (Funcionalidad CREATE
       expect(body.message).toContain(
         'No se puede cargar un certificado con fecha de vencimiento pasada'
       );
+    });
+  });
+  describe('GET /api/v1/medical-certificates/member/:memberId', () => {
+    // Test 7
+    it('[TEST 7] debe retornar 200 y un array vacío si el socio no tiene certificados', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/medical-certificates/member/socio-sin-certificados',
+      });
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.payload);
+      expect(body).toHaveProperty('data');
+      expect(Array.isArray(body.data)).toBe(true);
+      expect(body.data).toEqual([]);
+    });
+
+    // Test 8
+    it('[TEST 8] debe retornar 400 Bad Request si el memberId está vacío', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/medical-certificates/member/   ',
+      });
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.payload);
+      expect(body).toHaveProperty('message');
+      expect(body.message).toContain('requerido');
     });
   });
 });
