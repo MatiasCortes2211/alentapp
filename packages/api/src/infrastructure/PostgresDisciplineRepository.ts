@@ -83,7 +83,7 @@ export class PostgresDisciplineRepository implements DisciplineRepository {
             start_date: discipline.start_date.toISOString().split('T')[0],
             end_date: discipline.end_date.toISOString().split('T')[0],
             is_total_suspension: discipline.is_total_suspension,
-            member_id: discipline.member_id || '',
+            member_id: discipline.member_id,
             is_deleted: discipline.is_deleted,
         };
     }
