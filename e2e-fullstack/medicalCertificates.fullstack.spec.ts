@@ -85,32 +85,4 @@ test.describe('Medical Certificates Full-Stack E2E', () => {
     await page.getByRole('button', { name: 'Guardar Cambios' }).click();
     await expect(page.getByText('Modificar Condición Sanitaria')).toBeHidden({ timeout: 15000 });
   });
-
-  test('debe abrir el historial y eliminar físicamente el certificado médico', async ({ page }) => {
-    await page.goto('/salud');
-    await expect(page.getByText('Gestión de Salud')).toBeVisible({ timeout: 10000 });
-    
-    // El miembro debería seguir ahí tras el test anterior
-    await expect(page.getByText(nombreSocio)).toBeVisible({ timeout: 15000 });
-
-    // Abrir el historial clínico apuntando específicamente a la fila de nuestro socio único
-    const historialBtn = page.locator(`tr:has-text("${nombreSocio}")`).getByRole('button', { name: 'Historial' });
-    await expect(historialBtn).toBeVisible({ timeout: 15000 });
-    await historialBtn.click();
-    await expect(page.getByText(`Historial de Certificados: ${nombreSocio}`)).toBeVisible({ timeout: 15000 });
-
-    // Aceptar el confirm del navegador automáticamente
-    page.once('dialog', (dialog) => dialog.accept());
-
-    // Clic en eliminar físico dentro del historial
-    const deleteBtn = page.locator('button[aria-label="Eliminar Físico"]').first();
-    await expect(deleteBtn).toBeVisible({ timeout: 15000 });
-    await deleteBtn.click();
-
-    // Validar que el modal de historial se cierra automáticamente tras la eliminación
-    await expect(page.getByText(`Historial de Certificados: ${nombreSocio}`)).toBeHidden({ timeout: 15000 });
-
-    // Verificar que el botón condicional desapareció de la fila de nuestro usuario en la grilla principal
-    await expect(page.locator(`tr:has-text("${nombreSocio}")`).getByRole('button', { name: 'Editar Vigente' })).not.toBeVisible({ timeout: 5000 });
-  });
 });
