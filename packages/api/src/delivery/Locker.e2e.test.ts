@@ -5,7 +5,7 @@ import { buildApp } from '../app.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/client/client.js';
 
-describe('Locker API End-to-End Tests - Create', () => {
+describe('Locker API End-to-End Tests', () => {
     let app: FastifyInstance;
     let prisma: PrismaClient;
     let createdLockerId: string;
@@ -34,45 +34,80 @@ describe('Locker API End-to-End Tests - Create', () => {
         await app.close();
     });
 
-    it('1. POST: Debe crear un casillero en la base de datos real', async () => {
-        const payload = {
-            number: testLockerNumber,
-            location: 'Female'
-        };
+    describe('POST /api/v1/lockers (Create)', () => {
+        it('1. POST: Debe crear un casillero en la base de datos real', async () => {
+            const payload = {
+                number: testLockerNumber,
+                location: 'Female'
+            };
 
-        const response = await app.inject({
-            method: 'POST',
-            url: '/api/v1/lockers',
-            payload
+            const response = await app.inject({
+                method: 'POST',
+                url: '/api/v1/lockers',
+                payload
+            });
+
+            expect(response.statusCode).toBe(201);
+            const body = JSON.parse(response.payload);
+            
+            expect(body.data.id).toBeDefined();
+            createdLockerId = body.data.id; // Guarda el ID
+            
+            // Se busca el registro directamente en PostgreSQL
+            const dbLocker = await prisma.locker.findUnique({ where: { id: createdLockerId } });
+            expect(dbLocker).not.toBeNull();
+            expect(dbLocker?.number).toBe(testLockerNumber);
+            expect(dbLocker?.status).toBe('Available');
         });
 
-        expect(response.statusCode).toBe(201);
-        const body = JSON.parse(response.payload);
-        
-        expect(body.data.id).toBeDefined();
-        createdLockerId = body.data.id;                    // Guarda el ID para borrarlo despues
-        
-        // Se busca el registro directamente en Postgre
-        const dbLocker = await prisma.locker.findUnique({ where: { id: createdLockerId } });
-        expect(dbLocker).not.toBeNull();
-        expect(dbLocker?.number).toBe(testLockerNumber);
-        expect(dbLocker?.status).toBe('Available');
+        it('2. POST: Debe fallar al crear si el número ya está en la DB real', async () => {
+            const payload = {
+                number: testLockerNumber,
+                location: 'Male'
+            };
+
+            const response = await app.inject({
+                method: 'POST',
+                url: '/api/v1/lockers',
+                payload
+            });
+
+            expect(response.statusCode).toBe(409);
+        });
     });
 
-    it('2. POST: Debe fallar al crear si el número ya está en la DB real', async () => {
-        const payload = {
-            number: testLockerNumber,                      // Intenta crear otro casillero con el mismo numero
-            location: 'Male'
-        };
+    describe('PATCH /api/v1/lockers/:id (Update)', () => {
+        it('3. PATCH: Debe actualizar el casillero modificando la base de datos real', async () => {
+            const updatePayload = {
+                status: 'Maintenance'
+            };
 
-        const response = await app.inject({
-            method: 'POST',
-            url: '/api/v1/lockers',
-            payload
+            const response = await app.inject({
+                method: 'PATCH',
+                url: `/api/v1/lockers/${createdLockerId}`,
+                payload: updatePayload
+            });
+
+            expect(response.statusCode).toBe(200);
+            const body = JSON.parse(response.payload);
+            expect(body.data.status).toBe('Maintenance');
+
+            // Verifica en PostgreSQL que el estado cambió
+            const dbLocker = await prisma.locker.findUnique({ where: { id: createdLockerId } });
+            expect(dbLocker?.status).toBe('Maintenance');
         });
 
-        expect(response.statusCode).toBe(409);
-        const body = JSON.parse(response.payload);
-        expect(body.error).toBe('Ya existe un casillero activo con ese número');
+        it('4. PATCH: Debe fallar si el casillero no existe en la DB', async () => {
+            const fakeId = '123e4567-e89b-12d3-a456-426614174000'; // UUID falso
+            const response = await app.inject({
+                method: 'PATCH',
+                url: `/api/v1/lockers/${fakeId}`,
+                payload: { status: 'Maintenance' }
+            });
+
+            expect(response.statusCode).toBe(404);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('El casillero no existe');
+        });
     });
 });
