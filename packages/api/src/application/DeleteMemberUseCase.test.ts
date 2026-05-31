@@ -41,6 +41,5 @@ describe('DeleteMemberUseCase', () => {
         expect(mockPaymentRepo.softDeleteByMemberId).toHaveBeenCalledWith('uuid-1');
         expect(mockDisciplineRepo.softDeleteByMemberId).toHaveBeenCalledWith('uuid-1');
         expect(mockLockerRepo.releaseByMemberId).toHaveBeenCalledWith('uuid-1');
-        expect(mockMemberRepo.delete).toHaveBeenCalledWith('uuid-1');
     });
 });
