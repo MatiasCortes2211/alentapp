@@ -139,6 +139,50 @@ describe('Discipline API End-to-End Tests', () => {
         expect(dbMember?.status).toBe('Suspendido');
     });
 
+    it('PATCH: Debe actualizar la disciplina con status 200', async () => {
+        const response = await app.inject({
+            method: 'PATCH',
+            url: `/api/v1/disciplines/${createdDisciplineId}`,
+            payload: { reason: 'Razón actualizada E2E' }
+        });
+
+        expect(response.statusCode).toBe(200);
+        const body = JSON.parse(response.payload);
+        expect(body.data.reason).toBe('Razón actualizada E2E');
+
+        const dbDiscipline = await prisma.discipline.findUnique({
+            where: { id: createdDisciplineId }
+        });
+        expect(dbDiscipline).not.toBeNull();
+        expect(dbDiscipline?.reason).toBe('Razón actualizada E2E');
+    });
+
+    it('PATCH: Debe actualizar el estado del miembro a Suspendido si se modificó la fecha de la disciplina por una vigente', async () => {
+        const today = new Date();
+        const futureDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate()).toISOString().split('T')[0];
+
+        const response = await app.inject({
+            method: 'PATCH',
+            url: `/api/v1/disciplines/${createdDisciplineId}`,
+            payload: { end_date: futureDate }
+        });
+
+        expect(response.statusCode).toBe(200);
+
+        // Verificación directa en la BD
+        const dbDiscipline = await prisma.discipline.findUnique({
+            where: { id: createdDisciplineId }
+        });
+        expect(dbDiscipline).not.toBeNull();
+        expect(dbDiscipline?.end_date.toISOString().split('T')[0]).toBe(futureDate);
+
+        const dbMember = await prisma.member.findUnique({
+            where: { id: createdMemberId }
+        });
+        expect(dbMember).not.toBeNull();
+        expect(dbMember?.status).toBe('Suspendido');
+    });
+
     it('DELETE: Debe eliminar la disciplina cambiando su estado is_deleted a true y devolver código 204', async () => {
         const response = await app.inject({
             method: 'DELETE',

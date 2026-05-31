@@ -20,9 +20,20 @@ vi.mock('../infrastructure/PostgresDisciplineRepository.js', () => {
                 if (id === 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11') return { id, is_deleted: false };
                 if (id === 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22') return { id, is_deleted: true };
                 if (id === 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44') return { id, is_deleted: false };
+                if (id === 'e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55') return { id, is_deleted: false };
                 return null; 
             }
 
+            async update(id: string, data: any) {
+                if (id === 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11') {
+                    return { id, is_deleted: false, ...data };
+                }
+
+                if (id === 'e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55') {
+                    throw new Error('Error inesperado de base de datos');
+                }
+                return { id, is_deleted: false, ...data };
+                }
             
         }
     };
@@ -128,6 +139,94 @@ describe('Discipline API Integration Tests', () => {
             const body = JSON.parse(response.payload);
             expect(body.error).toBe('El miembro ingresado no existe en el sistema');
         });
+    });
+
+    describe('PATCH /api/v1/disciplines/:id', () => {
+        it('debe retornar 200 si la actualización es exitosa', async () => {
+            const response = await app.inject({
+                method: 'PATCH',
+                url: '/api/v1/disciplines/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+                payload: { reason: 'Razón actualizada' }
+            });
+
+            expect(response.statusCode).toBe(200);
+            const body = JSON.parse(response.payload);
+            expect(body.data.reason).toBe('Razón actualizada');
+        });
+
+        it('debe retornar 400 si el ID de la disciplina es inválido', async () => {
+            const response = await app.inject({
+                method: 'PATCH',
+                url: '/api/v1/disciplines/id-invalido',
+                payload: { reason: 'Razón actualizada' }
+            });
+
+            expect(response.statusCode).toBe(400);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('ID de disciplina inválido');
+        });
+
+        it('debe retornar 400 si la fecha de fin es anterior a la de inicio', async () => {
+            const response = await app.inject({
+                method: 'PATCH',
+                url: '/api/v1/disciplines/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+                payload: { start_date: '2026-12-31', end_date: '2026-01-01' }
+            });
+
+            expect(response.statusCode).toBe(400);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('La fecha de fin debe ser posterior a la fecha de inicio');
+        });
+
+        it('debe retornar 400 si hay un campo vacío', async () => {
+            const response = await app.inject({
+                method: 'PATCH',
+                url: '/api/v1/disciplines/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+                payload: { reason: '' }
+            });
+
+            expect(response.statusCode).toBe(400);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('Razón no puede estar vacía.');
+        });
+
+        it('debe retornar 404 si la disciplina no existe', async () => {
+            const response = await app.inject({
+                method: 'PATCH',
+                url: '/api/v1/disciplines/c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33',
+                payload: { reason: 'Razón actualizada' }
+            });
+
+            expect(response.statusCode).toBe(404);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('La disciplina no existe');
+        });
+
+        it('debe retornar 404 si el miembro no existe', async () => {
+            const response = await app.inject({
+                method: 'PATCH',
+                url: '/api/v1/disciplines/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+                payload: { member_id: '123e4567-e89b-12d3-a456-026614174000' }
+            });
+
+            expect(response.statusCode).toBe(404);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('El miembro ingresado no existe en el sistema');
+        });
+
+        it('debe retornar 500 si hubo un error de servidor', async () => {
+            const response = await app.inject({
+                method: 'PATCH',
+                url: '/api/v1/disciplines/e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55',
+                payload: { reason: 'Razón actualizada' }
+            });
+
+            expect(response.statusCode).toBe(500);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('Error al actualizar la disciplina');
+        });
+
+
     });
 
 
