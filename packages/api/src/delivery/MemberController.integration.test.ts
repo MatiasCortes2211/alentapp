@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { buildApp } from '../app.js';
@@ -17,6 +18,40 @@ vi.mock('../infrastructure/PostgresMemberRepository.js', () => {
         }
     };
 });
+
+vi.mock('../infrastructure/PostgresPaymentRepository.js', () => ({
+    PostgresPaymentRepository: class {
+        async softDeleteByMemberId() { return; }
+        async findAll() { return []; }
+        async findById() { return null; }
+        async create(data: any) { return data; }
+        async update() { return; }
+        async delete() { return; }
+        async findActiveByMemberMonthYear() { return null; }
+    }
+}));
+
+vi.mock('../infrastructure/PostgresDisciplineRepository.js', () => ({
+    PostgresDisciplineRepository: class {
+        async softDeleteByMemberId() { return; }
+        async findAll() { return []; }
+        async findById() { return null; }
+        async create(data: any) { return data; }
+        async update() { return; }
+        async delete() { return; }
+    }
+}));
+
+vi.mock('../infrastructure/PostgresLockerRepository.js', () => ({
+    PostgresLockerRepository: class {
+        async releaseByMemberId() { return; }
+        async findAll() { return []; }
+        async findById() { return null; }
+        async create(data: any) { return data; }
+        async update() { return; }
+        async delete() { return; }
+    }
+}));
 
 describe('Member API Integration Tests', () => {
     let app: FastifyInstance;
