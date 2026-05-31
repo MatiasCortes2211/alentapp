@@ -112,7 +112,7 @@ export interface PaymentDTO {
   due_date: string; // ISO Date String (YYYY-MM-DD)
   payment_date?: string | null; // ISO Date String (YYYY-MM-DD)
   is_deleted: boolean;
-  member_id: string; // UUID
+  member_id: string | null; // UUID
 }
 
 export interface CreatePaymentRequest {
