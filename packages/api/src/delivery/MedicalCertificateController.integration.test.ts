@@ -256,7 +256,7 @@ describe('MedicalCertificateController - Integration Tests (Funcionalidad CREATE
     it('[TEST 7] debe retornar 200 y un array vacío si el socio no tiene certificados', async () => {
       const response = await app.inject({
         method: 'GET',
-        url: '/api/v1/medical-certificates/member/socio-sin-certificados',
+        url: '/api/v1/medical-certificates/member/123e4567-e89b-12d3-a456-426614174000',
       });
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.payload);
@@ -266,7 +266,19 @@ describe('MedicalCertificateController - Integration Tests (Funcionalidad CREATE
     });
 
     // Test 8
-    it('[TEST 8] debe retornar 400 Bad Request si el memberId está vacío', async () => {
+    it('[TEST 8] debe retornar 404 Not Found si el socio no existe', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/medical-certificates/member/123e4567-e89b-12d3-a456-000000000000',
+      });
+      expect(response.statusCode).toBe(404);
+      const body = JSON.parse(response.payload);
+      expect(body).toHaveProperty('error');
+      expect(body.error).toContain('Socio inexistente');
+    });
+
+    // Test 9
+    it('[TEST 9] debe retornar 400 Bad Request si el memberId está vacío', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/medical-certificates/member/   ',
