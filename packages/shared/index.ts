@@ -163,7 +163,7 @@ export interface Discipline {
   start_date: string;
   end_date: string;
   is_total_suspension: boolean;
-  member_id: string;
+  member_id: string | null;
   is_deleted: boolean;
 }
 

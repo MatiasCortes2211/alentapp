@@ -17,7 +17,7 @@ type DBDiscipline = {
     start_date: Date;
     end_date: Date;
     is_total_suspension: boolean;
-    member_id: string;
+    member_id: string | null;
     is_deleted: boolean;
 };
 
