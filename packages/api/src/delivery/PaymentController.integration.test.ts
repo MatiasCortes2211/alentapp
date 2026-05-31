@@ -47,9 +47,22 @@ vi.mock('../infrastructure/PostgresPaymentRepository.js', () => {
                         month: 6,
                         year: 2026,
                         due_date: '2026-06-30',
-                        status: 'PAID',
+                        status: 'PAID', // ya pagado
                         payment_date: new Date().toISOString(),
                         is_deleted: false,
+                        member_id: '123e4567-e89b-12d3-a456-426614174000',
+                    };
+                }
+                if (id === '123e4567-e89b-12d3-a456-426614174003') {
+                    return {
+                        id,
+                        amount: 5000,
+                        month: 6,
+                        year: 2026,
+                        due_date: '2026-06-30',
+                        status: 'PENDING',
+                        payment_date: null,
+                        is_deleted: true, // ya eliminado
                         member_id: '123e4567-e89b-12d3-a456-426614174000',
                     };
                 }
@@ -230,6 +243,54 @@ describe('Payment API Integration Tests', () => {
             expect(body.error).toContain('ya se encuentra en estado');
         });
         
+    });
+
+    describe('DELETE /api/v1/payments/:id', () => {
+        const validPaymentId = '123e4567-e89b-12d3-a456-426614174001'; // UUID del pago que mockeamos como existente y no eliminado
+        const deletedPaymentId = '123e4567-e89b-12d3-a456-426614174003'; // UUID del pago que mockeamos como eliminado
+
+        it('debe retornar 204 si el pago se elimina exitosamente', async () => {
+            const response = await app.inject({
+                method: 'DELETE',
+                url: `/api/v1/payments/${validPaymentId}`,
+            });
+
+            expect(response.statusCode).toBe(204);
+            expect(response.payload).toBe('');
+        });
+
+        it('debe retornar 404 si el pago no existe', async () => {
+            const response = await app.inject({
+                method: 'DELETE',
+                url: `/api/v1/payments/123e4567-e89b-12d3-a456-000000000000`,
+            });
+
+            expect(response.statusCode).toBe(404);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('El pago ingresado no existe en el sistema');
+        });
+
+        it('debe retornar 409 si el pago ya fue eliminado', async () => {
+            const response = await app.inject({
+                method: 'DELETE',
+                url: `/api/v1/payments/${deletedPaymentId}`,
+            });
+
+            expect(response.statusCode).toBe(409);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('El pago ya fue eliminado');
+        });
+
+        it('debe retornar 400 si el id no tiene formato UUID válido', async () => {
+            const response = await app.inject({
+                method: 'DELETE',
+                url: `/api/v1/payments/id-invalido`,
+            });
+
+            expect(response.statusCode).toBe(400);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('El formato del ID es inválido');
+        });
     });
 
 });

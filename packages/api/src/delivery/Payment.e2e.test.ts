@@ -162,4 +162,39 @@ describe('Payment API End-to-End Tests', () => {
         expect(body.error).toBe('El pago ingresado no existe en el sistema');
     });
 
+    it('7. DELETE: Debe eliminar lógicamente el pago en la base de datos real', async () => {
+        const response = await app.inject({
+            method: 'DELETE',
+            url: `/api/v1/payments/${createdPaymentId}`,
+        });
+
+        expect(response.statusCode).toBe(204);
+
+        const dbPayment = await prisma.payment.findUnique({ where: { id: createdPaymentId } });
+        expect(dbPayment).not.toBeNull();
+        expect(dbPayment?.is_deleted).toBe(true);
+    });
+
+    it('8. DELETE: Debe fallar si el pago ya fue eliminado', async () => {
+        const response = await app.inject({
+            method: 'DELETE',
+            url: `/api/v1/payments/${createdPaymentId}`,
+        });
+
+        expect(response.statusCode).toBe(409);
+        const body = JSON.parse(response.payload);
+        expect(body.error).toBe('El pago ya fue eliminado');
+    });
+
+    it('9. DELETE: Debe fallar si el pago no existe', async () => {
+        const response = await app.inject({
+            method: 'DELETE',
+            url: `/api/v1/payments/123e4567-e89b-12d3-a456-000000000000`,
+        });
+
+        expect(response.statusCode).toBe(404);
+        const body = JSON.parse(response.payload);
+        expect(body.error).toBe('El pago ingresado no existe en el sistema');
+    });
+
 });
