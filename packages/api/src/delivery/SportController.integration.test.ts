@@ -20,6 +20,7 @@ vi.mock('../infrastructure/PostgresSportRepository.js', () => {
                 if (id === 'f47ac10b-58cc-4372-a567-0e02b2c3d479') return { id, is_deleted: false };
                 if (id === '8a3e74a8-92d5-455a-bd54-5264b3c43555') return { id, is_deleted: true };
                 if (id === '8a3e74a8-92d5-455a-bd54-5264b3c43500') return { id, is_deleted: false };
+                if (id === '8a3e74a8-92d5-455a-bd54-5264b3c43999') return { id, is_deleted: false };
                 return null;
             }
             async delete(id: string) { 
@@ -27,7 +28,17 @@ vi.mock('../infrastructure/PostgresSportRepository.js', () => {
                     throw new Error('Database connection failed');
                 }
                 return;
-             }
+            }
+            async countActiveEnrollments(id: string) {
+                if (id === '8a3e74a8-92d5-455a-bd54-5264b3c43999') return 10;
+                return 0;
+            }
+            async update(id: string, data: any) {
+                if (id === '8a3e74a8-92d5-455a-bd54-5264b3c43500') {
+                    throw new Error('Database connection failed');
+                }
+                return { id, description: 'Deporte original', max_capacity: 15, ...data, is_deleted: false };
+            }
         }
     };
 });
@@ -122,6 +133,82 @@ describe('Sport API Integration Tests', () => {
         });
     });
         
+    describe('PATCH /api/v1/sports/:id', () => {
+        it('debe devolver 200 y actualizar parcialmente el deporte (solo descripción)', async () => {
+            const response = await app.inject({
+                method: 'PATCH',
+                url: '/api/v1/sports/f47ac10b-58cc-4372-a567-0e02b2c3d479',
+                payload: {
+                    description: 'Descripción actualizada'
+                }
+            });
+
+            expect(response.statusCode).toBe(200);
+            const body = JSON.parse(response.payload);
+            expect(body.data.description).toBe('Descripción actualizada');
+            expect(body.data.max_capacity).toBe(15);
+        });
+
+        it('debe devolver 400 si la capacidad máxima es inválida', async () => {
+            const response = await app.inject({
+                method: 'PATCH',
+                url: '/api/v1/sports/f47ac10b-58cc-4372-a567-0e02b2c3d479',
+                payload: { max_capacity: -5 }
+            });
+
+            expect(response.statusCode).toBe(400);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('La capacidad máxima debe ser mayor a 0.');
+        });
+
+        it('debe devolver 404 si el deporte no existe', async () => {
+            const response = await app.inject({
+                method: 'PATCH',
+                url: '/api/v1/sports/8a3e74a8-92d5-455a-bd54-000000000000',
+                payload: { max_capacity: 20 }
+            });
+
+            expect(response.statusCode).toBe(404);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('El deporte no existe.');
+        });
+
+        it('debe devolver 409 si el deporte ya está eliminado', async () => {
+            const response = await app.inject({
+                method: 'PATCH',
+                url: '/api/v1/sports/8a3e74a8-92d5-455a-bd54-5264b3c43555',
+                payload: { max_capacity: 20 }
+            });
+
+            expect(response.statusCode).toBe(409);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('El deporte ya está eliminado.');
+        });
+
+        it('debe devolver 409 si la capacidad nueva es menor a los inscriptos activos', async () => {
+            const response = await app.inject({
+                method: 'PATCH',
+                url: '/api/v1/sports/8a3e74a8-92d5-455a-bd54-5264b3c43999',
+                payload: { max_capacity: 5 }
+            });
+
+            expect(response.statusCode).toBe(409);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('La capacidad máxima no puede ser menor a la cantidad de inscriptos activos.');
+        });
+
+        it('debe devolver status 500 si ocurre un error en el servidor', async () => {
+            const response = await app.inject({
+                method: 'PATCH',
+                url: '/api/v1/sports/8a3e74a8-92d5-455a-bd54-5264b3c43500',
+                payload: { max_capacity: 20 }
+            });
+
+            expect(response.statusCode).toBe(500);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('Ocurrió un error inesperado. Por favor, intentá de nuevo más tarde.');
+        });
+    });
 
     describe('DELETE /api/v1/sports/:id', () => {
         it('debe devolver status 204 si la eliminación es exitosa', async () => {

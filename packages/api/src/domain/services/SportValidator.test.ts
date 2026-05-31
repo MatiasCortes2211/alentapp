@@ -27,4 +27,30 @@ describe('SportValidator', () => {
             expect(mockSportRepo.findByName).toHaveBeenCalledWith('Natación');
         });
     });
+
+    describe('validateCanUpdateSport', () => {
+        const validUuid = 'uuid-valido';
+
+        it('no debe lanzar error si la nueva capacidad es mayor a los inscriptos activos', async () => {
+            vi.mocked(mockSportRepo.countActiveEnrollments).mockResolvedValueOnce(10);
+            
+            await expect(validator.validateCanUpdateSport(validUuid, 20)).resolves.toBeUndefined();
+            expect(mockSportRepo.countActiveEnrollments).toHaveBeenCalledWith(validUuid);
+        });
+
+        it('no debe lanzar error si la nueva capacidad es exactamente igual a los inscriptos activos', async () => {
+            vi.mocked(mockSportRepo.countActiveEnrollments).mockResolvedValueOnce(30);
+            
+            await expect(validator.validateCanUpdateSport(validUuid, 30)).resolves.toBeUndefined();
+            expect(mockSportRepo.countActiveEnrollments).toHaveBeenCalledWith(validUuid);
+        });
+
+        it('debe lanzar error si la nueva capacidad es menor a los inscriptos activos', async () => {
+            vi.mocked(mockSportRepo.countActiveEnrollments).mockResolvedValueOnce(20);
+            
+            await expect(validator.validateCanUpdateSport(validUuid, 15))
+                .rejects.toThrow('La capacidad máxima no puede ser menor a la cantidad de inscriptos activos.');
+            expect(mockSportRepo.countActiveEnrollments).toHaveBeenCalledWith(validUuid);
+        });
+    });
 });
