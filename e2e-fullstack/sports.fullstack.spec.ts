@@ -35,7 +35,7 @@ test.describe('Sports Full-Stack E2E', () => {
         
         const mensajeNativo = await inputNombre.evaluate((el: HTMLInputElement) => el.validationMessage);
         
-        expect(mensajeNativo).toContain('Completa este campo');
+        expect(mensajeNativo).toMatch(/Completa este campo|Please fill out this field/);
     });
 
     test('3 debe fallar si max_capacity es menor o igual a 0', async ({ page }) => {
@@ -55,7 +55,7 @@ test.describe('Sports Full-Stack E2E', () => {
         
         const mensajeNativo = await inputNombre.evaluate((el: HTMLInputElement) => el.validationMessage);
         
-        expect(mensajeNativo).toContain('Completa este campo');
+        expect(mensajeNativo).toMatch(/Completa este campo|Please fill out this field/);
     });
 
     test('4 debe fallar si el nombre del deporte (activo) ya existe', async ({ page }) => {
