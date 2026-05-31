@@ -61,6 +61,9 @@ export class SportController {
             const sport = await this.updateSportUseCase.execute(request.params.id, request.body);
             return reply.status(200).send({ data: sport });
         } catch (error: any) {
+            if (error.message.includes('Unrecognized key')) { // Del .strict() de Zod
+                return reply.status(400).send({ error: 'No se pueden modificar campos inmutables tras la creación del deporte.' });
+            }
             const zodErrors = [
                 "El ID es obligatorio.",
                 "La descripción no puede estar vacía.",
@@ -110,3 +113,4 @@ export class SportController {
         }
     }
 }
+

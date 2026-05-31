@@ -91,4 +91,18 @@ test.describe('Payments Full-Stack E2E', () => {
     await expect(page.getByRole('cell', { name: 'PENDING' })).toBeHidden();
   });
 
+  test('debe eliminar el pago y mostrar el estado vacío', async ({ page }) => {
+    await page.goto('/payments');
+
+    // El pago del test anterior debería estar en PAID
+    await expect(page.getByRole('cell', { name: 'PAID' })).toBeVisible({ timeout: 10000 });
+
+    // Aceptar el confirm del navegador automáticamente
+    page.on('dialog', (dialog) => dialog.accept());
+
+    await page.getByRole('button', { name: /Eliminar pago/i }).first().click();
+
+    await expect(page.getByText('No se encontraron pagos registrados.')).toBeVisible({ timeout: 10000 });
+  });
+
 });

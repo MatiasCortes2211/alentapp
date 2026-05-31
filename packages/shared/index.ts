@@ -112,7 +112,7 @@ export interface PaymentDTO {
   due_date: string; // ISO Date String (YYYY-MM-DD)
   payment_date?: string | null; // ISO Date String (YYYY-MM-DD)
   is_deleted: boolean;
-  member_id: string; // UUID
+  member_id: string | null; // UUID
 }
 
 export interface CreatePaymentRequest {
@@ -163,7 +163,7 @@ export interface Discipline {
   start_date: string;
   end_date: string;
   is_total_suspension: boolean;
-  member_id: string;
+  member_id: string | null;
   is_deleted: boolean;
 }
 

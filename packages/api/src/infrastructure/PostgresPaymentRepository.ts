@@ -21,7 +21,7 @@ type DBPayment = {
     due_date: Date;
     payment_date: Date | null;
     is_deleted: boolean;
-    member_id: string;
+    member_id: string | null;
 };
 
 export class PostgresPaymentRepository implements PaymentRepository {
