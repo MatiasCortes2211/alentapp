@@ -88,6 +88,78 @@ describe('create', () => {
     });
 });
 
+    describe('update', () => {
+        const mockRequestUpdate = {
+            params: { id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' },
+            body: { reason: 'Razón actualizada' }
+        };
+
+        it('debe devolver status 200 si la disciplina se actualiza correctamente', async () => {
+            const mockDiscipline = { id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', reason: 'Razón actualizada' };
+            mockUpdateUseCase.execute.mockResolvedValueOnce(mockDiscipline);
+
+            await controller.update(mockRequestUpdate as any, mockReply as any);
+
+            expect(mockUpdateUseCase.execute).toHaveBeenCalledWith(mockRequestUpdate.params.id, mockRequestUpdate.body);
+            expect(mockReply.status).toHaveBeenCalledWith(200);
+            expect(mockReply.send).toHaveBeenCalledWith({ data: mockDiscipline });
+        });
+
+        it('debe devolver status 400 si el ID de la disciplina es inválido', async () => {
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error('ID de disciplina inválido'));
+
+            await controller.update(mockRequestUpdate as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(400);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'ID de disciplina inválido' });
+        });
+
+        it('debe devolver status 400 si la fecha de fin es anterior a la de inicio', async () => {
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error('La fecha de fin debe ser posterior a la fecha de inicio'));
+
+            await controller.update(mockRequestUpdate as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(400);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'La fecha de fin debe ser posterior a la fecha de inicio' });
+        });
+
+        it('debe devolver status 400 si hay un campo vacío', async () => {
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error('Razón no puede estar vacía.'));
+
+            await controller.update(mockRequestUpdate as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(400);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'Razón no puede estar vacía.' });
+        });
+
+        it('debe devolver status 404 si la disciplina no existe', async () => {
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error('La disciplina no existe'));
+
+            await controller.update(mockRequestUpdate as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(404);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'La disciplina no existe' });
+        });
+
+        it('debe devolver status 404 si el miembro no existe', async () => {
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error('El miembro ingresado no existe en el sistema'));
+
+            await controller.update(mockRequestUpdate as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(404);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'El miembro ingresado no existe en el sistema' });
+        });
+
+        it('debe devolver status 500 si hubo un error inesperado', async () => {
+            mockUpdateUseCase.execute.mockRejectedValueOnce(new Error('Error inesperado'));
+
+            await controller.update(mockRequestUpdate as any, mockReply as any);
+
+            expect(mockReply.status).toHaveBeenCalledWith(500);
+            expect(mockReply.send).toHaveBeenCalledWith({ error: 'Error al actualizar la disciplina' });
+        });
+    });
+
     describe('delete', () => {
         const mockRequest = {
             params: { id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' },
