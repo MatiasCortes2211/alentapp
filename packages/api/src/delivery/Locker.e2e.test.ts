@@ -110,4 +110,44 @@ describe('Locker API End-to-End Tests', () => {
             expect(body.error).toBe('El casillero no existe');
         });
     });
+
+    describe('DELETE /api/v1/lockers/:id (Delete)', () => {
+        it('5. DELETE: Debe eliminar el casillero lógicamente en la base de datos real', async () => {
+            const response = await app.inject({
+                method: 'DELETE',
+                url: `/api/v1/lockers/${createdLockerId}` // El casillero real que venimos usando
+            });
+
+            expect(response.statusCode).toBe(204);
+
+            // Verifica en PostgreSQL que se aplicó
+            const dbLocker = await prisma.locker.findUnique({ where: { id: createdLockerId } });
+            expect(dbLocker?.is_deleted).toBe(true);
+            expect(dbLocker?.status).toBe('Available');
+            expect(dbLocker?.member_id).toBeNull();
+        });
+
+        it('6. DELETE: Debe fallar si se intenta eliminar un casillero ya eliminado', async () => {
+            const response = await app.inject({
+                method: 'DELETE',
+                url: `/api/v1/lockers/${createdLockerId}` // El mismo casillero que acabamos de borrar
+            });
+
+            expect(response.statusCode).toBe(409);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('El casillero ya fue eliminado previamente');
+        });
+
+        it('7. DELETE: Debe fallar si el casillero no existe en la DB real', async () => {
+            const fakeId = '123e4567-e89b-12d3-a456-426614174000'; // UUID falso
+            const response = await app.inject({
+                method: 'DELETE',
+                url: `/api/v1/lockers/${fakeId}`
+            });
+
+            expect(response.statusCode).toBe(404);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('El casillero no existe');
+        });
+    });
 });

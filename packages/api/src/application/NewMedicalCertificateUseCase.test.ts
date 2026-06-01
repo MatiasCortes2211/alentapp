@@ -109,7 +109,7 @@ describe('NewMedicalCertificateUseCase - Creación de Certificados Médicos', ()
 
   // Test 2
 
-  describe('TEST 2: Validación - Socio Inexistente (404)', () => {
+  describe('TEST 2: Validación - Socio Inexistente', () => {
     it('debería lanzar error si el socio no existe en la base de datos y NO llamar a create()', async () => {
       const inputData: CreateMedicalCertificate = {
         member_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
@@ -132,7 +132,7 @@ describe('NewMedicalCertificateUseCase - Creación de Certificados Médicos', ()
   });
 
   // Test 3
-  describe('TEST 3: Validación - Socio Suspendido (400)', () => {
+  describe('TEST 3: Validación - Socio Suspendido', () => {
     it('debería rechazar la creación si el socio se encuentra en estado "Suspendido"', async () => {
       const inputData: CreateMedicalCertificate = {
         member_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
@@ -166,7 +166,7 @@ describe('NewMedicalCertificateUseCase - Creación de Certificados Médicos', ()
   });
 
   // test 4
-  describe('TEST 4: Validación de Dominio - Expiry <= Issue (400)', () => {
+  describe('TEST 4: Validación de Dominio - Expiry', () => {
     it('debería rechazar si la fecha de vencimiento es anterior o igual a la de emisión', async () => {
       const inputData: CreateMedicalCertificate = {
         member_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
@@ -191,7 +191,7 @@ describe('NewMedicalCertificateUseCase - Creación de Certificados Médicos', ()
   });
 
   // Test 5
-  describe('TEST 5: Validación de Dominio - Certificado Vencido (400)', () => {
+  describe('TEST 5: Validación de Dominio - Certificado Vencido', () => {
     it('debería rechazar si se intenta cargar un certificado con fecha de vencimiento en el pasado', async () => {
       const inputData: CreateMedicalCertificate = {
         member_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',

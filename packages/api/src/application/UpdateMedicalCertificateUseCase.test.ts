@@ -64,7 +64,7 @@ describe('UpdateMedicalCertificateUseCase - Actualización de Certificados Médi
     expect(result.expiry_date).toBe(inputData.expiry_date);
   });
 
-  it('TEST 2: Validación - Error si el certificado no existe (404)', async () => {
+  it('TEST 2: Validación - Error si el certificado no existe', async () => {
     const certId = 'c77bc10b-58cc-4372-a567-0e02b2c3d999';
     vi.mocked(mockCertificateRepo.findById).mockResolvedValueOnce(null);
 
@@ -74,7 +74,7 @@ describe('UpdateMedicalCertificateUseCase - Actualización de Certificados Médi
     expect(mockCertificateRepo.update).not.toHaveBeenCalled();
   });
 
-  it('TEST 3: Regla de Negocio - Error si el socio está "Suspendido" (400)', async () => {
+  it('TEST 3: Regla de Negocio - Error si el socio está "Suspendido"', async () => {
     const certId = 'c77bc10b-58cc-4372-a567-0e02b2c3d999';
     const existingCert = {
       id: certId,
@@ -95,7 +95,7 @@ describe('UpdateMedicalCertificateUseCase - Actualización de Certificados Médi
     expect(mockCertificateRepo.update).not.toHaveBeenCalled();
   });
 
-  it('TEST 4: Validación de Dominio - Error si nueva expiry es anterior a la issue original (400)', async () => {
+  it('TEST 4: Validación de Dominio - Error si nueva expiry es anterior a la issue original', async () => {
     const certId = 'c77bc10b-58cc-4372-a567-0e02b2c3d999';
     const existingCert = {
       id: certId,

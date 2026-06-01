@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { buildApp } from '../app.js';
-import { CreateLockerRequest, UpdateLockerRequest,  } from '@alentapp/shared';
+import { CreateLockerRequest, UpdateLockerRequest } from '@alentapp/shared';
 
 // Mock de Casilleros
 vi.mock('../infrastructure/PostgresLockerRepository.js', () => {
@@ -17,8 +17,13 @@ vi.mock('../infrastructure/PostgresLockerRepository.js', () => {
                 return { id: 'nuevo-locker-id', ...data, is_deleted: false }; 
             }
             async findById(id: string) { 
-                // Simulamos un casillero valido para el Caso de Uso de Update
+                // Casillero para Update
                 if (id === 'locker-valido') return { id: 'locker-valido', number: 10, status: 'Available', is_deleted: false, member_id: null };
+                
+                // Casilleros para Delete
+                if (id === '123e4567-e89b-12d3-a456-426614174001') return { id: id, number: 11, status: 'Occupied', is_deleted: false, member_id: 'otro-uuid' };
+                if (id === '123e4567-e89b-12d3-a456-426614174002') return { id: id, number: 12, status: 'Available', is_deleted: true, member_id: null };
+                
                 return null; 
             }
             async update(id: string, data: any) { return { id, ...data }; }
@@ -62,13 +67,21 @@ describe('Locker API Integration Tests', () => {
     describe('POST /api/v1/lockers (Create)', () => {
         it('1. debe retornar 201 y crear el casillero', async () => {
             const payload: CreateLockerRequest = { number: 10, location: 'Kids' };
-            const response = await app.inject({ method: 'POST', url: '/api/v1/lockers', payload });
+            const response = await app.inject({ 
+                method: 'POST', 
+                url: '/api/v1/lockers', 
+                payload 
+            });
             expect(response.statusCode).toBe(201);
         });
 
         it('2. debe retornar 409 si el número ya existe', async () => {
             const payload: CreateLockerRequest = { number: 99, location: 'Male' };
-            const response = await app.inject({ method: 'POST', url: '/api/v1/lockers', payload });
+            const response = await app.inject({ 
+                method: 'POST', 
+                url: '/api/v1/lockers', 
+                payload 
+            });
             expect(response.statusCode).toBe(409);
         });
     });
@@ -114,6 +127,46 @@ describe('Locker API Integration Tests', () => {
             expect(response.statusCode).toBe(400);
             const body = JSON.parse(response.payload);
             expect(body.error).toContain('Un socio suspendido');
+        });
+    });
+
+    describe('DELETE /api/v1/lockers/:id (Delete)', () => {
+        it('6. debe retornar 204 y eliminar lógicamente el casillero', async () => {
+            const response = await app.inject({
+                method: 'DELETE',
+                url: '/api/v1/lockers/123e4567-e89b-12d3-a456-426614174001'
+            });
+            expect(response.statusCode).toBe(204);
+        });
+
+        it('7. debe retornar 404 si el casillero a eliminar no existe', async () => {
+            const response = await app.inject({
+                method: 'DELETE',
+                url: '/api/v1/lockers/123e4567-e89b-12d3-a456-426614174003' // No registrado en el mock
+            });
+            expect(response.statusCode).toBe(404);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('El casillero no existe');
+        });
+
+        it('8. debe retornar 409 si el casillero ya fue eliminado previamente', async () => {
+            const response = await app.inject({
+                method: 'DELETE',
+                url: '/api/v1/lockers/123e4567-e89b-12d3-a456-426614174002' // Registrado con is_deleted: true
+            });
+            expect(response.statusCode).toBe(409);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('El casillero ya fue eliminado previamente');
+        });
+
+        it('9. debe retornar 400 si el ID provisto no es un UUID válido', async () => {
+            const response = await app.inject({
+                method: 'DELETE',
+                url: '/api/v1/lockers/id-invalido-123'
+            });
+            expect(response.statusCode).toBe(400);
+            const body = JSON.parse(response.payload);
+            expect(body.error).toBe('El formato del ID es inválido');
         });
     });
 });

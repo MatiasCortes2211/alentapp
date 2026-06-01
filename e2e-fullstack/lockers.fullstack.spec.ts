@@ -74,4 +74,18 @@ test.describe('Lockers Full-Stack E2E', () => {
     await expect(filaLocker.getByText('Maintenance')).toBeVisible({ timeout: 10000 });
   });
 
+  test('4. Debe eliminar el casillero y desaparecer de la tabla', async ({ page }) => {
+    await page.goto('/lockers');
+    
+    // Busca la fila del casillero de prueba
+    const filaLocker = page.locator('tr').filter({ hasText: `#${testLockerNumber}` });
+    page.once('dialog', (dialog) => dialog.accept());
+    
+    // Hace click en el segundo boton de la fila (el tacho de basura)
+    await filaLocker.locator('button').nth(1).click();
+
+    // Verifica que el casillero desaparece de la tabla
+    await expect(page.getByText(`#${testLockerNumber}`, { exact: true })).toBeHidden({ timeout: 10000 });
+  });
+  
 });

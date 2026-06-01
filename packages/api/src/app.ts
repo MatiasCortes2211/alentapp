@@ -112,7 +112,7 @@ export function buildApp() {
         memberRepo,
         certificateValidator
     );
-    const getMedicalCertificatesUseCase = new GetMedicalCertificatesUseCase(certificateRepo);
+    const getMedicalCertificatesUseCase = new GetMedicalCertificatesUseCase(certificateRepo, memberRepo);
     const updateMedicalCertificateUseCase = new UpdateMedicalCertificateUseCase(
         certificateRepo, 
         memberRepo, 
