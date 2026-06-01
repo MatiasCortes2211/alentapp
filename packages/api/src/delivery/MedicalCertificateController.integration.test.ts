@@ -324,4 +324,17 @@ describe('MedicalCertificateController - Integration Tests (Funcionalidades CREA
       expect(body.message).toContain('requerido');
     });
   });
+  describe('DELETE /api/v1/medical-certificates/:id', () => {
+    // Test 10
+    it('[TEST 10] debe retornar 204 No Content al eliminar un certificado existente', async () => {
+      const certId = 'c77bc10b-58cc-4372-a567-0e02b2c3d999';
+
+      const response = await app.inject({
+        method: 'DELETE',
+        url: `/api/v1/medical-certificates/${certId}`,
+      });
+
+      expect(response.statusCode).toBe(204);
+    })
+  })
 });

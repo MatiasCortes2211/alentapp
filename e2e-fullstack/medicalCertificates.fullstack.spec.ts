@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, request } from '@playwright/test';
 
 /**
  * Tests E2E Full-Stack para la vista de Salud (Certificados Médicos).
@@ -84,5 +84,58 @@ test.describe('Medical Certificates Full-Stack E2E', () => {
     // Guardar cambios
     await page.getByRole('button', { name: 'Guardar Cambios' }).click();
     await expect(page.getByText('Modificar Condición Sanitaria')).toBeHidden({ timeout: 15000 });
+  });
+
+  test('debe eliminar físicamente el certificado desde la interfaz', async ({ page }) => {
+    await page.goto('/salud');
+
+    const row = page.locator('tr', { hasText: nombreSocio });
+    await row.waitFor({ state: 'visible', timeout: 15000 });
+
+    await row.getByRole('button', { name: /Historial/i }).click();
+
+    // Usamos el diálogo por rol y esperamos a que el estado sea 'open'
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 15000 });
+
+    // Aceptar el confirm nativo antes de disparar la eliminación
+    page.once('dialog', async (dialogEvent) => {
+      await dialogEvent.accept();
+    });
+
+    // Clic en eliminar dentro del diálogo y esperar la respuesta DELETE real
+    const deleteResponsePromise = page.waitForResponse(
+      (response) => response.request().method() === 'DELETE' &&
+        response.url().includes('/api/v1/medical-certificates') &&
+        [200, 204].includes(response.status()),
+      { timeout: 20000 }
+    );
+
+    await Promise.all([
+      dialog.locator('button[aria-label="Eliminar Físico"]').first().click(),
+      deleteResponsePromise,
+    ]);
+
+    // Esperar a que la animación de cierre de Chakra termine
+    await expect(dialog).toHaveAttribute('data-state', 'closed', { timeout: 20000 });
+    await expect(dialog).toBeHidden({ timeout: 20000 });
+
+    // Validar que el certificado vigente ya no está disponible en la fila del socio
+    await expect(row.getByRole('button', { name: 'Editar Vigente' })).toBeHidden({ timeout: 20000 });
+  });
+
+  test.afterAll(async () => {
+    // Limpieza: buscamos el socio creado por DNI y lo eliminamos vía API para no romper otras pruebas
+    const req = await request.newContext({ baseURL: 'http://localhost:3001' });
+    try {
+      const res = await req.get('/api/v1/socios');
+      const body = await res.json();
+      const found = (body.data || []).find((s: any) => s.dni === dniSocio || s.email === emailSocio || s.name === nombreSocio);
+      if (found && found.id) {
+        await req.delete(`/api/v1/socios/${found.id}`);
+      }
+    } finally {
+      await req.dispose();
+    }
   });
 });
