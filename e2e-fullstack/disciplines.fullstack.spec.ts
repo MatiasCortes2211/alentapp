@@ -56,13 +56,17 @@ test.describe('Disciplines Full-Stack E2E', () => {
 
         //Crea una disciplina para editar
         await page.goto('/disciplines');
+        //Definimos una fecha de fin que siempre sea futura para asignar a la disciplina
+        const today = new Date();
+        const futureDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate()).toISOString().split('T')[0];
+
         
         await expect(page.getByText('No se encontraron disciplinas registradas.')).toBeVisible({ timeout: 10000 });
         await page.locator('button:has-text("Generar Disciplina")').click();
         await expect(page.getByText('Generar Nueva Disciplina')).toBeVisible();
         await page.locator('select').first().selectOption({ label: 'Socio E2E Discipline (DNI: 99988877)' });
         await page.getByLabel(/Razón/i).fill('Conducta inapropiada E2E');
-        await page.getByLabel(/Fecha de Fin/i).fill('2026-12-31');
+        await page.getByLabel(/Fecha de Fin/i).fill(futureDate);
         await page.locator('select').last().selectOption({ value: 'false' });
         await page.getByRole('button', { name: 'Generar' }).click();
         page.on('dialog', (dialog) => dialog.accept());
@@ -101,12 +105,15 @@ test.describe('Disciplines Full-Stack E2E', () => {
 
         //Crea una disciplina para eliminar
         await page.goto('/disciplines');
+        //Definimos una fecha de fin que siempre sea futura para asignar a la disciplina
+        const today = new Date();
+        const futureDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate()).toISOString().split('T')[0];
         await expect(page.getByText('No se encontraron disciplinas registradas.')).toBeVisible({ timeout: 10000 });
         await page.locator('button:has-text("Generar Disciplina")').click();
         await expect(page.getByText('Generar Nueva Disciplina')).toBeVisible();
         await page.locator('select').first().selectOption({ label: 'Socio E2E Discipline (DNI: 99988877)' });
         await page.getByLabel(/Razón/i).fill('Conducta inapropiada E2E');
-        await page.getByLabel(/Fecha de Fin/i).fill('2026-12-31');
+        await page.getByLabel(/Fecha de Fin/i).fill(futureDate);
         await page.locator('select').last().selectOption({ value: 'false' });
         await page.getByRole('button', { name: 'Generar' }).click();
         page.on('dialog', (dialog) => dialog.accept());
