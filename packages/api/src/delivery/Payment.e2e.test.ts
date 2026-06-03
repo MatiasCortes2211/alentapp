@@ -39,10 +39,9 @@ describe('Payment API End-to-End Tests', () => {
     });
 
     afterAll(async () => {
-        // Limpiamos pagos y miembro creados
-        if (createdPaymentId) {
-            await prisma.payment.deleteMany({ where: { member_id: createdMemberId } });
-        }
+        // Limpiamos pagos y miembros creados
+        await prisma.payment.deleteMany({ where: { member_id: createdMemberId } });
+      
         if (createdMemberId) {
             await prisma.member.deleteMany({ where: { id: createdMemberId } });
         }
@@ -53,9 +52,9 @@ describe('Payment API End-to-End Tests', () => {
     it('1. POST: Debe crear un pago en la base de datos real', async () => {
         const payload = {
             amount: 5000,
-            month: 6,
+            month: 1,
             year: 2026,
-            due_date: '2026-06-30',
+            due_date: '2036-06-30',
             member_id: createdMemberId,
         };
 
@@ -72,7 +71,6 @@ describe('Payment API End-to-End Tests', () => {
         expect(body.data.status).toBe('PENDING');
         expect(body.data.payment_date).toBeNull();
 
-        // Guardamos el ID para usarlo en los siguientes tests y poder limpiar la DB luego
         createdPaymentId = body.data.id;
 
         // Verificación directa en PostgreSQL
@@ -84,9 +82,9 @@ describe('Payment API End-to-End Tests', () => {
     it('2. POST: Debe fallar si el miembro no existe', async () => {
         const payload = {
             amount: 5000,
-            month: 7,
+            month: 2,
             year: 2026,
-            due_date: '2026-07-30',
+            due_date: '2036-07-30',
             member_id: '123e4567-e89b-12d3-a456-000000000000',
         };
 
@@ -102,11 +100,23 @@ describe('Payment API End-to-End Tests', () => {
     });
 
     it('3. POST: Debe fallar si ya existe un pago activo para ese miembro, mes y año', async () => {
+        await prisma.payment.create({
+        data: {
+            amount: 5000,
+            month: 3,
+            year: 2026,
+            due_date: new Date('2036-06-30'),
+            member_id: createdMemberId, 
+            status: 'PENDING',
+            is_deleted: false
+        }
+       });
+
         const payload = {
             amount: 5000,
-            month: 6, // mismo mes y año que el test 1
+            month: 3, // mismo mes y año (03/2026) que el payment creado
             year: 2026,
-            due_date: '2026-06-30',
+            due_date: '2036-06-30',
             member_id: createdMemberId,
         };
 
@@ -122,9 +132,21 @@ describe('Payment API End-to-End Tests', () => {
     });
 
     it('4. PATCH: Debe actualizar el pago a PAID en la base de datos real', async () => {
+        const payment = await prisma.payment.create({
+        data: {
+            amount: 5000,
+            month: 4,
+            year: 2026,
+            due_date: new Date('2036-06-30'),
+            member_id: createdMemberId, 
+            status: 'PENDING',
+            is_deleted: false
+        }
+       });
+
         const response = await app.inject({
             method: 'PATCH',
-            url: `/api/v1/payments/${createdPaymentId}`,
+            url: `/api/v1/payments/${payment.id}`,
             payload: { status: 'PAID' }
         });
 
@@ -133,15 +155,27 @@ describe('Payment API End-to-End Tests', () => {
         expect(body.data.status).toBe('PAID');
         expect(body.data.payment_date).not.toBeNull();
 
-        const dbPayment = await prisma.payment.findUnique({ where: { id: createdPaymentId } });
+        const dbPayment = await prisma.payment.findUnique({ where: { id: payment.id } });
         expect(dbPayment?.status).toBe('PAID');
         expect(dbPayment?.payment_date).not.toBeNull();
     });
 
     it('5. PATCH: Debe fallar si el pago ya está en estado PAID', async () => {
+        const payment = await prisma.payment.create({
+        data: {
+            amount: 5000,
+            month: 5,
+            year: 2026,
+            due_date: new Date('2036-06-30'),
+            member_id: createdMemberId,
+            status: 'PAID',
+            is_deleted: false
+        }
+       });
+
         const response = await app.inject({
             method: 'PATCH',
-            url: `/api/v1/payments/${createdPaymentId}`,
+            url: `/api/v1/payments/${payment.id}`,
             payload: { status: 'CANCELED' }
         });
 
@@ -163,22 +197,45 @@ describe('Payment API End-to-End Tests', () => {
     });
 
     it('7. DELETE: Debe eliminar lógicamente el pago en la base de datos real', async () => {
+        const payment = await prisma.payment.create({
+        data: {
+            amount: 5000,
+            month: 6,
+            year: 2026,
+            due_date: new Date('2036-06-30'),
+            member_id: createdMemberId, 
+            status: 'PENDING',
+            is_deleted: false
+        }
+        });
+
         const response = await app.inject({
             method: 'DELETE',
-            url: `/api/v1/payments/${createdPaymentId}`,
+            url: `/api/v1/payments/${payment.id}`,
         });
 
         expect(response.statusCode).toBe(204);
 
-        const dbPayment = await prisma.payment.findUnique({ where: { id: createdPaymentId } });
+        const dbPayment = await prisma.payment.findUnique({ where: { id: payment.id } });
         expect(dbPayment).not.toBeNull();
         expect(dbPayment?.is_deleted).toBe(true);
     });
 
     it('8. DELETE: Debe fallar si el pago ya fue eliminado', async () => {
+        const payment = await prisma.payment.create({
+        data: {
+            amount: 5000,
+            month: 7,
+            year: 2026,
+            due_date: new Date('2036-06-30'),
+            member_id: createdMemberId, 
+            status: 'PENDING',
+            is_deleted: true // Lo creamos ya eliminado para este test
+        }
+    });
         const response = await app.inject({
             method: 'DELETE',
-            url: `/api/v1/payments/${createdPaymentId}`,
+            url: `/api/v1/payments/${payment.id}`,
         });
 
         expect(response.statusCode).toBe(409);
