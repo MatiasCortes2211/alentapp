@@ -1,7 +1,7 @@
 //Este test verifica que al eliminar una disciplina, el campo is_deleted se actualice a true en la base de datos real, y que no se elimine físicamente el registro.
 
 import 'dotenv/config';
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { buildApp } from '../app.js';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -13,9 +13,7 @@ describe('Discipline API End-to-End Tests', () => {
     let createdMemberId: string;
     let createdDisciplineId: string;
     
-    const randomSuffix = Math.floor(Math.random() * 100000).toString();
-    const testDni = `E2E${randomSuffix}`;
-    const testEmail = `e2e${randomSuffix}@test.com`;
+
 
     beforeAll(async () => {
         app = buildApp();
@@ -25,6 +23,13 @@ describe('Discipline API End-to-End Tests', () => {
             adapter: new PrismaPg(process.env.DATABASE_URL as any),
         });
         await prisma.$connect();
+    });
+
+    beforeEach(async () => {
+
+    const randomSuffix = Math.floor(Math.random() * 100000).toString();
+    const testDni = `E2E${randomSuffix}`;
+    const testEmail = `e2e${randomSuffix}@test.com`;
 
         const member = await prisma.member.create({
             data: {
@@ -53,6 +58,11 @@ describe('Discipline API End-to-End Tests', () => {
     });
 
     afterAll(async () => {
+        await prisma.$disconnect();
+        await app.close();
+    });
+
+    afterEach(async () => {
         if (createdMemberId) {
             await prisma.discipline.deleteMany({
                 where: { member_id: createdMemberId }
@@ -63,12 +73,9 @@ describe('Discipline API End-to-End Tests', () => {
                 where: { id: createdMemberId }
             });
         }
-
-        await prisma.$disconnect();
-        await app.close();
     });
 
-        it('POST: Debe crear una disciplina con status 201 y mantener el estado del miembro si la disciplina no es vigente', async () => {
+    it('POST: Debe crear una disciplina con status 201 y mantener el estado del miembro si la disciplina no es vigente', async () => {
             const today = new Date();
             const pastDate1 = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate()).toISOString().split('T')[0];
             const pastDate2 = new Date(today.getFullYear() - 2, today.getMonth(), today.getDate()).toISOString().split('T')[0];
