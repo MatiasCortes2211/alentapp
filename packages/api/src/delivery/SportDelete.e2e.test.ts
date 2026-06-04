@@ -10,6 +10,8 @@ describe('Sport API End-to-End Tests - Delete', () => {
     let prisma: PrismaClient;
     let createdSportId: string;
 
+    const baseSportName = 'Natación Delete Test';
+
     beforeAll(async () => {
         app = buildApp();
         await app.ready();
@@ -18,52 +20,65 @@ describe('Sport API End-to-End Tests - Delete', () => {
             adapter: new PrismaPg(process.env.DATABASE_URL as any),
         });
         await prisma.$connect();
+    });
 
+    afterAll(async () => {
+        await prisma.sport.deleteMany({
+            where: {
+                name: {
+                    contains: baseSportName
+                }
+            }
+        });
+        await prisma.$disconnect();
+        await app.close();
+    });
+
+    it('1. DELETE: Debe eliminar el deporte cambiando su estado is_deleted a true y devolver código 204', async () => {
+        const randomSuffix = Math.floor(Math.random() * 100000).toString();
         const sport = await prisma.sport.create({
             data: {
-                name: 'Natación Delete',
-                description: 'Deporte de prueba para testear el borrado lógico',
+                name: `${baseSportName} Activo ${randomSuffix}`,
+                description: 'Deporte de prueba activo',
                 max_capacity: 15,
                 additional_price: 2000,
                 requires_medical_certificate: true,
                 is_deleted: false,
             }
         });
-        createdSportId = sport.id;
-    });
 
-    afterAll(async () => {
-        // Limpiamos el deporte creado
-        if (createdSportId) {
-            await prisma.sport.deleteMany({
-                where: { id: createdSportId }
-            });
-        }
-        await prisma.$disconnect();
-        await app.close();
-    });
-
-    it('1. DELETE: Debe eliminar el deporte cambiando su estado is_deleted a true y devolver código 204', async () => {
         const response = await app.inject({
             method: 'DELETE',
-            url: `/api/v1/sports/${createdSportId}`
+            url: `/api/v1/sports/${sport.id}`
         });
 
         expect(response.statusCode).toBe(204);
         
         // Verificación directa del borrado lógico
         const dbSport = await prisma.sport.findUnique({
-            where: { id: createdSportId }
+            where: { id: sport.id }
         });
         expect(dbSport).not.toBeNull();
         expect(dbSport?.is_deleted).toBe(true);
     });
 
     it('2. DELETE: Debe fallar con 409 si se intenta eliminar un deporte que ya está eliminado', async () => {
+        const randomSuffix = Math.floor(Math.random() * 100000).toString();
+        const deletedSport = await prisma.sport.create({
+            data: {
+                name: `${baseSportName} Borrado ${randomSuffix}`,
+                description: 'Deporte de prueba ya borrado',
+                max_capacity: 15,
+                additional_price: 2000,
+                requires_medical_certificate: true,
+                is_deleted: true, // Estado preparado explícitamente para este test
+            }
+        });
+
         // Como el test anterior ya lo eliminó lógicamente, acá debería rebotar
         const response = await app.inject({
             method: 'DELETE',
-            url: `/api/v1/sports/${createdSportId}`
+            url: `/api/v1/sports/${deletedSport.id}`
         });
 
         expect(response.statusCode).toBe(409);

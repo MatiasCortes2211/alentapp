@@ -8,8 +8,8 @@ import { PrismaClient } from '../generated/client/client.js';
 describe('Sport API End-to-End Tests - Update', () => {
     let app: FastifyInstance;
     let prisma: PrismaClient;
-    let activeSportId: string;
-    let deletedSportId: string;
+
+    const baseSportName = 'Tenis Update Test';
 
     beforeAll(async () => {
         app = buildApp();
@@ -19,35 +19,13 @@ describe('Sport API End-to-End Tests - Update', () => {
             adapter: new PrismaPg(process.env.DATABASE_URL as any),
         });
         await prisma.$connect();
-
-        const activeSport = await prisma.sport.create({
-            data: {
-                name: 'Tenis Update',
-                description: 'Deporte para probar actualización',
-                max_capacity: 10,
-                additional_price: 3000,
-                requires_medical_certificate: true,
-                is_deleted: false,
-            }
-        });
-        activeSportId = activeSport.id;
-
-        const deletedSport = await prisma.sport.create({
-            data: {
-                name: 'Tenis Eliminado Update',
-                description: 'Deporte eliminado',
-                max_capacity: 10,
-                additional_price: 3000,
-                requires_medical_certificate: true,
-                is_deleted: true,
-            }
-        });
-        deletedSportId = deletedSport.id;
     });
 
     afterAll(async () => {
         await prisma.sport.deleteMany({
-            where: { id: { in: [activeSportId, deletedSportId] } }
+            where: { 
+                name: { contains: baseSportName } 
+            }
         });
         
         await prisma.$disconnect();
@@ -55,6 +33,18 @@ describe('Sport API End-to-End Tests - Update', () => {
     });
 
     it('1. PATCH: Debe actualizar parcialmente el deporte y devolver 200', async () => {
+        const randomSuffix = Math.floor(Math.random() * 100000).toString();
+        const sport = await prisma.sport.create({
+            data: {
+                name: `${baseSportName} Exitoso ${randomSuffix}`,
+                description: 'Deporte para probar actualización',
+                max_capacity: 10,
+                additional_price: 3000,
+                requires_medical_certificate: true,
+                is_deleted: false,
+            }
+        });
+
         const updatePayload = {
             description: 'En cancha de arena',
             max_capacity: 15
@@ -62,7 +52,7 @@ describe('Sport API End-to-End Tests - Update', () => {
 
         const response = await app.inject({
             method: 'PATCH',
-            url: `/api/v1/sports/${activeSportId}`,
+            url: `/api/v1/sports/${sport.id}`,
             payload: updatePayload
         });
 
@@ -71,14 +61,26 @@ describe('Sport API End-to-End Tests - Update', () => {
         
         expect(body.data.description).toBe('En cancha de arena');
         expect(body.data.max_capacity).toBe(15);
-        expect(body.data.name).toBe('Tenis Update');
+        expect(body.data.name).toBe(`${baseSportName} Exitoso ${randomSuffix}`);
 
-        const dbSport = await prisma.sport.findUnique({ where: { id: activeSportId } });
+        const dbSport = await prisma.sport.findUnique({ where: { id: sport.id } });
         expect(dbSport?.description).toBe('En cancha de arena');
         expect(dbSport?.max_capacity).toBe(15);
     });
 
     it('2. PATCH: Debe fallar con 400 si se intenta modificar un campo inmutable', async () => {
+        const randomSuffix = Math.floor(Math.random() * 100000).toString();
+        const sport = await prisma.sport.create({
+            data: {
+                name: `${baseSportName} Inmutable ${randomSuffix}`,
+                description: 'Deporte para probar inmutabilidad',
+                max_capacity: 10,
+                additional_price: 3000,
+                requires_medical_certificate: true,
+                is_deleted: false,
+            }
+        });
+        
         const invalidPayload = {
             name: 'Tenis de mesa',
             max_capacity: 20
@@ -86,7 +88,7 @@ describe('Sport API End-to-End Tests - Update', () => {
 
         const response = await app.inject({
             method: 'PATCH',
-            url: `/api/v1/sports/${activeSportId}`,
+            url: `/api/v1/sports/${sport.id}`,
             payload: invalidPayload
         });
 
@@ -96,9 +98,21 @@ describe('Sport API End-to-End Tests - Update', () => {
     });
 
     it('3. PATCH: Debe fallar con 400 si la validación de Zod falla', async () => {
+        const randomSuffix = Math.floor(Math.random() * 100000).toString();
+        const sport = await prisma.sport.create({
+            data: {
+                name: `${baseSportName} Zod ${randomSuffix}`,
+                description: 'Deporte para probar validacion',
+                max_capacity: 10,
+                additional_price: 3000,
+                requires_medical_certificate: true,
+                is_deleted: false,
+            }
+        });
+
         const response = await app.inject({
             method: 'PATCH',
-            url: `/api/v1/sports/${activeSportId}`,
+            url: `/api/v1/sports/${sport.id}`,
             payload: { max_capacity: 0 }
         });
 
@@ -120,9 +134,21 @@ describe('Sport API End-to-End Tests - Update', () => {
     });
 
     it('5. PATCH: Debe fallar con 409 si el deporte ya está eliminado', async () => {
+        const randomSuffix = Math.floor(Math.random() * 100000).toString();
+        const deletedSport = await prisma.sport.create({
+            data: {
+                name: `${baseSportName} Eliminado ${randomSuffix}`,
+                description: 'Deporte ya eliminado lógicamente',
+                max_capacity: 10,
+                additional_price: 3000,
+                requires_medical_certificate: true,
+                is_deleted: true,
+            }
+        });
+        
         const response = await app.inject({
             method: 'PATCH',
-            url: `/api/v1/sports/${deletedSportId}`,
+            url: `/api/v1/sports/${deletedSport.id}`,
             payload: { max_capacity: 20 }
         });
 

@@ -5,14 +5,11 @@ import { buildApp } from '../app.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/client/client.js';
 
-describe('Sport API End-to-End Tests - Create', () => {
+describe('Sport API End-to-End Tests Create', () => {
     let app: FastifyInstance;
     let prisma: PrismaClient;
-    let createdSportId: string;
-
-    // Sufijo aleatorio para evitar colisiones de nombre único entre distintas ejecuciones
-    const randomSuffix = Math.floor(Math.random() * 100000).toString();
-    const testSportName = `Natación Create ${randomSuffix}`;
+    
+    const baseSportName = 'Natación';
 
     beforeAll(async () => {
         app = buildApp();
@@ -25,16 +22,22 @@ describe('Sport API End-to-End Tests - Create', () => {
     });
 
     afterAll(async () => {
-        if (createdSportId) {
-            await prisma.sport.deleteMany({
-                where: { id: createdSportId }
-            });
-        }
+        await prisma.sport.deleteMany({
+            where: {
+                name: {
+                    contains: baseSportName
+                }
+            }
+        });
+        
         await prisma.$disconnect();
         await app.close();
     });
 
     it('1. POST: Debe crear un deporte en la base de datos y devolver 201', async () => {
+        const randomSuffix = Math.floor(Math.random() * 100000).toString();
+        const testSportName = `${baseSportName} ${randomSuffix}`;
+
         const payload = {
             name: testSportName,
             description: 'Deporte de prueba para testear la creación',
@@ -56,9 +59,8 @@ describe('Sport API End-to-End Tests - Create', () => {
         expect(body.data.name).toBe(testSportName);
         expect(body.data.is_deleted).toBe(false);
 
-        createdSportId = body.data.id;
         const dbSport = await prisma.sport.findUnique({
-            where: { id: createdSportId }
+            where: { id: body.data.id }
         });
         
         expect(dbSport).not.toBeNull();
@@ -87,8 +89,21 @@ describe('Sport API End-to-End Tests - Create', () => {
     });
 
     it('3. POST: Debe fallar con 409 si se intenta crear un deporte con un nombre que ya existe', async () => {
+        const randomSuffix = Math.floor(Math.random() * 100000).toString();
+        const duplicateSportName = `${baseSportName} ${randomSuffix}`;
+        
+        await prisma.sport.create({
+            data: {
+                name: duplicateSportName,
+                description: 'Deporte insertado manualmente para forzar error 409',
+                max_capacity: 10,
+                additional_price: 0,
+                requires_medical_certificate: false
+            }
+        });
+
         const duplicatePayload = {
-            name: testSportName,
+            name: duplicateSportName,
             description: 'Nombre duplicado para testear conflicto',
             max_capacity: 20,
             additional_price: 5000,
