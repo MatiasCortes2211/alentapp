@@ -13,8 +13,7 @@ describe('Discipline API End-to-End Tests', () => {
     let createdMemberId: string;
     let createdDisciplineId: string;
     
-
-
+    //Antes de empezar todos los tests, se crea un miembro para asociar la disciplina. Se utiliza un DNI y email únicos para evitar conflictos con otros tests.
     beforeAll(async () => {
         app = buildApp();
         await app.ready();
@@ -23,13 +22,10 @@ describe('Discipline API End-to-End Tests', () => {
             adapter: new PrismaPg(process.env.DATABASE_URL as any),
         });
         await prisma.$connect();
-    });
 
-    beforeEach(async () => {
-
-    const randomSuffix = Math.floor(Math.random() * 100000).toString();
-    const testDni = `E2E${randomSuffix}`;
-    const testEmail = `e2e${randomSuffix}@test.com`;
+        const randomSuffix = Math.floor(Math.random() * 100000).toString();
+        const testDni = `E2E${randomSuffix}`;
+        const testEmail = `e2e${randomSuffix}@test.com`;
 
         const member = await prisma.member.create({
             data: {
@@ -41,46 +37,36 @@ describe('Discipline API End-to-End Tests', () => {
             }
         });
         createdMemberId = member.id;
-
-        const discipline = await prisma.discipline.create({
-            data: {
-                reason: 'Conducta Inapropiada E2E',
-                start_date: new Date('2026-05-27'),
-                end_date: new Date('2026-12-31'),
-                is_total_suspension: false,
-                member_id: createdMemberId
-            }
-        });
-        createdDisciplineId = discipline.id;
-
-
-
     });
 
+    //Luego de todos los tests, se elimina el miembro usado a lo largo del test.
     afterAll(async () => {
+        if (createdMemberId) {
+            await prisma.member.deleteMany({
+                where: { id: createdMemberId }
+            });
+        }
+
         await prisma.$disconnect();
         await app.close();
     });
 
+    //Luego de cada test se elimina la disciplina creada
     afterEach(async () => {
         if (createdMemberId) {
             await prisma.discipline.deleteMany({
                 where: { member_id: createdMemberId }
             });
         }
-        if (createdMemberId) {
-            await prisma.member.deleteMany({
-                where: { id: createdMemberId }
-            });
-        }
+
     });
 
     it('POST: Debe crear una disciplina con status 201 y mantener el estado del miembro si la disciplina no es vigente', async () => {
-            const today = new Date();
-            const pastDate1 = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate()).toISOString().split('T')[0];
-            const pastDate2 = new Date(today.getFullYear() - 2, today.getMonth(), today.getDate()).toISOString().split('T')[0];
+        const today = new Date();
+        const pastDate1 = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate()).toISOString().split('T')[0];
+        const pastDate2 = new Date(today.getFullYear() - 2, today.getMonth(), today.getDate()).toISOString().split('T')[0];
 
-            const payload = {
+        const payload = {
             reason: 'Motivo de la disciplina',
             start_date: pastDate2,
             end_date: pastDate1,
@@ -147,6 +133,18 @@ describe('Discipline API End-to-End Tests', () => {
     });
 
     it('PATCH: Debe actualizar la disciplina con status 200', async () => {
+        const discipline = await prisma.discipline.create({
+            data: {
+                reason: 'Motivo de la disciplina',
+                start_date: new Date('2026-01-01'),
+                end_date: new Date('2026-12-31'),
+                is_total_suspension: true,
+                member_id: createdMemberId
+            }
+        });
+
+        createdDisciplineId = discipline.id;
+
         const response = await app.inject({
             method: 'PATCH',
             url: `/api/v1/disciplines/${createdDisciplineId}`,
@@ -165,6 +163,18 @@ describe('Discipline API End-to-End Tests', () => {
     });
 
     it('PATCH: Debe actualizar el estado del miembro a Suspendido si se modificó la fecha de la disciplina por una vigente', async () => {
+        const discipline = await prisma.discipline.create({
+            data: {
+                reason: 'Motivo de la disciplina',
+                start_date: new Date('2026-01-01'),
+                end_date: new Date('2026-12-31'),
+                is_total_suspension: true,
+                member_id: createdMemberId
+            }
+        });
+
+        createdDisciplineId = discipline.id;
+        
         const today = new Date();
         const futureDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate()).toISOString().split('T')[0];
 
@@ -191,6 +201,18 @@ describe('Discipline API End-to-End Tests', () => {
     });
 
     it('DELETE: Debe eliminar la disciplina cambiando su estado is_deleted a true y devolver código 204', async () => {
+        const discipline = await prisma.discipline.create({
+            data: {
+                reason: 'Motivo de la disciplina',
+                start_date: new Date('2026-01-01'),
+                end_date: new Date('2026-12-31'),
+                is_total_suspension: true,
+                member_id: createdMemberId
+            }
+        });
+
+        createdDisciplineId = discipline.id;
+        
         const response = await app.inject({
             method: 'DELETE',
             url: `/api/v1/disciplines/${createdDisciplineId}`
