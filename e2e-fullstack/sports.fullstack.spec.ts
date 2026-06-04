@@ -162,11 +162,13 @@ test.describe('Sports Full-Stack E2E', () => {
     });
 
     test('8 debe crear un deporte, eliminarlo y verificar que desaparece de la tabla', async ({ page }) =>{
+        const randomSuffix = Math.floor(Math.random() * 100000).toString();
+        const sportName = `Deporte Borrable ${randomSuffix}`;
 
         await page.goto('/sports');
         await page.locator('button:has-text("Agregar Deporte")').click();
 
-        await page.getByPlaceholder('Ej. Fútbol').fill('Deporte Borrable');
+        await page.getByPlaceholder('Ej. Fútbol').fill(sportName);
         await page.getByPlaceholder('Ej. Deporte de equipo').fill('Descripción del deporte borrable');
         await page.getByPlaceholder('Ej. 20').fill('22');
         await page.getByPlaceholder('Ej. 10000').fill('10000');
@@ -176,13 +178,31 @@ test.describe('Sports Full-Stack E2E', () => {
 
         await page.getByRole('button', {name: 'Crear Deporte'}).click();
         
-        await expect(page.getByText('Deporte Borrable', { exact: true })).toBeVisible({ timeout: 10000});
+        await expect(page.getByText(sportName, { exact: true })).toBeVisible({ timeout: 10000});
 
         page.on('dialog', (dialog) => dialog.accept());
 
-        const filaDeporte = page.locator('tr').filter({ hasText: 'Deporte Borrable'});
+        const filaDeporte = page.locator('tr').filter({ hasText: sportName });
         await filaDeporte.getByRole('button', { name: /Eliminar/i }).click();
 
-        await expect(page.getByText('Deporte Borrable', { exact: true })).toBeHidden({ timeout: 10000});
+        await expect(page.getByText(sportName, { exact: true })).toBeHidden({ timeout: 10000});
+    });
+
+    test.afterAll(async ({ request }) => {
+        const response = await request.get('http://localhost:3001/api/v1/sports');
+        const body = await response.json();
+        
+        if (!body.data) return;
+
+        // Filtramos solo los deportes creados por esta suite de tests
+        const deportesDePrueba = body.data.filter((sport: any) => 
+            sport.name.includes('Vóley') || 
+            sport.name.includes('Natación') || 
+            sport.name.includes('Deporte Borrable')
+        );
+
+        for (const sport of deportesDePrueba) {
+            await request.delete(`http://localhost:3001/api/v1/sports/${sport.id}`);
+        }
     });
 });
