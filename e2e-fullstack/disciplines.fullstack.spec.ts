@@ -34,9 +34,7 @@ test.describe('Disciplines Full-Stack E2E', () => {
         page.on('dialog', (dialog) => dialog.accept());
 
         await expect(page.getByText('Conducta inapropiada E2E')).toBeVisible({ timeout: 10000 });
-    });
-
-    test('debe verificar que el estado del miembro haya cambiado a suspendido si la disciplina es vigente', async ({ page }) => {
+    
         await page.goto('/members');
         await expect(page.getByText('Socio E2E Discipline')).toBeVisible({ timeout: 10000 });
         await expect(page.getByText('Suspendido')).toBeVisible({ timeout: 10000 });
