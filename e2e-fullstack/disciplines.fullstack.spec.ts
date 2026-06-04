@@ -76,18 +76,12 @@ test.describe('Disciplines Full-Stack E2E', () => {
         await page.getByRole('button', { name: /Editar disciplina/i }).first().click();
         await expect(page.getByText('Editar Disciplina')).toBeVisible();
 
-        // Cambiar el tipo de suspensión de Parcial a Total
         await page.locator('select').last().selectOption({ value: 'true' });
-
-        // Aceptar el alert de éxito antes del click
-        page.on('dialog', (dialog) => dialog.accept());
 
         await page.getByRole('button', { name: 'Guardar Cambios' }).click();
 
-        // Verificar que el modal se cerró
         await expect(page.getByText('Editar Disciplina')).toBeHidden({ timeout: 10000 });
 
-        // Verificar que el cambio aparece en la tabla usando role cell
         await expect(page.getByRole('cell', { name: 'Total' })).toBeVisible({ timeout: 10000 });
     });
 
@@ -120,14 +114,13 @@ test.describe('Disciplines Full-Stack E2E', () => {
 
         await expect(page.getByText('Conducta inapropiada E2E')).toBeVisible({ timeout: 10000 });
 
-        page.on('dialog', (dialog) => dialog.accept());
-
         await page.getByRole('button', { name: /Eliminar disciplina/i }).first().click();
 
         await expect(page.getByText('No se encontraron disciplinas registradas.')).toBeVisible({ timeout: 10000 });
     });
 
-    test.afterAll(async ({ request }) => {
+    test.afterEach(async ({ request }) => {
+        //Elimino el miembro creado para dejar la base de datos limpia
         const response = await request.get('http://localhost:3001/api/v1/socios');
         const body = await response.json();
         const member = body.data.find((m: any) => m.dni === '99988877');
