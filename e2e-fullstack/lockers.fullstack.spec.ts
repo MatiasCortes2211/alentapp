@@ -1,12 +1,11 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Lockers Full-Stack E2E', () => {
-  test.describe.configure({ mode: 'serial' });
-
-  // Un numero aleatorio y alto para no chocar con datos de prueba
-  const testLockerNumber = '8888'; 
 
   test('1. Debe crear un casillero exitosamente y mostrarlo en la tabla', async ({ page }) => {
+    // Genera un numero aleatorio y alto
+    const testLockerNumber = Math.floor(Math.random() * 9000 + 1000).toString();
+    
     await page.goto('/lockers');
 
     // Abrir modal
@@ -32,11 +31,21 @@ test.describe('Lockers Full-Stack E2E', () => {
   });
 
   test('2. Debe dar error al intentar crear un casillero con un número duplicado', async ({ page }) => {
+    // Genera un numero aleatorio y alto
+    const testLockerNumber = Math.floor(Math.random() * 9000 + 1000).toString();
+    
     await page.goto('/lockers');
 
+    // Crea el primer casillero
     await page.locator('button:has-text("Agregar Casillero")').click();
-    
-    // Intenta poner el mismo numero
+    await page.getByPlaceholder('Ej. 101').fill(testLockerNumber);
+    await page.getByRole('combobox', { name: 'Ubicación' }).click();
+    await page.getByRole('option', { name: 'Vestuario Femenino' }).click();
+    await page.getByRole('button', { name: 'Crear Casillero' }).click();
+    await expect(page.getByText(`#${testLockerNumber}`, { exact: true })).toBeVisible({ timeout: 10000 });
+
+    // Intenta crear otro casillero con el mismo numero
+    await page.locator('button:has-text("Agregar Casillero")').click();
     await page.getByPlaceholder('Ej. 101').fill(testLockerNumber);
     
     // Seleccionar ubicacion
@@ -56,9 +65,20 @@ test.describe('Lockers Full-Stack E2E', () => {
   });
 
   test('3. Debe editar el estado del casillero a Mantenimiento', async ({ page }) => {
+    // Genera un numero aleatorio y alto
+    const testLockerNumber = Math.floor(Math.random() * 9000 + 1000).toString();
+    
     await page.goto('/lockers');
 
-    // Busca la fila del casillero de prueba
+    // Crea un casillero
+    await page.locator('button:has-text("Agregar Casillero")').click();
+    await page.getByPlaceholder('Ej. 101').fill(testLockerNumber);
+    await page.getByRole('combobox', { name: 'Ubicación' }).click();
+    await page.getByRole('option', { name: 'Vestuario Masculino' }).click();
+    await page.getByRole('button', { name: 'Crear Casillero' }).click();
+    await expect(page.getByText(`#${testLockerNumber}`, { exact: true })).toBeVisible({ timeout: 10000 });
+
+    // Busca la fila del casillero de prueba creado
     const filaLocker = page.locator('tr').filter({ hasText: `#${testLockerNumber}` });
     
     await filaLocker.locator('button').first().click();
@@ -75,9 +95,20 @@ test.describe('Lockers Full-Stack E2E', () => {
   });
 
   test('4. Debe eliminar el casillero y desaparecer de la tabla', async ({ page }) => {
+    // Genera un numero aleatorio y alto
+    const testLockerNumber = Math.floor(Math.random() * 9000 + 1000).toString();
+    
     await page.goto('/lockers');
     
-    // Busca la fila del casillero de prueba
+    // Crea un casillero
+    await page.locator('button:has-text("Agregar Casillero")').click();
+    await page.getByPlaceholder('Ej. 101').fill(testLockerNumber);
+    await page.getByRole('combobox', { name: 'Ubicación' }).click();
+    await page.getByRole('option', { name: 'Niños' }).click();
+    await page.getByRole('button', { name: 'Crear Casillero' }).click();
+    await expect(page.getByText(`#${testLockerNumber}`, { exact: true })).toBeVisible({ timeout: 10000 });
+    
+    // Busca la fila del casillero de prueba creado
     const filaLocker = page.locator('tr').filter({ hasText: `#${testLockerNumber}` });
     page.once('dialog', (dialog) => dialog.accept());
     
