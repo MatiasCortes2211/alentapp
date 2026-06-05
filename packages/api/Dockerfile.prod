@@ -1,0 +1,89 @@
+# =============================================================
+# Stage 1 — deps
+# Instala solo dependencias de producción.
+# =============================================================
+FROM node:22-alpine AS deps
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY packages/api/package.json ./packages/api/
+COPY packages/shared/package.json ./packages/shared/
+
+# Instala solo las dependencias de producción.
+# --omit=dev excluye todo lo que está en "devDependencies"
+RUN npm ci --omit=dev
+
+# =============================================================
+# Stage 2 — build
+# Objetivo: compilar el proyecto TypeScript a JavaScript.
+# Esta etapa tiene todo lo necesario para compilar pero
+# nada de esto llega a la imagen final — se descarta al terminar.
+# =============================================================
+FROM node:22-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY packages/api/package.json ./packages/api/
+COPY packages/shared/package.json ./packages/shared/
+
+# Instala TODAS las dependencias incluyendo devDependencies.
+RUN npm ci
+
+COPY . .
+
+# Genera el cliente Prisma compilado para Linux.
+RUN npx prisma generate --config packages/api/prisma.config.ts
+
+# Compila TypeScript → JavaScript en packages/api/dist/
+RUN npm run build -w packages/api
+
+# Compila el paquete shared.
+# shared tiene un "enum" de TypeScript que Node no puede ejecutar
+# como TypeScript crudo — necesita ser compilado a JavaScript primero.
+RUN npm run build -w packages/shared
+
+RUN find . -name "*.tsbuildinfo" -delete
+
+# =============================================================
+# Stage 3 — runtime
+# Imagen final: solo lo necesario para ejecutar la app.
+# No contiene TypeScript, tsx, devDependencies ni código fuente.
+# =============================================================
+FROM node:22-alpine AS runtime
+
+WORKDIR /app
+
+# Le indica a Node.js que está en producción
+ENV NODE_ENV=production
+
+# Copia solo las dependencias de producción del Stage 1
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copia el JavaScript compilado del Stage 2
+COPY --from=build /app/packages/api/dist ./packages/api/dist
+
+# Copia el shared compilado a JavaScript.
+COPY --from=build /app/packages/shared/dist ./packages/shared/dist
+
+# Copia el package.json de shared para que Node pueda resolver
+# el paquete "@alentapp/shared" cuando la API lo importa.
+COPY packages/shared/package.json ./packages/shared/package.json 
+
+# Copia el cliente Prisma generado
+# y el schema.prisma que Prisma necesita en runtime para construir queries
+COPY --from=build /app/packages/api/src/generated ./packages/api/dist/generated 
+
+COPY packages/api/prisma ./packages/api/prisma
+COPY packages/api/prisma.config.ts ./packages/api/prisma.config.ts
+
+USER node
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=10s --timeout=5s --retries=3 --start-period=15s \
+  CMD wget -qO- http://localhost:3000 || exit 1
+
+
+CMD ["node", "--enable-source-maps", "packages/api/dist/app.js"]
