@@ -1,0 +1,13 @@
+# Fase 1: Analizar y proponer
+
+## 1.1. Analizar la infraestructura Docker actual
+
+Se detallan 5 problemas y vulnerabilidades identificados en la **infraestructura actual** respecto a las buenas prácticas para entornos productivos:
+
+| Problema | ¿Dónde ocurre? | Impacto | Solución propuesta |
+| :--- | :--- | :--- | :--- |
+| **Datos sensibles hardcodeados:** Se exponen credenciales de la base de datos directamente en el código fuente, lo cual es una vulnerabilidad crítica si alguien obtiene acceso al repositorio. | `docker-compose.yml`: líneas 6-7 y 30 | Alto | Extraer los valores sensibles y utilizar variables de entorno inyectadas desde un archivo `.env` externo (ignorado en git) o utilizar Docker Secrets. |
+| **Ausencia de Healthchecks en la aplicación:** Aunque la base de datos tiene su validación, la API y el Frontend carecen de ella. Si la API sufre un deadlock, Docker no lo detectará y le seguirá enviando tráfico de usuarios. | `docker-compose.yml`: servicios `api` y `web` | Medio | Agregar un bloque `healthcheck` a la API (ej. haciendo un `curl` a un endpoint `/health`) y actualizar la regla `depends_on` del frontend para que espere la condición `service_healthy` de la API.
+| **Uso de servidor de desarrollo (Vite/Node) para servir el Frontend:** Se utiliza el servidor en caliente de Vite (`npm run dev`), el cual no está optimizado para alta concurrencia, caché ni compresión estática en producción. | `packages/web/Dockerfile`: línea 16 | Medio | Implementar un multi-stage build que compile los archivos estáticos (`vite build`) y luego utilizar un servidor web robusto y de alto rendimiento como Nginx (Alpine) para servirlos. |
+| **Mapeo de código fuente mediante volúmenes (Bind Mounts):** Montar el directorio local (`.:/app`) rompe el principio de inmutabilidad de Docker. La imagen productiva debe ser un paquete cerrado e independiente; al usar bind mounts, el contenedor pasa a depender de los archivos físicos del servidor host. | `docker-compose.yml`: líneas 20 y 45 | Alto | Eliminar los mapeos de volúmenes de código local en el archivo productivo, garantizando que el código se empaquete exclusivamente a través de la instrucción `COPY` durante el build de la imagen. |
+| **Ausencia de límites de recursos (Memory/CPU):** Ninguno de los servicios tiene restricciones de uso de hardware. Un memory leak en un contenedor puede consumir todos los recursos del servidor host, interrumpiendo todo el sistema. | `docker-compose.yml` (Nivel de servicio) | Medio | Definir restricciones de hardware especificando un bloque `deploy.resources` (con `limits` y `reservations` para CPU y memoria) en el compose file productivo. |
