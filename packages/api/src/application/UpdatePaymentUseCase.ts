@@ -34,7 +34,16 @@ export class UpdatePaymentUseCase {
             throw new Error('El pago ingresado no existe en el sistema');
         }
 
+        if (!existingPayment.member_id) {
+            throw new Error('El pago no tiene un socio asociado');
+        }
+
         const member = await this.memberRepository.findById(existingPayment.member_id);
+
+        if (!member) {
+            throw new Error('El socio asociado al pago no existe');
+        }
+        
         this.paymentValidator.validateMemberIsNotSuspended(member.status);
 
         // 2. Verificar que no este ya eliminado
