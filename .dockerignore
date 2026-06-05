@@ -2,3 +2,15 @@ node_modules
 dist
 .git
 *.log
+.gitignore
+.env
+**/.env
+.env.*
+**/.env.*
+**/*.test.ts
+**/*.spec.ts
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+docs
+README.md
