@@ -44,7 +44,7 @@ La imagen final que se despliega. Solo contiene lo necesario para que la app cor
 #### Requisitos no funcionales
  
 - **Usuario no-root:** se usa `USER node` (usuario sin privilegios incluido en la imagen base)
-- **Healthcheck:** `wget -qO- http://localhost:3000/health || exit 1` cada 10s, con `start_period` de 15s para dar tiempo al startup de la API.
+- **Healthcheck:** `wget -qO- http://127.0.0.1:3000 || exit 1` cada 10s, con `start_period` de 15s para dar tiempo al startup de la API.
 - **`.dockerignore`:** excluye `node_modules`, `.git`, `dist`, `*.log`, `.env`, archivos de test (`*.test.ts`, `*.spec.ts`). Evita que el contexto de build sea innecesariamente pesado y que archivos sensibles entren en la imagen.
 - **Tamaño objetivo:** ≤ 300 MB (reducción ≥ 70% respecto a la imagen de desarrollo ~1 GB).
 - **`ENV NODE_ENV=production`:** Node.js omite la carga de `devDependencies` en runtime.
