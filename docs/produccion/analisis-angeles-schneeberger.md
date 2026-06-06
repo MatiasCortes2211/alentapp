@@ -39,7 +39,7 @@ La diferencia clave es de rol:
 
 ### Los 3 pilares de la observabilidad
 
-Los tres pilares son **métricas**, **trazas** y **logs**. Juntos permiten responder tres preguntas distintas sobre un sistema:
+Los tres pilares son **métricas**, **trazas** y **logs**. OpenTelemetry aborda y unifica los 3 pilares bajo un mismo framework y protocolo (OTLP), permitiendo correlacionar las tres señales sin cambiar de herramienta.
 
 **Métricas** — *¿Qué está pasando ahora?*  
 Números agregados en el tiempo: cuántos requests por segundo, cuánta memoria usa el proceso, cuántos errores hubo en la última hora. 
