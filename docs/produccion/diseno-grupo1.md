@@ -208,3 +208,92 @@ en este momento exacto.
 Para qué sirve: detectar saturación. Si este número sube mucho y no baja,
 significa que la API está recibiendo más requests de los que puede procesar.
 Es una señal de que se necesita escalar el servicio.
+
+---
+
+### b) OpenTelemetry SDK
+
+La configuración conceptual del SDK para inyectar la telemetría en la API se estructurará de la siguiente manera:
+
+```typescript
+// packages/api/src/infrastructure/telemetry.ts
+
+import { NodeSDK } from '@opentelemetry/sdk-node'
+import { PrometheusExporter } from '@opentelemetry/exporter-prometheus'
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node'
+import { metrics } from '@opentelemetry/api'
+
+// 1. PrometheusExporter configurado para exponer métricas en el puerto 9464.
+const prometheusExporter = new PrometheusExporter({
+  port: 9464,
+  endpoint: '/metrics',
+})
+
+// 2. Crear el SDK con auto-instrumentaciones simplificadas
+const sdk = new NodeSDK({
+  metricReader: prometheusExporter,
+  instrumentations: [
+    // Se deja vacío para evitar el error de tipos de TypeScript
+    getNodeAutoInstrumentations(), 
+  ],
+})
+
+sdk.start()     // Encender el SDK
+console.log('[OTel] SDK iniciado — métricas disponibles en :9464/metrics')
+
+// 3. Métricas personalizadas RED
+const meter = metrics.getMeter('alentapp-api')
+
+export const requestCounter = meter.createCounter('http.requests.total', {
+  description: 'Total de requests HTTP recibidos por la API',
+})
+
+export const errorCounter = meter.createCounter('http.requests.errors', {
+  description: 'Total de requests que fallaron (4xx o 5xx)',
+})
+
+export const requestDuration = meter.createHistogram('http.request.duration', {
+  description: 'Latencia de cada request en milisegundos',
+  unit: 'ms',
+})
+
+export const memoryGauge = meter.createObservableGauge('process.memory.usage', {
+  description: 'RAM utilizada por el proceso Node.js en bytes',
+})
+
+memoryGauge.addCallback((result: any) => {
+  result.observe(process.memoryUsage().heapUsed)    // Registra la memoria automáticamente
+})
+
+export const activeRequestsGauge = meter.createUpDownCounter('http.requests.active', {
+  description: 'Cantidad de requests procesándose al mismo tiempo',
+})
+
+export { sdk, meter, prometheusExporter }
+```
+
+---
+
+### c) Dashboard RED en Grafana
+
+Diseño de los paneles para el monitoreo de la API:
+
+| Panel | Métrica (Consulta PromQL) | Tipo de gráfico | Propósito |
+| :--- | :--- | :--- | :--- |
+| **1. Requests por segundo** | `rate(http_server_duration_count[1m])` | Time series | Ver el tráfico actual |
+| **2. Tasa de error** | `sum(rate(...{status=~"5.."}[1m])) / sum(rate(...[1m]))` | Time series | % de errores |
+| **3. Latencia p95/p99** | `histogram_quantile(0.95, ...)` | Time series | Performance percibida |
+| **4. Por status code** | `sum by (status) (rate(...))` | Stacked area | Distribución de respuestas |
+| **5. Memoria del proceso** | `process_memory_usage_bytes / 1024 / 1024` | Time series | Consumo de recursos |
+| **6. Endpoints más lentos** | `topk(5, ...)` | Bar chart (horizontal) | Cuellos de botella |
+
+#### Explicación técnica de las consultas (PromQL)
+
+Para construir estos gráficos, Grafana utiliza PromQL (Prometheus Query Language) para consultar los datos almacenados. A continuación se explica la lógica detrás de cada métrica:
+
+*   **1. Requests por segundo (`rate`):** La función `rate(...[1m])` calcula el promedio de peticiones por segundo evaluando los datos del último minuto. Traduce un contador acumulativo puro en una "tasa de velocidad" fácil de leer para entender la carga instantánea del servidor.
+*   **2. Tasa de error (`status=~"5.."`):** Utiliza una expresión regular (`~"5.."`) para filtrar únicamente las peticiones que devolvieron un código de error de servidor (500, 502, 503, etc.). Luego, divide esa cantidad de errores por el total absoluto de peticiones recibidas, obteniendo así el porcentaje real de fallos de la API.
+*   **3. Latencia p95/p99 (`histogram_quantile`):** PromQL calcula el percentil 95 (o 99) a partir de un histograma de latencias. Si el p95 es 150ms, significa que el 95% de las peticiones se resolvieron en 150ms o menos. Es una métrica mucho más precisa que el "promedio simple", ya que evita que los casos extremos (outliers) distorsionen la lectura del rendimiento real que percibe la mayoría de los usuarios.
+*   **4. Agrupación por status code (`sum by (status)`):** La cláusula `by (status)` actúa como un "GROUP BY" de SQL. Agrupa la tasa de peticiones separándolas por su código de respuesta HTTP (200, 201, 400, 404). Esto permite construir un gráfico de área apilada para visualizar qué proporción del tráfico actual corresponde a éxitos y qué proporción a advertencias.
+*   **5. Memoria del proceso (`/ 1024 / 1024`):** El exportador de telemetría envía el consumo de memoria RAM en bytes puros. La consulta divide ese valor dos veces por 1024 para transformarlo matemáticamente de Bytes a Megabytes (MB), facilitando la detección de *memory leaks* (fugas de memoria).
+*   **6. Endpoints más lentos (`topk`):** La función `topk(5, ...)` (Top K elements) es un filtro de ordenamiento que evalúa todos los endpoints de la API, los ordena de mayor a menor según su tiempo medio de respuesta, y devuelve estrictamente los 5 peores. Es ideal para detectar cuellos de botella de forma automática.
