@@ -1,6 +1,6 @@
 import type { MedicalCertificateDTO, CreateMedicalCertificate, UpdateMedicalCertificate } from '@alentapp/shared';
 
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
 
 export const medicalCertificateService = {
   // 1. Crear Certificado Original
