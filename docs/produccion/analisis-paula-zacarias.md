@@ -4,8 +4,8 @@
 
 | Problema | ¿Dónde Ocurre? | Impacto | Solución Propuesta |
 |---|---|---|---|
-| Corre como root, no se define usuario no-root | api/Dockerfile y web/Dockerfile (toda la imagen) | Alto | Agregar RUN addgroup -S appuser && adduser -S appuser -G appuser y USER appuser antes del CMD |
-| Node.js completo en producción, en runtime solo se necesita ejecutar el JS compilado, no todo Node.js | api/Dockerfile:1, web/Dockerfile:1 | Alto | Usar multi-stage build: stage de build con node, stage runtime solo con el JS compilado |
+| Corre como root, no se define usuario no-root | api/Dockerfile y web/Dockerfile | Alto | Agregar USER node en runtime |
+| Node.js completo en producción, en runtime solo se necesita ejecutar el JS compilado, no todo Node.js | api/Dockerfile, web/Dockerfile | Alto | Usar multi-stage build: stage de build con node, stage runtime solo con el JS compilado |
 | Variables sensibles hardcodeadas, POSTGRES_USER, POSTGRES_PASSWORD, DATABASE_URL con credenciales reales en texto plano | docker-compose.yml | Alto | Mover a archivo .env y referenciar |
 | Sin límites de recursos |  CPU/memoria. Ningún servicio define limitación de los servicios | Medio | Agregar deploy.resources.limits con cpus y memory por servicio |
 | Sin separación desarrollo-producción, y volúmenes de código fuente montados | docker-compose.yml, volumes de api y web | Medio | Crear docker-compose.prod.yml sin bind mounts, usando imagen compilada |
