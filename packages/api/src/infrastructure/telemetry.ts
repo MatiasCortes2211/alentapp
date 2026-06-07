@@ -53,5 +53,17 @@ export const activeRequestsGauge = meter.createUpDownCounter('http.requests.acti
   description: 'Cantidad de requests procesándose al mismo tiempo',
 })
 
-export { sdk, meter, prometheusExporter }
+// Funciones auxiliares para estandarizar el registro de métricas
+export function recordRequest(route: string, method: string, status: number) {
+  requestCounter.add(1, { route, method, status: status.toString() });
+}
 
+export function recordError(route: string, method: string, status: number) {
+  errorCounter.add(1, { route, method, status: status.toString() });
+}
+
+export function recordDuration(duration: number, route: string, method: string) {
+  requestDuration.record(duration, { route, method });
+}
+
+export { sdk, meter, prometheusExporter }

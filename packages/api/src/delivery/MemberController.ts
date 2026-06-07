@@ -4,7 +4,7 @@ import { GetMembersUseCase } from '../application/GetMembersUseCase.js';
 import { UpdateMemberUseCase } from '../application/UpdateMemberUseCase.js';
 import { DeleteMemberUseCase } from '../application/DeleteMemberUseCase.js';
 import { CreateMemberRequest, UpdateMemberRequest } from '@alentapp/shared';
-import { requestCounter, errorCounter, requestDuration, activeRequestsGauge } from '../infrastructure/telemetry.js';
+import { recordRequest, recordError, recordDuration, activeRequestsGauge } from '../infrastructure/telemetry.js';
 
 export class MemberController {
     constructor(
@@ -18,16 +18,18 @@ export class MemberController {
         const start = Date.now();
         const method = _request.method;
         const route = _request.url.split('?')[0];
+        let statusCode = 200;
         activeRequestsGauge.add(1);
         try {
             const socios = await this.getMembersUseCase.execute();
-            requestCounter.add(1, { method, route, status: '200' });
-            return reply.status(200).send({ data: socios });
+            return reply.status(statusCode).send({ data: socios });
         } catch (error: any) {
-            errorCounter.add(1, { method, route, status: '500' });
-            return reply.status(500).send({ error: error.message });
+            statusCode = 500;
+            recordError(route, method, statusCode);
+            return reply.status(statusCode).send({ error: error.message });
         } finally {
-            requestDuration.record(Date.now() - start, { method, route });
+            recordRequest(route, method, statusCode);
+            recordDuration(Date.now() - start, route, method);
             activeRequestsGauge.add(-1);
         }
     }
@@ -39,25 +41,22 @@ export class MemberController {
         const start = Date.now();
         const method = request.method;
         const route = request.url.split('?')[0];
+        let statusCode = 201;
         activeRequestsGauge.add(1);
         try {
             request.log.info('Alguien pegó al endpoint de ping');
             const socio = await this.createMemberUseCase.execute(request.body);
-            requestCounter.add(1, { method, route, status: '201' });
-            return reply.status(201).send({ data: socio });
+            return reply.status(statusCode).send({ data: socio });
         } catch (error: any) {
-            if (error.message.includes('Ya existe un miembro con ese DNI')) {
-                errorCounter.add(1, { method, route, status: '409' });
-                return reply.status(409).send({ error: error.message });
-            }
-            if (error.message.includes('inválido')) {
-                errorCounter.add(1, { method, route, status: '400' });
-                return reply.status(400).send({ error: error.message });
-            }
-            errorCounter.add(1, { method, route, status: '500' });
-            return reply.status(500).send({ error: "Error interno, reintente más tarde" });
+            statusCode = 500;
+            if (error.message.includes('Ya existe un miembro con ese DNI')) statusCode = 409;
+            else if (error.message.includes('inválido')) statusCode = 400;
+
+            recordError(route, method, statusCode);
+            return reply.status(statusCode).send({ error: error.message || "Error interno, reintente más tarde" });
         } finally {
-            requestDuration.record(Date.now() - start, { method, route });
+            recordRequest(route, method, statusCode);
+            recordDuration(Date.now() - start, route, method);
             activeRequestsGauge.add(-1);
         }
     }
@@ -69,25 +68,22 @@ export class MemberController {
         const start = Date.now();
         const method = request.method;
         const route = request.url.split('?')[0];
+        let statusCode = 200;
         activeRequestsGauge.add(1);
         try {
             const { id } = request.params;
             const socio = await this.updateMemberUseCase.execute(id, request.body);
-            requestCounter.add(1, { method, route, status: '200' });
-            return reply.status(200).send({ data: socio });
+            return reply.status(statusCode).send({ data: socio });
         } catch (error: any) {
-            if (error.message.includes('Ya existe un miembro con ese DNI')) {
-                errorCounter.add(1, { method, route, status: '409' });
-                return reply.status(409).send({ error: error.message });
-            }
-            if (error.message.includes('inválido') || error.message.includes('no existe')) {
-                errorCounter.add(1, { method, route, status: '400' });
-                return reply.status(400).send({ error: error.message });
-            }
-            errorCounter.add(1, { method, route, status: '500' });
-            return reply.status(500).send({ error: "Error interno, reintente más tarde" });
+            statusCode = 500;
+            if (error.message.includes('Ya existe un miembro con ese DNI')) statusCode = 409;
+            else if (error.message.includes('inválido') || error.message.includes('no existe')) statusCode = 400;
+
+            recordError(route, method, statusCode);
+            return reply.status(statusCode).send({ error: error.message || "Error interno, reintente más tarde" });
         } finally {
-            requestDuration.record(Date.now() - start, { method, route });
+            recordRequest(route, method, statusCode);
+            recordDuration(Date.now() - start, route, method);
             activeRequestsGauge.add(-1);
         }
     }
@@ -99,17 +95,19 @@ export class MemberController {
         const start = Date.now();
         const method = request.method;
         const route = request.url.split('?')[0];
+        let statusCode = 204;
         activeRequestsGauge.add(1);
         try {
             const { id } = request.params;
             await this.deleteMemberUseCase.execute(id);
-            requestCounter.add(1, { method, route, status: '204' });
-            return reply.status(204).send(); // No Content
+            return reply.status(statusCode).send();
         } catch (error: any) {
-            errorCounter.add(1, { method, route, status: '400' });
-            return reply.status(400).send({ error: error.message });
+            statusCode = 400;
+            recordError(route, method, statusCode);
+            return reply.status(statusCode).send({ error: error.message });
         } finally {
-            requestDuration.record(Date.now() - start, { method, route });
+            recordRequest(route, method, statusCode);
+            recordDuration(Date.now() - start, route, method);
             activeRequestsGauge.add(-1);
         }
     }

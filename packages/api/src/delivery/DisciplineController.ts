@@ -4,7 +4,7 @@ import { UpdateDisciplineUseCase } from '../application/UpdateDisciplineUseCase.
 import { CreateDiscipline, UpdateDiscipline } from '@alentapp/shared';
 import { GetDisciplineUseCase } from '../application/GetDisciplineUseCase.js';
 import { DeleteDisciplineUseCase } from '../application/DeleteDisciplineUseCase.js';
-import { requestCounter, errorCounter, requestDuration, activeRequestsGauge } from '../infrastructure/telemetry.js';
+import { recordRequest, recordError, recordDuration, activeRequestsGauge } from '../infrastructure/telemetry.js';
 
 export class DisciplineController {
     constructor(
@@ -21,36 +21,32 @@ export class DisciplineController {
         const start = Date.now();
         const method = request.method;
         const route = request.url.split('?')[0];
+        let statusCode = 201;
         activeRequestsGauge.add(1);
         try {
             const discipline = await this.createDisciplineUseCase.execute(request.body);
-            requestCounter.add(1, { method, route, status: '201' });
-            return reply.status(201).send({ data: discipline });
+            return reply.status(statusCode).send({ data: discipline });
         } catch (error: any) {
+            statusCode = 500;
             if (error.message.includes('ID de miembro inválido') ||
-                error.message.includes('Razón es un campo requerido y no puede estar vacío.') ||
+                error.message.includes('Razón es un campo requerido') ||
                 error.message.includes('Razón no puede tener más de 40 caracteres.') ||
                 error.message.includes('La fecha de inicio es obligatoria') ||
                 error.message.includes('La fecha de fin es obligatoria') ||
                 error.message.includes('Es suspensión Total debe ser un booleano') ||
-                error.message.includes('Required') || //Required es el mensaje por defecto de error que devuelve zod cuando falta un campo requerido
+                error.message.includes('Required') ||
                 error.message.includes('requerido') ||
-                error.message.includes('obligatori')){ 
-                errorCounter.add(1, { method, route, status: '400' });
-                return reply.status(400).send({ error: error.message });
+                error.message.includes('obligatori') ||
+                error.message.includes('La fecha de fin debe ser posterior a la fecha de inicio')){ 
+                statusCode = 400;
+            } else if (error.message.includes('El miembro ingresado no existe en el sistema')){
+                statusCode = 404;
             }
-            if (error.message.includes('La fecha de fin debe ser posterior a la fecha de inicio')){
-                errorCounter.add(1, { method, route, status: '400' });
-                return reply.status(400).send({ error: error.message });
-            }
-            if (error.message.includes('El miembro ingresado no existe en el sistema')){
-                errorCounter.add(1, { method, route, status: '404' });
-                return reply.status(404).send({ error: error.message });
-            }
-            errorCounter.add(1, { method, route, status: '500' });
-            return reply.status(500).send({ error: 'Error al crear la disciplina' });
+            recordError(route, method, statusCode);
+            return reply.status(statusCode).send({ error: error.message || 'Error al crear la disciplina' });
         } finally {
-            requestDuration.record(Date.now() - start, { method, route });
+            recordRequest(route, method, statusCode);
+            recordDuration(Date.now() - start, route, method);
             activeRequestsGauge.add(-1);
         }
     }
@@ -59,16 +55,18 @@ export class DisciplineController {
         const start = Date.now();
         const method = _request.method;
         const route = _request.url.split('?')[0];
+        let statusCode = 200;
         activeRequestsGauge.add(1);
         try {
             const disciplines = await this.getDisciplineUseCase.execute();
-            requestCounter.add(1, { method, route, status: '200' });
-            return reply.status(200).send({ data: disciplines });
+            return reply.status(statusCode).send({ data: disciplines });
         } catch (error) {
-            errorCounter.add(1, { method, route, status: '500' });
-            return reply.status(500).send({ error: 'Error al obtener las disciplinas' });
+            statusCode = 500;
+            recordError(route, method, statusCode);
+            return reply.status(statusCode).send({ error: 'Error al obtener las disciplinas' });
         } finally {
-            requestDuration.record(Date.now() - start, { method, route });
+            recordRequest(route, method, statusCode);
+            recordDuration(Date.now() - start, route, method);
             activeRequestsGauge.add(-1);
         }
     }
@@ -80,28 +78,25 @@ export class DisciplineController {
         const start = Date.now();
         const method = request.method;
         const route = request.url.split('?')[0];
+        let statusCode = 204;
         activeRequestsGauge.add(1);
         try {
             await this.deleteDisciplineUseCase.execute(request.params.id);
-            requestCounter.add(1, { method, route, status: '204' });
-            return reply.status(204).send();
+            return reply.status(statusCode).send();
         } catch (error: any) {
+            statusCode = 500;
             if (error.message.includes('ID de disciplina inválido')) {
-                errorCounter.add(1, { method, route, status: '400' });
-                return reply.status(400).send({ error: error.message });
+                statusCode = 400;
+            } else if (error.message.includes('La disciplina no existe')) {
+                statusCode = 404;
+            } else if (error.message.includes('La disciplina ya fue eliminada')){
+                statusCode = 409;
             }
-            if (error.message.includes('La disciplina no existe')) {
-                errorCounter.add(1, { method, route, status: '404' });
-                return reply.status(404).send({ error: error.message });
-            }
-            if (error.message.includes('La disciplina ya fue eliminada')){
-                errorCounter.add(1, { method, route, status: '409' });
-                return reply.status(409).send({ error: error.message });
-            }
-            errorCounter.add(1, { method, route, status: '500' });
-            return reply.status(500).send({ error: 'Error al eliminar la disciplina' });
+            recordError(route, method, statusCode);
+            return reply.status(statusCode).send({ error: error.message || 'Error al eliminar la disciplina' });
         } finally {
-            requestDuration.record(Date.now() - start, { method, route });
+            recordRequest(route, method, statusCode);
+            recordDuration(Date.now() - start, route, method);
             activeRequestsGauge.add(-1);
         }
     }
@@ -113,35 +108,27 @@ export class DisciplineController {
         const start = Date.now();
         const method = request.method;
         const route = request.url.split('?')[0];
+        let statusCode = 200;
         activeRequestsGauge.add(1);
         try {
             const discipline = await this.updateDisciplineUseCase.execute(request.params.id, request.body);
-            requestCounter.add(1, { method, route, status: '200' });
-            return reply.status(200).send({ data: discipline });
+            return reply.status(statusCode).send({ data: discipline });
         } catch (error: any) {
-            if (error.message.includes('La disciplina no existe')){
-                errorCounter.add(1, { method, route, status: '404' });
-                return reply.status(404).send({ error: error.message });
+            statusCode = 500;
+            if (error.message.includes('La disciplina no existe') || error.message.includes('El miembro ingresado no existe')){
+                statusCode = 404;
+            } else if (error.message.includes('La fecha de fin debe ser posterior a la fecha de inicio') ||
+                       error.message.includes('ID de disciplina inválido') ||
+                       error.message.includes('vací') ||
+                       error.message.includes('Required') || 
+                       error.message.includes('requerido')){
+                statusCode = 400;
             }
-            if (error.message.includes('El miembro ingresado no existe en el sistema')){
-                errorCounter.add(1, { method, route, status: '404' });
-                return reply.status(404).send({ error: error.message });
-            }
-            if (error.message.includes('La fecha de fin debe ser posterior a la fecha de inicio') ||
-                error.message.includes('ID de disciplina inválido')){
-                errorCounter.add(1, { method, route, status: '400' });
-                return reply.status(400).send({ error: error.message });
-            }
-            if (error.message.includes('vací') ||
-                error.message.includes('Required') || 
-                error.message.includes('requerido') ){
-                errorCounter.add(1, { method, route, status: '400' });
-                return reply.status(400).send({ error: error.message });
-            }
-            errorCounter.add(1, { method, route, status: '500' });
-            return reply.status(500).send({ error: 'Error al actualizar la disciplina' });
+            recordError(route, method, statusCode);
+            return reply.status(statusCode).send({ error: error.message || 'Error al actualizar la disciplina' });
         } finally {
-            requestDuration.record(Date.now() - start, { method, route });
+            recordRequest(route, method, statusCode);
+            recordDuration(Date.now() - start, route, method);
             activeRequestsGauge.add(-1);
         }
     }
