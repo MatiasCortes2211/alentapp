@@ -89,6 +89,14 @@ Al forzar deliberadamente un error de negocio (Intentar eliminar un socio inexis
 
 ### 4.4.2 Decisiones técnicas
 
+**Arquitectura Multi-stage Build**
+
+- Qué decisión se tomó: Dividir el proceso de construcción en tres etapas independientes: deps, build y runtime.
+
+- Por qué se hizo: Para separar las herramientas que se necesitan para construir la app de las que se necesitan para ejecutarla. Esto permitió que la imagen final sea ultra ligera.
+
+- Impacto: Menor consumo de almacenamiento en el servidor, despliegues más rápidos y mayor eficiencia de red.
+
 ---
 
 ### 4.4.3 Desafíos y Complicaciones Encontradas
@@ -96,7 +104,13 @@ Al forzar deliberadamente un error de negocio (Intentar eliminar un socio inexis
 Durante el desarrollo de la implementación y verificación, el equipo se enfrentó a diversos desafíos técnicos que requirieron investigación y depuración. A continuación, se detallan las principales complicaciones resueltas por área de responsabilidad:
 
 #### API Dockerfile
-* *(Completar con los desafíos encontrados en el multi-stage build, optimización de peso y seguridad del Dockerfile de la API)*
+
+* **Compilación previa de shared:** En TypeScript, los enums generan código JavaScript real al compilarse. Node.js en producción no entiende el TypeScript crudo de shared. 
+Por lo tanto, primero se tiene que compilar shared, luego se inyecta en la API, y finalmente se usa un comando sed en el Dockerfile para "engañar" al package.json de producción y redirigir el punto de entrada (main) desde el archivo .ts original hacia el .js compilado en la carpeta dist/.
+
+* **Migraciones con Prisma:** Se tuvo que programar un script de Bash (docker-entrypoint sh) que actúa como intermediario. Al encender el contenedor, este script frena momentáneamente el arranque de la app, ejecuta de forma segura npx prisma migrate deploy, y recién cuando la base de datos está lista, levanta el proceso de Node.js. 
+
+* **Eliminación de Herramientas Heredadas de la Imagen Base:** La imagen oficial de Node (node:22-alpine) viene por defecto con npm y npx preinstalados. Para producción, esto representa un problema de seguridad (mayor superficie de ataque) y un peso innecesario. La complicación radicó en tener que limpiar manualmente el entorno de ejecución, forzando la eliminación de estos binarios del sistema mediante comandos rm -rf directos a los directorios de la imagen base antes de dar por terminada la construcción del contenedor.
 
 #### Web Dockerfile y Nginx
 * *(Completar con los desafíos encontrados en la configuración de Nginx, ruteo y el build del frontend)*
