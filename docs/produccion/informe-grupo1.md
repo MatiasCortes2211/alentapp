@@ -70,7 +70,12 @@ Durante el desarrollo de la implementación y verificación, el equipo se enfren
 * *(Completar con los desafíos encontrados en el multi-stage build, optimización de peso y seguridad del Dockerfile de la API)*
 
 #### Web Dockerfile y Nginx
-* *(Completar con los desafíos encontrados en la configuración de Nginx, ruteo y el build del frontend)*
+* **Errores de TypeScript en el build:** Al ejecutar el build de producción por primera vez, el stage 2 falló porque el script build del `package.json`corre `tsc -b` antes de vite build. El compilador de TypeScript detectó errores de tipos en varios archivos (`Discipline.tsx`, `Lockers.tsx`, `Payments.tsx`, etc.). 
+Para solucionarlo eliminamos el comando tsc -b en la configuración de `web/package.json` así no se devolverán esos errores en el build. Quedando como pendiente implementar la solución más adecuada que sería arreglar correctamente los tipos de datos en las vistas y hacer `tsc -b` en build.
+* **Nginx no levantaba con read_only: true:** Al momento de correr de levantar el contenedor ocurría un fallo porque nginx necesitaba crear carpetas temporales y escribir el log de errores, siendo impedido por la configuración de `read_only`. La solución fue cambiar la imagen por `nginxinc/nginx-unprivileged`, agregar entradas tmpfs en el docker-compose.prod.yml para las carpetas temporales de nginx (`/var/cache/nginx`, `/var/run`, `/tmp`, `/var/log/nginx`), y redirigir los logs de nginx a stdout/stderr en el nginx.conf.
+* **Problema con la URL de la API en producción:** Al construir la imagen de producción del frontend, surgió un problema con la URL de la API ya que usábamos localhost, y este desde el punto de vista del browser es la máquina del usuario final, no el servidor donde corre la API.
+La solución fue configurar nginx como proxy inverso mediante el bloque location `/api/` en el nginx.conf, que intercepta las requests que empiezan con `/api/` y las redirige internamente al contenedor de la API. Tambien se definió `VITE_API_URL=/api/v1` en el docker-compose.prod.ym para que el frontend use la ruta relativa `/api/v1` en lugar de `http://localhost:3000/api/v1`.
+
 
 #### Docker Compose de Producción
 * *(Completar con los desafíos encontrados en la orquestación, redes, healthchecks y límites de recursos)*
