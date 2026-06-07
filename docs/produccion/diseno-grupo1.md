@@ -1,4 +1,4 @@
-# Diseño de Infraestructura — Fase 2
+# Diseño de Infraestructura y observabilidad — Fase 2
 
 **Grupo:** 1  
 **Proyecto:** alentapp
