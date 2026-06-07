@@ -40,9 +40,11 @@ comando: curl localhost/
 | Medida de seguridad | Estado | Verificación |
 |---|---|---|
 | API corre con usuario no-root | ✓ OK | `docker exec alentapp-api-prod whoami` → `node` |
+| Web corre con usuario no-root | ✓ OK | `docker exec alentapp-web-prod whoami` → `nginx` |
 | npm ausente en imagen final | ✓ OK | `docker exec alentapp-api-prod which npm` → vacío |
 | tsc ausente en imagen final | ✓ OK | `docker exec alentapp-api-prod which tsc` → vacío |
 | Filesystem read-only activo | ✓ OK | `docker exec alentapp-api-prod touch /test` → falla |
+| Filesystem read-only activo | ✓ OK | `docker exec alentapp-web-prod touch /test` → falla |
 | Variables sensibles vía .env | ✓ OK | no hardcodeadas en Dockerfile ni docker-compose |
 | Capabilities mínimas (cap_drop: ALL) | ✓ OK | configurado en docker-compose.prod.yml |
 | Healthchecks funcionando | ✓ OK | `docker ps` → los 3 contenedores en estado `healthy`| 
