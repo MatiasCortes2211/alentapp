@@ -5,6 +5,31 @@
 
 ---
 
+## 4.1. Verificación técnica
+
+| Métrica | Antes (desarrollo) | Después (producción) | Mejora |
+|---|---|---|---|
+| Tamaño imagen API | 421 MB | 165 MB | 61% |
+| Tamaño imagen Web | - | - | - |
+| Tiempo de startup API | 0m19.198s | 0m13.528s | 29% |
+| Memoria API (idle) | 107.6 MB (sin límite) | 72 MB / 512 MiB | 33% |
+| Memoria Web (idle) | - | - | - |
+| Endpoint API accesible | ✓ 200 OK | ✓ 200 OK | — |
+| Frontend vía nginx | — | - | — |
+
+## 4.2. Verificación de seguridad
+
+| Medida de seguridad | Estado | Verificación |
+|---|---|---|
+| API corre con usuario no-root | ✓ OK | `docker exec alentapp-api-prod whoami` → `node` |
+| npm ausente en imagen final | ✓ OK | `docker exec alentapp-api-prod which npm` → vacío |
+| tsc ausente en imagen final | ✓ OK | `docker exec alentapp-api-prod which tsc` → vacío |
+| Filesystem read-only activo | ✓ OK | `docker exec alentapp-api-prod touch /test` → falla |
+| Variables sensibles vía .env | ✓ OK | no hardcodeadas en Dockerfile ni docker-compose |
+| Capabilities mínimas (cap_drop: ALL) | ✓ OK | configurado en docker-compose.prod.yml |
+| Healthchecks funcionando | ✓ OK | `docker ps` → los 3 contenedores en estado `healthy`| 
+
+![Contenedores healthy](./assets/contenedores-estado.png)
 
 ---
 
