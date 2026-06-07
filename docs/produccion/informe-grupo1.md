@@ -56,7 +56,17 @@ comando: curl localhost/
 
 ### 4.4.1 Arquitectura final
 
----
+La solución se basa en una arquitectura de **micro-contenedores orquestados** mediante `docker-compose`, diseñada bajo principios de *seguridad por diseño* y *aislamiento de servicios*. La infraestructura se segmenta en tres planos críticos:
+
+1. **Plano de Ejecución (App Plane):** Compuesto por tres servicios interconectados (`alentapp-api`, `alentapp-web`, `alentapp-db`). La comunicación es estrictamente interna a través de una red Bridge personalizada (`alentapp-prod-net`), lo cual asegura que los servicios no sean accesibles desde el exterior, salvo a través de los puertos expuestos (`3000` y `5173`).
+2. **Plano de Observabilidad (Monitoring Plane):** Desacoplado totalmente del flujo de datos principal. Los contenedores `Prometheus` y `Grafana` operan de forma autónoma, recolectando métricas mediante *pull* desde el endpoint `/metrics` de la API (vía OTel). Este desacoplamiento garantiza que, ante una saturación de tráfico o una caída del monitoreo, el rendimiento de la aplicación nunca se vea comprometido.
+3. **Plano de Persistencia:** Basado en `PostgreSQL` con volúmenes de Docker (`pgdata`) para garantizar la durabilidad de los datos, configurado con un `healthcheck` que impide el arranque de la API hasta que la base de datos esté lista, evitando errores de inicialización.
+
+### Puntos clave de esta arquitectura:
+
+* **Encapsulamiento:** Ningún servicio conoce la infraestructura subyacente; solo conocen los *endpoints* definidos por nombre de servicio gracias al DNS interno de Docker.
+* **Immutabilidad:** Los contenedores de ejecución (API y Web) son inmutables y de solo lectura (`read-only`), lo que impide la inyección de código o la modificación maliciosa en tiempo de ejecución.
+* **Separación de responsabilidades:** La configuración de observabilidad se inyecta como volumen externo, permitiendo modificar las reglas de monitoreo sin necesidad de reconstruir la imagen de la aplicación.
 
 ### 4.4.2 Decisiones técnicas
 
@@ -68,7 +78,11 @@ comando: curl localhost/
 
 - Impacto: Menor consumo de almacenamiento en el servidor, despliegues más rápidos y mayor eficiencia de red.
 
----
+**Implementación de Métricas RED (Requests, Errors, Duration)**
+
+- **Qué decisión se tomó:** Adoptar el modelo RED para la instrumentación de los controladores de la API.
+- **Por qué se hizo:** Porque permite monitorear de forma exhaustiva el rendimiento: el volumen de tráfico (Requests), la calidad del servicio (Errors) y la experiencia del usuario final según el tiempo de respuesta (Duration).
+- **Impacto:** Visibilidad total sobre el estado operativo del sistema, permitiendo detectar cuellos de botella y fallas funcionales en tiempo real sin tener que revisar logs manualmente.
 
 ### 4.4.3 Desafíos y Complicaciones Encontradas
 
@@ -90,7 +104,9 @@ Por lo tanto, primero se tiene que compilar shared, luego se inyecta en la API, 
 * *(Completar con los desafíos encontrados en la orquestación, redes, healthchecks y límites de recursos)*
 
 #### Instrumentación OpenTelemetry
-* *(Completar con los desafíos encontrados con TypeScript en el SDK, y la creación de métricas personalizadas en los controladores)*
+* **Divergencia en la contabilización de peticiones (Fidelidad de datos):** Se detectó que las peticiones con error no siempre se registraban correctamente, sesgando las métricas de tráfico. Se centralizó la lógica de registro en el bloque `finally` de cada controlador mediante métodos auxiliares, garantizando que el total de *requests* sea siempre la suma exacta de éxitos y fallos.
+* **Conflictos de tipos y auto-instrumentación:** La integración del `NodeSDK` presentó conflictos con las definiciones de tipos de TypeScript. Se resolvió mediante la inicialización explícita del `MeterProvider` y un *wrapper* para los contadores, preservando el tipado estricto del proyecto.
+* **Medición inteligente de memoria (ObservableGauge):** En lugar de medir cuánta RAM gasta el servidor en cada consulta (lo que haría que la API se ponga lenta), implementamos un medidor que "espiá" la memoria cada cierto tiempo. Usamos una función que le entrega el dato a Prometheus solo cuando él lo pide, evitando así que el servidor pierda potencia procesando mediciones innecesarias.
 
 #### Prometheus y Dashboard Grafana
 * **Tolerancia cero a errores de sintaxis (YAML):** Durante la configuración inicial de `prometheus.yml`, un error mínimo de indentación en la propiedad `labels` provocó que el contenedor de Prometheus fallara silenciosamente al iniciar. Esto derivó en un error de DNS (`no such host`) en Grafana que requirió auditar el estado de los contenedores para aislar la falla en el motor de recolección.
