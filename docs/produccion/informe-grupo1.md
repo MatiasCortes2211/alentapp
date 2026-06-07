@@ -3,8 +3,6 @@
 **Grupo:** 1  
 **Proyecto:** alentapp
 
----
-
 ## 4.1. Verificación técnica
 
 | Métrica | Antes (desarrollo) | Después (producción) | Mejora |
@@ -31,9 +29,43 @@
 
 ![Contenedores healthy](./assets/contenedores-estado.png)
 
+## 4.3 Verificación de Observabilidad (Dashboard RED)
+
+
+## 4.4 Documentación de decisiones
+
+### 4.4.1 Arquitectura final
+
 ---
 
-## 4.3 Verificación de Observabilidad (Dashboard RED)
+### 4.4.2 Decisiones técnicas
+
+---
+
+### 4.4.3 Desafíos y Complicaciones Encontradas
+
+Durante el desarrollo de la implementación y verificación, el equipo se enfrentó a diversos desafíos técnicos que requirieron investigación y depuración. A continuación, se detallan las principales complicaciones resueltas por área de responsabilidad:
+
+#### API Dockerfile
+* *(Completar con los desafíos encontrados en el multi-stage build, optimización de peso y seguridad del Dockerfile de la API)*
+
+#### Web Dockerfile y Nginx
+* *(Completar con los desafíos encontrados en la configuración de Nginx, ruteo y el build del frontend)*
+
+#### Docker Compose de Producción
+* *(Completar con los desafíos encontrados en la orquestación, redes, healthchecks y límites de recursos)*
+
+#### Instrumentación OpenTelemetry
+* *(Completar con los desafíos encontrados con TypeScript en el SDK, y la creación de métricas personalizadas en los controladores)*
+
+#### Prometheus y Dashboard Grafana
+* **Tolerancia cero a errores de sintaxis (YAML):** Durante la configuración inicial de `prometheus.yml`, un error mínimo de indentación en la propiedad `labels` provocó que el contenedor de Prometheus fallara silenciosamente al iniciar. Esto derivó en un error de DNS (`no such host`) en Grafana que requirió auditar el estado de los contenedores para aislar la falla en el motor de recolección.
+* **Manejo de valores nulos en PromQL:** Al diseñar el panel de "Tasa de error", el gráfico arrojaba "No data" cuando la API operaba de forma 100% sana. Se debió investigar y modificar la consulta matemática agregando una validación de fallback (`OR vector(0)` y `> 0`) para evitar que la base de datos de Prometheus colapsara al intentar ejecutar una división por cero.
+* **Saturación de renderizado en paneles:** El panel de "Endpoints más lentos" inicialmente intentaba renderizar el historial continuo del Top K, generando una saturación visual incomprensible. Se resolvió la complicación modificando la estructura de la consulta en Grafana a formato `Table` y forzando una evaluación `Instant`, permitiendo visualizar únicamente la fotografía del estado actual.
+
+---
+
+### 4.4.4 Grafana (Dashboard RED)
 
 Para verificar el correcto funcionamiento del pipeline de telemetría (OpenTelemetry $\rightarrow$ Prometheus $\rightarrow$ Grafana), se sometió a la API productiva a una prueba de carga controlada. Se utilizó un script automatizado que generó un flujo constante de tráfico sano (códigos 200) intercalado con peticiones de borrado inválidas (códigos 400/404) para forzar fallos en los controladores.
 
