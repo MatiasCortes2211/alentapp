@@ -60,6 +60,14 @@ comando: curl localhost/
 
 ### 4.4.2 Decisiones técnicas
 
+**Arquitectura Multi-stage Build**
+
+- Qué decisión se tomó: Dividir el proceso de construcción en tres etapas independientes: deps, build y runtime.
+
+- Por qué se hizo: Para separar las herramientas que se necesitan para construir la app de las que se necesitan para ejecutarla. Esto permitió que la imagen final sea ultra ligera.
+
+- Impacto: Menor consumo de almacenamiento en el servidor, despliegues más rápidos y mayor eficiencia de red.
+
 ---
 
 ### 4.4.3 Desafíos y Complicaciones Encontradas
