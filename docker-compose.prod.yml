@@ -65,7 +65,7 @@ services:
         max-file: "3"
     networks:
       - alentapp-prod-net
-    command: sh -c "node_modules/.bin/prisma migrate deploy --config packages/api/prisma.config.ts && node packages/api/dist/app.js"
+    command: sh -c "node /app/node_modules/.bin/prisma migrate deploy --config packages/api/prisma.config.ts && node --enable-source-maps /app/packages/api/dist/app.js"
 
 
   web:
