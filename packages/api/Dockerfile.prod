@@ -92,4 +92,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=10s --timeout=5s --retries=3 --start-period=15s \
   CMD wget -qO- http://localhost:3000 || exit 1
 
-ENTRYPOINT ["sh", "./packages/api/docker-entrypoint.sh"]
+ENTRYPOINT ["sh", "/app/packages/api/docker-entrypoint.sh"]
