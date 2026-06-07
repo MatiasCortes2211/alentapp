@@ -71,6 +71,8 @@ COPY --chown=node:node --from=build /app/packages/shared/dist ./packages/shared/
 # el paquete "@alentapp/shared" cuando la API lo importa.
 COPY --chown=node:node packages/shared/package.json ./packages/shared/package.json 
 
+RUN sed -i 's/"main": "index.ts"/"main": "dist\/index.js"/' packages/shared/package.json
+
 # Copia el cliente Prisma generado
 # y el schema.prisma que Prisma necesita en runtime para construir queries
 COPY --chown=node:node --from=build /app/packages/api/src/generated ./packages/api/dist/generated 
