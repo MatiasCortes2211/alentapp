@@ -10,12 +10,30 @@
 | Métrica | Antes (desarrollo) | Después (producción) | Mejora |
 |---|---|---|---|
 | Tamaño imagen API | 421 MB | 165 MB | 61% |
-| Tamaño imagen Web | - | - | - |
+| Tamaño imagen Web | 220MB | 23.3MB | 89% |
 | Tiempo de startup API | 0m19.198s | 0m13.528s | 29% |
 | Memoria API (idle) | 107.6 MB (sin límite) | 72 MB / 512 MiB | 33% |
-| Memoria Web (idle) | - | - | - |
+| Memoria Web (idle) | 376.7MiB / 6.649GiB | 12.72MiB / 256MiB | 96% |
 | Endpoint API accesible | ✓ 200 OK | ✓ 200 OK | — |
-| Frontend vía nginx | — | - | — |
+| Frontend vía nginx | — | ✓ Documento HTML* | — |
+
+```HTML
+comando: curl localhost/
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>web</title>
+    <script type="module" crossorigin src="/assets/index-BJA5EXvJ.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+```
 
 ## 4.2. Verificación de seguridad
 
