@@ -31,10 +31,12 @@ services:
       context: .
       dockerfile: packages/api/Dockerfile.prod
     container_name: alentapp-api-prod
+    image: alentapp-api:prod
     environment:
       DATABASE_URL: ${DATABASE_URL}
     ports:
       - '3000:3000'
+      - '9464:9464'
     depends_on:
       db:
         condition: service_healthy
@@ -50,6 +52,8 @@ services:
           cpus: '0.5'
           memory: 512M
     read_only: true
+    tmpfs:
+     - /tmp
     cap_drop:
       - ALL
     security_opt:
@@ -61,7 +65,6 @@ services:
         max-file: "3"
     networks:
       - alentapp-prod-net
-    command: sh -c "node_modules/.bin/prisma migrate deploy --config packages/api/prisma.config.ts && node packages/api/dist/app.js"
 
 
   web:
@@ -71,6 +74,7 @@ services:
       args:
       - VITE_API_URL=/api/v1
     container_name: alentapp-web-prod
+    image: alentapp-web:prod
     ports:
       - '80:8080'
     depends_on:

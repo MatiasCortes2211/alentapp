@@ -49,18 +49,73 @@ comando: curl localhost/
 
 ![Contenedores healthy](./assets/contenedores-estado.png)
 
-## 4.3 Verificación de Observabilidad (Dashboard RED)
+## 4.3 Verificación de Observabilidad
 
+### Detalle de validación técnica de los requerimientos
+
+**1. OpenTelemetry exporta métricas en :9464/metrics**
+Se verificó accediendo directamente al endpoint expuesto por el SDK. Se observan las métricas crudas (como `http_requests_total` o `http_request_duration`) listas para ser recolectadas.
+
+![OpenTelemetry Metrics](./assets/opentelemetry-metrics.png)
+
+**2. Prometheus scrapea correctamente el endpoint OTLP**
+Se analizó el panel de *Targets* de la interfaz de Prometheus (`localhost:9090/targets`). Se comprobó que el job configurado en `prometheus.yml` está leyendo el puerto 9464 del contenedor de la API y reporta un estado de salud **UP**.
+
+![Prometheus Targets](./assets/prometheus-targets.png)
+
+**3. Grafana tiene al menos un datasource Prometheus configurado**
+Se estableció la conexión interna entre el contenedor de Grafana y el de Prometheus a través de la URL `http://prometheus:9090`. La prueba de conexión arrojó un resultado exitoso.
+
+![Grafana Datasource 1](./assets/grafana-datasource-1.png)
+
+![Grafana Datasource 2](./assets/grafana-datasource-2.png)
+
+**4. El dashboard RED tiene 6 paneles funcionales**
+Se importó el esquema JSON del dashboard validando que los paneles de Requests por segundo, Tasa de error, Latencia, Status code, Memoria y Endpoints más lentos ejecutan sus consultas PromQL de manera exitosa y sin errores de datos vacíos ("No data").
+
+**5. Los gráficos responden al tráfico generado**
+Al inyectar tráfico masivo mediante el bucle de consultas *curl*, los gráficos en formato *Time series* abandonaron su estado de reposo y dibujaron la fluctuación del tráfico en tiempo real de forma inmediata.
+
+**6. Las métricas de error reflejan los 4xx/5xx**
+Al forzar deliberadamente un error de negocio (Intentar eliminar un socio inexistente con código 404), la métrica generada por `errorCounter` fue capturada por Grafana, elevando el gráfico de la Tasa de error de manera proporcional al total de las consultas.
+
+*(La evidencia visual que respalda el correcto funcionamiento descrito en los puntos 4, 5 y 6 se encuentra en la captura general del Dashboard RED adjunta al final de este apartado).*
 
 ## 4.4 Documentación de decisiones
 
 ### 4.4.1 Arquitectura final
 
----
+La solución se basa en una arquitectura de **micro-contenedores orquestados** mediante `docker-compose`, diseñada bajo principios de *seguridad por diseño* y *aislamiento de servicios*. La infraestructura se segmenta en tres planos críticos:
+
+1. **Plano de Ejecución (App Plane):** Compuesto por tres servicios interconectados (`alentapp-api`, `alentapp-web`, `alentapp-db`). La comunicación es estrictamente interna a través de una red Bridge personalizada (`alentapp-prod-net`), lo cual asegura que los servicios no sean accesibles desde el exterior, salvo a través de los puertos expuestos (`3000` y `5173`).
+2. **Plano de Observabilidad (Monitoring Plane):** Desacoplado totalmente del flujo de datos principal. Los contenedores `Prometheus` y `Grafana` operan de forma autónoma, recolectando métricas mediante *pull* desde el endpoint `/metrics` de la API (vía OTel). Este desacoplamiento garantiza que, ante una saturación de tráfico o una caída del monitoreo, el rendimiento de la aplicación nunca se vea comprometido.
+3. **Plano de Persistencia:** Basado en `PostgreSQL` con volúmenes de Docker (`pgdata`) para garantizar la durabilidad de los datos, configurado con un `healthcheck` que impide el arranque de la API hasta que la base de datos esté lista, evitando errores de inicialización.
+
+### Puntos clave de esta arquitectura:
+
+* **Encapsulamiento:** Ningún servicio conoce la infraestructura subyacente; solo conocen los *endpoints* definidos por nombre de servicio gracias al DNS interno de Docker.
+* **Immutabilidad:** Los contenedores de ejecución (API y Web) son inmutables y de solo lectura (`read-only`), lo que impide la inyección de código o la modificación maliciosa en tiempo de ejecución.
+* **Separación de responsabilidades:** La configuración de observabilidad se inyecta como volumen externo, permitiendo modificar las reglas de monitoreo sin necesidad de reconstruir la imagen de la aplicación.
 
 ### 4.4.2 Decisiones técnicas
 
-*Nginx*
+**Arquitectura Multi-stage Build**
+
+- Qué decisión se tomó: Dividir el proceso de construcción en tres etapas independientes: deps, build y runtime.
+
+- Por qué se hizo: Para separar las herramientas que se necesitan para construir la app de las que se necesitan para ejecutarla. Esto permitió que la imagen final sea ultra ligera.
+
+- Impacto: Menor consumo de almacenamiento en el servidor, despliegues más rápidos y mayor eficiencia de red.
+
+**Implementación de Métricas RED (Requests, Errors, Duration)**
+
+- Qué decisión se tomó: Adoptar el modelo RED para la instrumentación de los controladores de la API.
+
+- Por qué se hizo: Porque permite monitorear de forma exhaustiva el rendimiento: el volumen de tráfico (Requests), la calidad del servicio (Errors) y la experiencia del usuario final según el tiempo de respuesta (Duration).
+
+- Impacto: Visibilidad total sobre el estado operativo del sistema, permitiendo detectar cuellos de botella y fallas funcionales en tiempo real sin tener que revisar logs manualmente.
+
+**Nginx**
 
 - Qué decisión se tomó: Usar nginx para servir el frontend en producción, reemplazando a Vite.
 
@@ -73,7 +128,13 @@ comando: curl localhost/
 Durante el desarrollo de la implementación y verificación, el equipo se enfrentó a diversos desafíos técnicos que requirieron investigación y depuración. A continuación, se detallan las principales complicaciones resueltas por área de responsabilidad:
 
 #### API Dockerfile
-* *(Completar con los desafíos encontrados en el multi-stage build, optimización de peso y seguridad del Dockerfile de la API)*
+
+* **Compilación previa de shared:** En TypeScript, los enums generan código JavaScript real al compilarse. Node.js en producción no entiende el TypeScript crudo de shared. 
+Por lo tanto, primero se tiene que compilar shared, luego se inyecta en la API, y finalmente se usa un comando sed en el Dockerfile para "engañar" al package.json de producción y redirigir el punto de entrada (main) desde el archivo .ts original hacia el .js compilado en la carpeta dist/.
+
+* **Migraciones con Prisma:** Se tuvo que programar un script de Bash (docker-entrypoint sh) que actúa como intermediario. Al encender el contenedor, este script frena momentáneamente el arranque de la app, ejecuta de forma segura npx prisma migrate deploy, y recién cuando la base de datos está lista, levanta el proceso de Node.js. 
+
+* **Eliminación de Herramientas Heredadas de la Imagen Base:** La imagen oficial de Node (node:22-alpine) viene por defecto con npm y npx preinstalados. Para producción, esto representa un problema de seguridad (mayor superficie de ataque) y un peso innecesario. La complicación radicó en tener que limpiar manualmente el entorno de ejecución, forzando la eliminación de estos binarios del sistema mediante comandos rm -rf directos a los directorios de la imagen base antes de dar por terminada la construcción del contenedor.
 
 #### Web Dockerfile y Nginx
 * **Errores de TypeScript en el build:** Al ejecutar el build de producción por primera vez, el stage 2 falló porque el script build del `package.json`corre `tsc -b` antes de vite build. El compilador de TypeScript detectó errores de tipos en varios archivos (`Discipline.tsx`, `Lockers.tsx`, `Payments.tsx`, etc.). 
@@ -87,12 +148,14 @@ La solución fue configurar nginx como proxy inverso mediante el bloque location
 * *(Completar con los desafíos encontrados en la orquestación, redes, healthchecks y límites de recursos)*
 
 #### Instrumentación OpenTelemetry
-* *(Completar con los desafíos encontrados con TypeScript en el SDK, y la creación de métricas personalizadas en los controladores)*
+* **Divergencia en la contabilización de peticiones (Fidelidad de datos):** Se detectó que las peticiones con error no siempre se registraban correctamente, sesgando las métricas de tráfico. Se centralizó la lógica de registro en el bloque `finally` de cada controlador mediante métodos auxiliares, garantizando que el total de *requests* sea siempre la suma exacta de éxitos y fallos.
+* **Conflictos de tipos y auto-instrumentación:** La integración del `NodeSDK` presentó conflictos con las definiciones de tipos de TypeScript. Se resolvió mediante la inicialización explícita del `MeterProvider` y un *wrapper* para los contadores, preservando el tipado estricto del proyecto.
+* **Medición inteligente de memoria (ObservableGauge):** En lugar de medir cuánta RAM gasta el servidor en cada consulta (lo que haría que la API se ponga lenta), implementamos un medidor que "espiá" la memoria cada cierto tiempo. Usamos una función que le entrega el dato a Prometheus solo cuando él lo pide, evitando así que el servidor pierda potencia procesando mediciones innecesarias.
 
 #### Prometheus y Dashboard Grafana
-* **Tolerancia cero a errores de sintaxis (YAML):** Durante la configuración inicial de `prometheus.yml`, un error mínimo de indentación en la propiedad `labels` provocó que el contenedor de Prometheus fallara silenciosamente al iniciar. Esto derivó en un error de DNS (`no such host`) en Grafana que requirió auditar el estado de los contenedores para aislar la falla en el motor de recolección.
+* **Tolerancia cero a errores de sintaxis (YAML):** Durante la configuración inicial de `prometheus.yml`, un error mínimo de indentación en la propiedad `labels` provocó que el contenedor de Prometheus fallara silenciosamente al iniciar. Esto derivó en un error de DNS (`no such host`) en Grafana que requirió revisar el estado de los contenedores para aislar la falla.
 * **Manejo de valores nulos en PromQL:** Al diseñar el panel de "Tasa de error", el gráfico arrojaba "No data" cuando la API operaba de forma 100% sana. Se debió investigar y modificar la consulta matemática agregando una validación de fallback (`OR vector(0)` y `> 0`) para evitar que la base de datos de Prometheus colapsara al intentar ejecutar una división por cero.
-* **Saturación de renderizado en paneles:** El panel de "Endpoints más lentos" inicialmente intentaba renderizar el historial continuo del Top K, generando una saturación visual incomprensible. Se resolvió la complicación modificando la estructura de la consulta en Grafana a formato `Table` y forzando una evaluación `Instant`, permitiendo visualizar únicamente la fotografía del estado actual.
+* **Saturación de renderizado en paneles:** El panel de "Endpoints más lentos" inicialmente intentaba renderizar el historial continuo del Top K, generando una saturación visual incomprensible. Se resolvió la complicación modificando la estructura de la consulta en Grafana a formato `Table` y forzando una evaluación `Instant`, permitiendo visualizar únicamente la fotografía del estado actual de cinco endpoints.
 
 ---
 
@@ -112,6 +175,7 @@ for i in {1..300}; do
   curl -s http://localhost:3000/api/v1/socios > /dev/null
   curl -s http://localhost:3000/api/v1/sports > /dev/null
   curl -s http://localhost:3000/api/v1/lockers > /dev/null
+  curl -s http://localhost:3000/api/v1/disciplines > /dev/null
   
   # Tráfico roto (DELETE a un ID que no existe -> Error 400/404 real)
   curl -X DELETE -s http://localhost:3000/api/v1/socios/99999 > /dev/null
@@ -123,8 +187,8 @@ done
 Al analizar la captura del dashboard en tiempo real, se validaron los siguientes comportamientos:
 
 1. **Requests por segundo:** La métrica `rate` capturó instantáneamente el inicio del ataque de tráfico simulado, graficando el incremento sostenido de peticiones hacia la API.
-2. **Tasa de error (%):** El panel reflejó la división arquitectónica entre los contadores. El script enviaba 1 error por cada 3 éxitos. Como el contador `http_requests_total` registró estrictamente los éxitos, la fórmula ejecutada por Grafana (`1 error / 3 éxitos`) muestra una tasa de fallo que se estabilizó de forma precisa en el ~33%.
+2. **Tasa de error (%):** El panel reflejó la exactitud de la instrumentación. El script de estrés enviaba 1 error por cada ciclo de 5 peticiones totales (4 éxitos y 1 fallo). La fórmula PromQL ejecutada por Grafana calculó correctamente esta proporción absoluta ($1 / 5$), mostrando una tasa de fallo que se estabilizó de forma precisa y constante en el 20%.
 3. **Latencia p95:** El histograma calculó correctamente la *Duration*, permitiendo observar que, a pesar de la ráfaga de peticiones, el 95% de los usuarios experimentaron tiempos de respuesta óptimos de unos pocos milisegundos.
-4. **Por status code:** El panel agrupó exitosamente las peticiones de `http_requests_total`. Se visualizan exclusivamente los códigos de éxito (ej. 200), demostrando que la instrumentación separó correctamente los códigos de advertencia (4xx/5xx) hacia el contador independiente de errores.
+4. **Por status code:** El panel agrupó exitosamente la totalidad de las peticiones registradas en `http_requests_total` utilizando la etiqueta `status`. El panel renderiza un gráfico de área apilada (*Stacked Area*) que permite visualizar la proporción exacta del tráfico: una base dominante de peticiones exitosas (códigos 200/201/204) y, superpuesta a esta, la franja correspondiente a los errores (códigos 400/404) inyectados por el script.
 5. **Memoria del proceso:** El medidor de memoria demuestra que la API es estable a nivel de recursos. Durante la prueba de estrés, el consumo de RAM no se disparó sin control ni colapsó el servidor, sino que se mantuvo en niveles normales y equilibrados, confirmando que la aplicación libera correctamente la memoria que ya no utiliza (sin fugas de memoria).
-6. **Endpoints más lentos:** La función de agregación agrupó los promedios de tiempo por cada `route`, generando un top 5 en formato de tabla que permitió visualizar con precisión la latencia de, en este caso, las 4 rutas específicas que fueron sometidas a la prueba de carga.
+6. **Endpoints más lentos:** La función de agregación agrupó los promedios de tiempo por cada `route`, generando un top 5 en formato de tabla que permitió visualizar con precisión la latencia de los múltiples endpoints que fueron sometidos a la prueba de carga de forma simultánea.
