@@ -60,7 +60,13 @@ comando: curl localhost/
 
 ### 4.4.2 Decisiones técnicas
 
----
+*Nginx*
+
+- Qué decisión se tomó: Usar nginx para servir el frontend en producción, reemplazando a Vite.
+
+- Por qué se hizo: Nginx es más liviano y eficiente para servir archivos estáticos que node, ya que está diseñado para ello.
+
+- Impacto: El tamaño de la imagen presenta un 89% de mejora contra la de node.
 
 ### 4.4.3 Desafíos y Complicaciones Encontradas
 
