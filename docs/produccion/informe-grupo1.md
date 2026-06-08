@@ -39,8 +39,9 @@ comando: curl localhost/
 |---|---|---|
 | API corre con usuario no-root | ✓ OK | `docker exec alentapp-api-prod whoami` → `node` |
 | Web corre con usuario no-root | ✓ OK | `docker exec alentapp-web-prod whoami` → `nginx` |
-| npm ausente en imagen final | ✓ OK | `docker exec alentapp-api-prod which npm` → vacío |
-| tsc ausente en imagen final | ✓ OK | `docker exec alentapp-api-prod which tsc` → vacío |
+| npm ausente en imagen final de la API| ✓ OK | `docker run --rm --entrypoint which alentapp-api:prod npm` → vacío |
+| tsc ausente en imagen final de la API | ✓ OK | `docker run --rm --entrypoint which alentapp-api:prod tsc` → vacío |
+Node presente en imagen de la API | ✓ OK  | `docker run --rm --entrypoint which alentapp-api:prod node` → `/usr/local/bin/node` |
 | Filesystem read-only activo | ✓ OK | `docker exec alentapp-api-prod touch /test` → falla |
 | Filesystem read-only activo | ✓ OK | `docker exec alentapp-web-prod touch /test` → falla |
 | Variables sensibles vía .env | ✓ OK | no hardcodeadas en Dockerfile ni docker-compose |
