@@ -124,6 +124,14 @@ La solución se basa en una arquitectura de **micro-contenedores orquestados** m
 
 - Impacto: El tamaño de la imagen presenta un 89% de mejora contra la de node.
 
+**Healthcheck**
+
+- Qué decisión se tomó: Implementar el uso de Healthchecks para la API, la Web y la Base de Datos.
+
+- Por qué se hizo: Para asegurar que los tres contenedores estén corriendo y en correcto funcionamiento real (no solo encendidos).
+
+- Impacto: Permite que los contenedores se levanten dependiendo del estado de otro servicio. La API solo iniciará si la base de datos está *healthy*, y la Web solo iniciará si la API está *healthy*, evitando caídas en cascada.
+
 ### 4.4.3 Desafíos y Complicaciones Encontradas
 
 Durante el desarrollo de la implementación y verificación, el equipo se enfrentó a diversos desafíos técnicos que requirieron investigación y depuración. A continuación, se detallan las principales complicaciones resueltas por área de responsabilidad:
