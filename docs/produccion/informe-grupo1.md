@@ -132,6 +132,14 @@ La solución se basa en una arquitectura de **micro-contenedores orquestados** m
 
 - Impacto: Permite que los contenedores se levanten dependiendo del estado de otro servicio. La API solo iniciará si la base de datos está *healthy*, y la Web solo iniciará si la API está *healthy*, evitando caídas en cascada.
 
+**Separación de Orquestación en Módulos (Docker Compose)**
+
+- Qué decisión se tomó: Separar la orquestación del sistema en dos archivos `docker-compose` independientes: uno para los servicios (`docker-compose.prod.yml`) y otro exclusivo para la infraestructura de observabilidad (`observability/docker-compose.obs.yml`).
+
+- Por qué se hizo: Para aplicar una separación de responsabilidades clara entre el plano de ejecución de la aplicación y su plano de soporte. Ambos grupos de servicios poseen ciclos de vida, necesidades de recursos y propósitos operativos distintos. Separarlos permite gestionar, reiniciar o escalar el stack de monitoreo de forma aislada sin comprometer la disponibilidad del núcleo del negocio.
+
+- Impacto: Mejora drásticamente la mantenibilidad y flexibilidad operativa. Facilita la adopción de arquitecturas distribuidas, donde el stack de observabilidad podría migrarse a un nodo de monitoreo centralizado (o a otro servidor) sin necesidad de reconfigurar la arquitectura de la aplicación.
+
 ### 4.4.3 Desafíos y Complicaciones Encontradas
 
 Durante el desarrollo de la implementación y verificación, el equipo se enfrentó a diversos desafíos técnicos que requirieron investigación y depuración. A continuación, se detallan las principales complicaciones resueltas por área de responsabilidad:
