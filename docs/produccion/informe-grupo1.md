@@ -145,7 +145,11 @@ La solución fue configurar nginx como proxy inverso mediante el bloque location
 
 
 #### Docker Compose de Producción
-* *(Completar con los desafíos encontrados en la orquestación, redes, healthchecks y límites de recursos)*
+* **Sobreescritura del ciclo de vida (Exit Code 1):** El contenedor de la API fallaba en el inicio debido a que el archivo Compose tenía una línea command que entraba en conflicto y anulaba el ENTRYPOINT del Dockerfile prod. Se arregló eliminando comandos redundantes y respetando la delegación del arranque a la propia imagen.
+* **Mapeo de puertos para métricas (Port Binding):** Durante la integración de OpenTelemetry, la recolección de datos fallaba porque el puerto interno del SDK (9464) no estaba expuesto hacia el host en el Compose de producción. Se resolvió añadiendo el mapeo explícito en la configuración de la API para permitir que Prometheus pudiera acceder al endpoint de métricas.
+* **Nombrado explícito y caché de imágenes locales:** Al utilizar el bloque build para compilar los contenedores, las imágenes generadas quedaban con nombres dinámicos, dificultando su identificación. Se solucionó agregando image: alentapp-api:prod y image: alentapp-web:prod junto al contexto de construcción, forzando a Docker Compose a etiquetar las imágenes resultantes de forma predecible.
+
+---
 
 #### Instrumentación OpenTelemetry
 * **Divergencia en la contabilización de peticiones (Fidelidad de datos):** Se detectó que las peticiones con error no siempre se registraban correctamente, sesgando las métricas de tráfico. Se centralizó la lógica de registro en el bloque `finally` de cada controlador mediante métodos auxiliares, garantizando que el total de *requests* sea siempre la suma exacta de éxitos y fallos.
